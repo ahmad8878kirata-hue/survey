@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>استبيان سـري لقياس رضا العاملين بمحطات الوقود</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --main-green: #219150;
+            --main-green-dark: #17693a;
+            --main-green-light: #e6f7ed;
+            --accent-green: #43a047;
+            --border-green: #b2dfdb;
+            --text-dark: #1b3a2b;
+            --gray-bg: #f4f6fa;
+            --white: #fff;
+            --shadow: 0 0 24px 2px #b2dfdb;
+            --mframe-thick: 9px;
+            --mframe-color: #219150;
+            --mframe-double: #e8f3e4;
+        }
+
+        body {
+            font-family: 'Cairo', Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--main-green-light) 0%, var(--gray-bg) 100%);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .decorative-frame {
+            background: var(--mframe-double);
+            padding: 12px;
+            border-radius: 20px;
+            border: var(--mframe-thick) double var(--mframe-color);
+            box-shadow: 0 0 32px 2px #c6efc9a0;
+            margin: 30px auto;
+            width: 850px;
+            max-width: 96vw;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .container {
+            width: 794px;
+            min-height: 1123px;
+            margin: 0px auto 0px auto;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            border-radius: 14px;
+            padding: 24px 24px 24px 24px;
+            border: 2px solid var(--main-green);
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+            box-sizing: border-box;
+        }
+
+        .container:before,
+        .container:after {
+            content: "";
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle, var(--main-green-light) 60%, transparent 100%);
+            z-index: 0;
+        }
+
+        .container:before {
+            top: -30px;
+            left: -30px;
+        }
+
+        .container:after {
+            bottom: -30px;
+            right: -30px;
+        }
+
+        .header-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-logo-row img {
+            height: 64px;
+            width: auto;
+            max-width: 240px;
+            margin: 0;
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 2px solid var(--main-green);
+            background: #ffffff;
+            box-shadow: 0 6px 18px rgba(33, 145, 80, 0.18);
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: env(safe-area-inset-bottom, 0);
+            }
+
+            .decorative-frame {
+                margin: 16px auto;
+                padding: 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .container {
+                width: 100%;
+                min-height: auto;
+                padding: 16px;
+            }
+
+            .header-logo-row img {
+                height: 48px;
+                max-width: 180px;
+            }
+
+            h1 {
+                font-size: 1.05em;
+                line-height: 1.5;
+                padding: 0 8px;
+            }
+
+            .subtitle {
+                font-size: 0.95em;
+                padding: 0 4px;
+            }
+
+            .instructions {
+                padding: 10px 12px;
+                font-size: 0.95em;
+            }
+
+            .instructions ul {
+                padding-inline-start: 20px !important;
+            }
+
+            .basic-info label {
+                min-width: 100%;
+                margin-bottom: 4px;
+                display: block;
+            }
+
+            .basic-info input.input-line {
+                width: 100% !important;
+                min-width: 100%;
+                margin: 4px 0 12px 0;
+                box-sizing: border-box;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .checkbox-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .open-question {
+                padding: 12px;
+                margin: 14px 0;
+            }
+
+            .open-question label {
+                font-size: 1em;
+            }
+
+            .open-question textarea {
+                min-height: 70px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .submit-btn {
+                padding: 14px 24px;
+                font-size: 1em;
+                margin: 24px auto 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .print-btn {
+                left: 10px;
+                top: 10px;
+                padding: 8px 12px;
+                font-size: 0.9em;
+            }
+
+            .results-card {
+                width: 95%;
+                padding: 20px 16px;
+                max-height: 90vh;
+                margin: 10px;
+            }
+
+            .results-footer {
+                flex-direction: column;
+            }
+
+            .results-footer button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 0.95em;
+            }
+
+            .subtitle {
+                font-size: 0.9em;
+            }
+
+            .header-logo-row img {
+                height: 44px;
+                max-width: 160px;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 4px;
+            display: inline-block;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, var(--main-green), var(--main-green-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.05em;
+            color: var(--main-green-dark);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .instructions {
+            background: var(--main-green-light);
+            border-right: 4px solid var(--main-green);
+            border-radius: 6px 0 0 6px;
+            padding: 10px 14px;
+            margin-bottom: 18px;
+            font-size: 1em;
+            color: var(--main-green-dark);
+            font-weight: 500;
+        }
+
+        .basic-info {
+            margin-bottom: 18px;
+            font-size: 1em;
+        }
+
+        .basic-info label {
+            display: inline-block;
+            min-width: 140px;
+            font-weight: 600;
+            color: var(--main-green-dark);
+        }
+
+        .radio-group,
+        .checkbox-group {
+            margin: 7px 0 15px 0;
+        }
+
+        /* New rule to show radio buttons inline */
+        .radio-group {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-left: 5px;
+            margin-right: 2px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-left: 5px;
+            margin-right: 2px;
+        }
+
+        input.input-line {
+            border: none;
+            border-bottom: 1.5px dotted var(--main-green);
+            min-width: 120px;
+            padding: 2px 8px;
+            vertical-align: middle;
+            background: #eafaf2;
+            border-radius: 2px;
+            margin-left: 10px;
+            margin-right: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1em;
+            outline: none;
+            color: var(--text-dark);
+        }
+
+        input.input-line:focus {
+            background: #d4f3e1;
+            border-bottom: 1.5px solid var(--main-green-dark);
+        }
+
+        .submit-btn {
+            background: var(--main-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 40px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto 10px auto;
+            box-shadow: 0 4px 12px rgba(33, 145, 80, 0.3);
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .submit-btn:hover {
+            background: var(--main-green-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(33, 145, 80, 0.4);
+        }
+
+        .open-question {
+            margin-top: 18px;
+            margin-bottom: 18px;
+            background: var(--main-green-light);
+            padding: 14px 16px 16px 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px #b2dfdb33;
+            border: 1.5px solid var(--border-green);
+            position: relative;
+        }
+
+        .open-question label {
+            display: block;
+            font-weight: 600;
+            color: var(--main-green-dark);
+            margin-bottom: 8px;
+            font-size: 1.07em;
+        }
+
+        .open-question textarea {
+            width: 100%;
+            resize: vertical;
+            min-height: 54px;
+            font-family: 'Cairo', Arial, sans-serif;
+            font-size: 1em;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-green);
+            box-sizing: border-box;
+            background: #f7fcfa;
+            transition: border 0.18s;
+            direction: rtl;
+        }
+
+        .open-question textarea:focus {
+            outline: none;
+            border: 1.6px solid var(--main-green-dark);
+        }
+
+        .print-btn {
+            position: fixed;
+            left: 15px;
+            top: 15px;
+            background: var(--main-green);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            padding: 6px 14px;
+            font-size: 0.95em;
+            cursor: pointer;
+            box-shadow: 0 1px 4px #b2dfdb55;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        .print-btn:hover {
+            background: var(--main-green-dark);
+        }
+
+        .choices-list {
+            margin-bottom: 8px;
+        }
+
+        /* Results Overlay Styles */
+        #resultsOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .results-card {
+            background: white;
+            width: 600px;
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 15px;
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 3px solid var(--main-green);
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--main-green-light);
+            padding-bottom: 15px;
+        }
+
+        .results-header h2 {
+            color: var(--main-green-dark);
+            margin: 0;
+        }
+
+        .result-item {
+            margin-bottom: 12px;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .result-q {
+            font-weight: 700;
+            color: var(--main-green-dark);
+            display: block;
+        }
+
+        .result-a {
+            color: #333;
+            padding-right: 15px;
+            display: block;
+        }
+
+        .results-footer {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-close {
+            background: #eee;
+            color: #555;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+        }
+
+        .btn-copy {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .decorative-frame {
+                border: var(--mframe-thick) double var(--main-green);
+                box-shadow: none;
+            }
+
+            .container {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                min-height: initial;
+                padding: 10px;
+                background: #fff !important;
+                border: none;
+            }
+
+            .header-logo-row img {
+                height: 40px;
+                max-width: 220px;
+                padding: 2px 6px;
+                box-shadow: none;
+            }
+
+            .print-btn {
+                display: none;
+            }
+
+            .open-question {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                background: #fff;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <form id="surveyForm">
+        <!-- Fields will be gathered by JavaScript -->
+        <div class="decorative-frame">
+            <div class="container">
+                <div class="green-bar"></div>
+                <div class="header-logo-row">
+                    <img src="logo.png" alt="شعار المحطة">
+                    <h1>
+                        <i class="fa-solid fa-clipboard-question icon-title"></i>
+                        استبيان سري لقياس رضا العاملين في محطات الوقود
+                    </h1>
+                </div>
+                <div class="subtitle">
+                    نرجو تعبئة هذا الاستبيان بدقة وصراحة، حيث سيتم استخدام النتائج فقط لتحسين بيئة العمل وظروفها. جميع
+                    الإجابات سرية وستظل هوية المشارك مجهولة بالكامل بالنسبة للإدارة.
+                </div>
+                <div class="instructions">
+                    <div>
+                        <b>هدف الاستبيان:</b>
+                        <ul style="margin-right:22px; margin-bottom:0">
+                            <li>قياس الرضا الوظيفي للعاملين وبيئة العمل</li>
+                            <li>دراسة ملائمة الرواتب وساعات العمل</li>
+                            <li>تقييم الأدوات والمضخات والصيانة وسهولة العمل</li>
+                            <li>سلامة وصحة العاملين والمخاطر المهنية</li>
+                            <li>قياس فعالية التدريب واقتراحات التحسين</li>
+                            <li>تحسين جودة الخدمة المقدمة للعملاء</li>
+                            <li>جمع البيانات حول نقاط القوة والضعف لخطط تطوير بيئة العمل</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <b>التأكيد على سرية الاستبيان:</b> هذا الاستبيان مجهول الهوية ولا يترتب عليه أي محاسبة أو تأثير
+                        على
+                        العمل أو العاملين، ويستخدم فقط لتحسين بيئة العمل.
+                    </div>
+                </div>
+                <div class="basic-info">
+                    <div style="margin-bottom:10px;">
+                        <label for="station_name">اسم المحطة:</label>
+                        <input type="text" id="station_name" name="اسم المحطة" class="input-line" style="width:180px;"
+                            required>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label for="branch_name">اسم الفرع:</label>
+                        <input type="text" id="branch_name" name="اسم الفرع" class="input-line" style="width:180px;"
+                            required>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label for="job_title">المسمى الوظيفي:</label>
+                        <input type="text" id="job_title" name="المسمى الوظيفي" class="input-line" style="width:180px;"
+                            required>
+                    </div>
+                    <div class="radio-group">
+                        <label style="margin-left: 12px;">مدة العمل:</label>
+                        <input type="radio" id="less3" name="مدة العمل" value="أقل من 3 أشهر">
+                        <label for="less3" style="font-weight:400">أقل من 3 أشهر</label>
+                        <input type="radio" id="between3and6" name="مدة العمل" value="من 3 إلى 6 أشهر">
+                        <label for="between3and6" style="font-weight:400">من 3 إلى 6 أشهر</label>
+                        <input type="radio" id="more6" name="مدة العمل" value="أكثر من 6 أشهر">
+                        <label for="more6" style="font-weight:400">أكثر من 6 أشهر</label>
+                    </div>
+                </div>
+
+
+
+
+                <div class="open-question">
+                    <label>مدى الرضا عن العمل:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="not_satisfied" name="مدى الرضا عن العمل" value="غير راضي أبداً">
+                        <label for="not_satisfied" style="font-weight:400">غير راضي أبداً</label>
+                        <input type="radio" id="satisfied" name="مدى الرضا عن العمل" value="راضي">
+                        <label for="satisfied" style="font-weight:400">راضي</label>
+                        <input type="radio" id="very_satisfied" name="مدى الرضا عن العمل" value="راضي جداً">
+                        <label for="very_satisfied" style="font-weight:400">راضي جداً</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label>هل ساعات العمل مناسبة بالنسبة لك؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="hours_yes" name="ساعات العمل مناسبة؟" value="نعم">
+                        <label for="hours_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="hours_no" name="ساعات العمل مناسبة؟" value="لا">
+                        <label for="hours_no" style="font-weight:400">لا</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label>هل الراتب مناسب لطبيعة عملك؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="salary_yes" name="الراتب مناسب؟" value="نعم">
+                        <label for="salary_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="salary_no" name="الراتب مناسب؟" value="لا">
+                        <label for="salary_no" style="font-weight:400">لا</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label>هل نظام الدفع واضح وسهل؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="payment_clear_yes" name="نظام الدفع واضح وسهل؟" value="نعم">
+                        <label for="payment_clear_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="payment_clear_no" name="نظام الدفع واضح وسهل؟" value="لا">
+                        <label for="payment_clear_no" style="font-weight:400">لا</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label>هل يتم تحميلك مسؤوليات مالية غير عادلة؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="unfair_finance_yes" name="مسؤوليات مالية غير عادلة؟" value="نعم">
+                        <label for="unfair_finance_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="unfair_finance_no" name="مسؤوليات مالية غير عادلة؟" value="لا">
+                        <label for="unfair_finance_no" style="font-weight:400">لا</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label>هل يتم اعطائك فرصة لتصحيح خطائك؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="correct_mistake_yes" name="فرصة لتصحيح الخطأ؟" value="نعم">
+                        <label for="correct_mistake_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="correct_mistake_no" name="فرصة لتصحيح الخطأ؟" value="لا">
+                        <label for="correct_mistake_no" style="font-weight:400">لا</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label>هل تشعر أن الرقابة عادلة؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="fair_supervision_yes" name="الرقابة عادلة؟" value="نعم">
+                        <label for="fair_supervision_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="fair_supervision_no" name="الرقابة عادلة؟" value="لا">
+                        <label for="fair_supervision_no" style="font-weight:400">لا</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label>هل تشعر بالتقدير على عملك؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="feel_appreciated_yes" name="الشعور بالتقدير؟" value="نعم">
+                        <label for="feel_appreciated_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="feel_appreciated_no" name="الشعور بالتقدير؟" value="لا">
+                        <label for="feel_appreciated_no" style="font-weight:400">لا</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label>هل تشعر بالأستقرار الوظيفي؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="job_stability_yes" name="الاستقرار الوظيفي؟" value="نعم">
+                        <label for="job_stability_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="job_stability_no" name="الاستقرار الوظيفي؟" value="لا">
+                        <label for="job_stability_no" style="font-weight:400">لا</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label for="q_leader_satisfaction">
+                        ما مدى رضاك عن أسلوب مدير المحطة؟ اشرح باختصار سبب رأيك.
+                    </label>
+                    <textarea id="q_leader_satisfaction" name="أسلوب مدير المحطة والسبب"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_env_help">
+                        هل ترى أن بيئة العمل تساعد على الالتزام والنزاهة؟
+                    </label>
+                    <div class="radio-group">
+                        <input type="radio" id="env_yes" name="بيئة العمل والنزاهة؟" value="نعم">
+                        <label for="env_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="env_no" name="بيئة العمل والنزاهة؟" value="لا">
+                        <label for="env_no" style="font-weight:400">لا</label>
+                    </div>
+                </div>
+
+                <div class="open-question">
+                    <label for="q_violation_causes">
+                        في حال وجود مخالفات، ما هو السبب الرئيسي برأيك؟ (اختر واحد أو أكثر)
+                    </label>
+                    <div class="checkbox-group choices-list">
+                        <input type="checkbox" id="cause_salary" name="أسباب المخالفات" value="ضعف الراتب">
+                        <label for="cause_salary" style="font-weight:400">ضعف الراتب</label>
+                        <input type="checkbox" id="cause_workload" name="أسباب المخالفات" value="ضغط العمل">
+                        <label for="cause_workload" style="font-weight:400">ضغط العمل</label>
+                        <input type="checkbox" id="cause_management" name="أسباب المخالفات" value="سوء الإدارة">
+                        <label for="cause_management" style="font-weight:400">سوء الإدارة</label>
+                        <input type="checkbox" id="cause_other" name="أسباب المخالفات" value="أسباب أخرى">
+                        <label for="cause_other" style="font-weight:400">أسباب أخرى</label>
+                    </div>
+                    <textarea id="cause_other_text" name="توضيح أسباب المخالفات الأخرى"
+                        placeholder="إذا اخترت أسباب أخرى يرجى التوضيح"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_recommend">
+                        هل تنصح بالعمل في المحطة لغيرك؟
+                    </label>
+                    <div class="radio-group">
+                        <input type="radio" id="recommend_yes" name="هل تنصح بالعمل في المحطة؟" value="نعم">
+                        <label for="recommend_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="recommend_no" name="هل تنصح بالعمل في المحطة؟" value="لا">
+                        <label for="recommend_no" style="font-weight:400">لا</label>
+                    </div>
+                    <textarea id="recommend_why" name="سبب النصيحة أو عدمها" placeholder="السبب"></textarea>
+                </div>
+
+                <div class="open-question">
+                    <label for="q_communication">
+                        كيف تجد التواصل مع مديرك وزملائك؟ هل هو واضح ومحترم وسهل؟ يرجى ذكر أمثلة إن وجدت.
+                    </label>
+                    <textarea id="q_communication" name="التواصل مع المدير والزملاء"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_management_fairness">
+                        هل إدارة المحطة تحقق العدالة بين العاملين؟ وضّح وجهة نظرك/أمثلة.
+                    </label>
+                    <textarea id="q_management_fairness" name="عدالة الإدارة"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_dealing_with_errors">
+                        كيف يتم التعامل مع الأخطاء أو المشاكل في العمل (هل تعتبر فرصة للتعلم أو للعقوبة فقط)؟ وضّح
+                        برأيك.
+                    </label>
+                    <textarea id="q_dealing_with_errors" name="التعامل مع الأخطاء"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_guidance">
+                        هل تتلقى التوجيهات والتعليمات اللازمة بشكل واضح وكافٍ لأداء عملك؟
+                    </label>
+                    <textarea id="q_guidance" name="التوجيهات والتعليمات"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_training">
+                        هل حصلت على التدريب الكافي للعمل؟ كيف تقيم جودة التدريب؟
+                    </label>
+                    <textarea id="q_training" name="التدريب وجودته"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_tools">
+                        ما رأيك في الأدوات والمضخات والصيانة في المحطة؟ هل هناك أعطال متكررة أو حاجة لصيانة دورية؟
+                    </label>
+                    <textarea id="q_tools" name="الأدوات والمضخات والصيانة"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_environment">
+                        ما رأيك في بيئة العمل من حيث النظافة، الأمان، والعلاقة مع الزملاء والإدارة؟
+                    </label>
+                    <textarea id="q_environment" name="ظروف بيئة العمل"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_health_safety">
+                        هل سلامتك وصحتك المهنية محمية في مكان العمل؟ هل ترى أن إجراءات السلامة كافية؟
+                    </label>
+                    <textarea id="q_health_safety" name="الصحة والسلامة المهنية"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_risk">
+                        هل تعرضت أو شاهدت أي مخاطر أثناء عملك بالمحطة؟ وكيف تم التعامل معها؟
+                    </label>
+                    <textarea id="q_risk" name="المخاطر التي تم مشاهدتها"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_suggestion">
+                        هل لديك أي اقتراح لتحسين جودة الخدمة المقدمة للعملاء أو عملك بشكل عام؟
+                    </label>
+                    <textarea id="q_suggestion" name="اقتراحات التحسين"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_biggest_problem">ما اكبر مشكلة تواجهك باستمرار؟</label>
+                    <textarea id="q_biggest_problem" name="أكبر مشكلة تواجهك"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q_comment">
+                        في نهاية الاستبيان: إذا كان لديك شكوى أو ملاحظة أو أي ما ترغب بمشاركته يرجى كتابته هنا (الخانة
+                        مفتوحة).
+                    </label>
+                    <textarea id="q_comment" name="ملاحظات أو شكاوى إضافية"></textarea>
+                </div>
+                <div class="instructions" style="margin-top:30px; text-align:center; background:#e4ffeb;">
+                    نؤكد مجدداً أن جميع الإجابات في هذا الاستبيان سرية تماماً ولن يتم استخدامها لأي غرض آخر سوى تحسين
+                    واقع
+                    العمل في محطات الوقود ولن تؤثر مطلقاً على عمل أي مشارك. شكراً لوقتك!
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i>
+                    إرسال الاستبيان
+                </button>
+            </div>
+        </div>
+    </form>
+    <div id="resultsOverlay">
+        <div class="results-card">
+            <div class="results-header">
+                <h2><i class="fa-solid fa-check-circle"></i> تم تسجيل إجاباتك بنجاح</h2>
+                <p>إليك ملخص لما سيتم إرساله للإدارة:</p>
+            </div>
+            <div id="resultsContent">
+                <!-- Data will be injected here -->
+            </div>
+            <div class="results-footer">
+                <button class="btn-copy" id="btnCopy"><i class="fa-solid fa-copy"></i> نسخ التقرير</button>
+                <button class="btn-close" onclick="closeOverlay()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('surveyForm');
+        const overlay = document.getElementById('resultsOverlay');
+        const resultsContent = document.getElementById('resultsContent');
+        const submitBtn = form.querySelector('.submit-btn');
+
+        // Passwordless / anonymous delivery:
+        const RECEIVER_EMAIL = (window.SURVEY_RECEIVER_EMAIL || "963-991293755.402@zohomail.com").trim();
+        const SEND_EMAIL_URL = `https://formsubmit.co/ajax/${encodeURIComponent(RECEIVER_EMAIL)}`;
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            const originalBtnContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = 'جاري الإرسال... <span class="loading-spinner"></span>';
+
+            const formData = new FormData(this);
+            // Updated to 'اسم الفرع'
+            const branchName = formData.get('اسم الفرع') || 'غير محدد';
+            // Also keep 'اسم المحطة' logic if needed, but we renamed the field.
+            const subject = `نتائج استبيان عمال: ${branchName}`;
+
+            // 1. Build Pretty Summary for UI
+            let summaryHTML = "";
+            let clipboardText = `نتائج استبيان العمال - الفرع: ${branchName}\n\n`;
+
+            for (const [key, value] of formData.entries()) {
+                summaryHTML += `
+                    <div class="result-item">
+                        <span class="result-q">• ${key}:</span>
+                        <span class="result-a">${value || "لم تتم الإجابة"}</span>
+                    </div>`;
+                clipboardText += `• ${key}: ${value || "لم تتم الإجابة"}\n`;
+            }
+            resultsContent.innerHTML = summaryHTML;
+
+            // 2. Prepare payload
+            const data = {};
+            formData.forEach((value, key) => {
+                if (Object.prototype.hasOwnProperty.call(data, key)) {
+                    const prev = data[key];
+                    data[key] = Array.isArray(prev) ? [...prev, value] : [prev, value];
+                } else {
+                    data[key] = value;
+                }
+            });
+            data['_subject'] = subject;
+            data['_form'] = 'استبيان عمال';
+
+            // 3. Prepare Requests
+            const params = new URLSearchParams();
+            for (const [key, value] of Object.entries(data)) {
+                if (Array.isArray(value)) {
+                    for (const v of value) params.append(key, v);
+                } else {
+                    params.append(key, value);
+                }
+            }
+            params.set('_captcha', 'false');
+            params.set('_template', 'table');
+
+            // --- OPTIMIZATION START ---
+            try {
+                // 1. Send to Local Server (Fast)
+                const localReq = await fetch('/api/save-survey', {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'worker', data: data })
+                });
+
+                if (localReq.ok) {
+                    console.log("Local save success.");
+                } else {
+                    console.warn("Local save failed, attempting email anyway.");
+                }
+
+                // Show Success immediately
+                overlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+
+                // 2. Send Email in Background (Non-blocking)
+                fetch(SEND_EMAIL_URL, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
+                    body: params.toString()
+                }).catch(err => console.error("Email background send error:", err));
+
+            } catch (err) {
+                console.error("Submission Logic Error:", err);
+                alert("حدث خطأ في الاتصال بالخادم المحلي. سيتم محاولة الإرسال عبر البريد الإلكتروني.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnContent;
+                form.reset();
+            }
+            // --- OPTIMIZATION END ---
+        });
+
+        // Button actions
+        document.getElementById('btnCopy').onclick = function () {
+            navigator.clipboard.writeText(clipboardText).then(() => {
+                alert("تم نسخ التقرير بنجاح! يمكنك الآن لصقه في أي مكان.");
+            });
+        };
+
+        function closeOverlay() {
+            overlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+
+</html>

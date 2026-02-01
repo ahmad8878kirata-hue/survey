@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة استبيانات المحطة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --main-green: #219150;
+            --main-green-dark: #17693a;
+            --main-green-light: #e6f7ed;
+            --white: #fff;
+            --text-dark: #1b3a2b;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, var(--main-green-light) 0%, #f4f6fa 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: var(--text-dark);
+        }
+
+        .portal-container {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(33, 145, 80, 0.15);
+            text-align: center;
+            border: 3px solid var(--main-green);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            color: var(--main-green-dark);
+            margin-bottom: 30px;
+        }
+
+        .survey-links {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .portal-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            background: var(--main-green);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .portal-btn:hover {
+            background: var(--main-green-dark);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(33, 145, 80, 0.3);
+        }
+
+        .portal-btn i {
+            font-size: 1.4em;
+        }
+
+        .footer-note {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="portal-container">
+        <i class="fa-solid fa-gas-pump" style="font-size: 3em; color: var(--main-green); margin-bottom: 20px;"></i>
+        <h1>بوابة استبيانات المحطة</h1>
+        <div class="survey-links">
+            <a href="استبيان عمال.html" class="portal-btn">
+                <i class="fa-solid fa-users"></i>
+                استبيان العمال
+            </a>
+            <a href="استبيان مدراء.html" class="portal-btn">
+                <i class="fa-solid fa-user-tie"></i>
+                استبيان المدراء
+            </a>
+            <a href="dashboard.html" class="portal-btn"
+                style="background: white; color: var(--main-green); border: 2px solid var(--main-green);">
+                <i class="fa-solid fa-chart-line"></i>
+                لوحة التحكم
+            </a>
+        </div>
+        <div class="footer-note">
+            نظام إرسال آلي متكامل - جميع الحقوق محفوظة
+        </div>
+    </div>
+</body>
+
+</html>

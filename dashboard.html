@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title data-i18n="pageTitle">Tayeba Company Survey Dashboard - Follow-up and Control Department</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --main-green: #219150;
+            --main-green-dark: #17693a;
+            --main-green-light: #e6f7ed;
+            --text-dark: #1b3a2b;
+            --white: #fff;
+            --gray-bg: #f4f6fa;
+            --border-color: #ddd;
+            --info-blue: #3b82f6;
+            --danger-red: #ef4444;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--gray-bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: var(--main-green);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.4em;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-inline-start: 15px;
+            transition: background 0.3s;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            min-height: 400px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab-btn {
+            padding: 12px 30px;
+            background: none;
+            border: none;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #777;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--main-green);
+            border-bottom-color: var(--main-green);
+            background: var(--main-green-light);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.95em;
+            box-sizing: border-box;
+        }
+
+        html[dir="ltr"] .search-box input {
+            padding: 10px 40px 10px 15px;
+        }
+
+        html[dir="rtl"] .search-box input {
+            padding: 10px 15px 10px 40px;
+        }
+
+        .search-box i {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        html[dir="ltr"] .search-box i {
+            right: 12px;
+        }
+
+        html[dir="rtl"] .search-box i {
+            left: 12px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            background: var(--main-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--main-green-dark);
+        }
+
+        .action-btn.secondary {
+            background: #fff;
+            color: var(--main-green);
+            border: 1px solid var(--main-green);
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--main-green-light);
+        }
+
+        /* Row Action Buttons */
+        .row-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9em;
+            margin: 0 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: filter 0.2s;
+        }
+
+        .row-btn:hover {
+            filter: brightness(0.9);
+        }
+
+        .btn-view {
+            background-color: var(--info-blue);
+        }
+
+        .btn-delete {
+            background-color: var(--danger-red);
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            min-height: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            min-width: 1000px;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        html[dir="ltr"] th,
+        html[dir="ltr"] td {
+            text-align: left;
+        }
+
+        html[dir="rtl"] th,
+        html[dir="rtl"] td {
+            text-align: right;
+        }
+
+        th {
+            font-weight: 700;
+            color: var(--main-green-dark);
+            user-select: none;
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 10;
+        }
+
+        .th-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .th-icons {
+            display: flex;
+            gap: 4px;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        th:hover .th-icons,
+        .th-icons.active {
+            opacity: 1;
+        }
+
+        .icon-btn {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .icon-btn:hover {
+            background: #e2e8f0;
+            color: var(--main-green);
+        }
+
+        .icon-btn.active-filter {
+            color: var(--main-green);
+            background: #e6f7ed;
+        }
+
+        tr:hover {
+            background: #fbfbfb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #777;
+        }
+
+        /* Modal General */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        html[dir="ltr"] .close-modal {
+            right: 15px;
+        }
+
+        html[dir="rtl"] .close-modal {
+            left: 15px;
+        }
+
+        /* Full Details List */
+        .detail-row {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 10px 0;
+        }
+
+        .detail-key {
+            font-weight: 700;
+            color: #555;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .detail-val {
+            color: #333;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        /* Filter Popover */
+        .filter-popover {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 6px;
+            width: 250px;
+            max-height: 350px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+        }
+
+        .filter-header {
+            font-weight: bold;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 4px;
+        }
+
+        .filter-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .filter-item:hover {
+            background: #f0f0f0;
+        }
+
+        .filter-actions {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #eee;
+            padding-top: 6px;
+        }
+
+        .btn-mini {
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-mini.primary {
+            background: var(--main-green);
+            color: white;
+        }
+
+        .btn-mini.clear {
+            background: #eee;
+            color: #333;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: env(safe-area-inset-bottom, 0);
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                padding: 12px 16px;
+            }
+
+            .header > div:first-child {
+                justify-content: center;
+            }
+
+            .header h1 {
+                font-size: 0.95em;
+                text-align: center;
+                line-height: 1.4;
+            }
+
+            .header > div:last-child {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            #updateTime {
+                width: 100%;
+                text-align: center;
+                font-size: 0.8em !important;
+            }
+
+            .lang-btn {
+                margin-inline-start: 0;
+            }
+
+            .container {
+                margin: 16px auto;
+                padding: 0 12px;
+            }
+
+            .dashboard-card {
+                padding: 16px;
+                min-height: 300px;
+            }
+
+            .tabs {
+                flex-direction: column;
+                gap: 4px;
+                margin-bottom: 16px;
+            }
+
+            .tab-btn {
+                padding: 12px 16px;
+                font-size: 1em;
+                border-radius: 8px;
+                border-bottom: 3px solid transparent;
+                width: 100%;
+                text-align: center;
+            }
+
+            .tab-btn.active {
+                border-radius: 8px;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 16px;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 12px 16px;
+            }
+
+            .table-wrapper {
+                border-radius: 8px;
+                -webkit-overflow-scrolling: touch;
+                min-height: 250px;
+            }
+
+            table {
+                font-size: 0.8em;
+                min-width: 700px;
+            }
+
+            th, td {
+                padding: 10px 12px;
+                max-width: 180px;
+            }
+
+            .row-btn {
+                padding: 8px 10px;
+                font-size: 0.85em;
+                margin: 2px 0;
+            }
+
+            .empty-state {
+                padding: 30px 20px;
+                font-size: 0.95em;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px 16px;
+                max-height: 90vh;
+                margin: 10px;
+            }
+
+            .filter-popover {
+                width: calc(100vw - 32px);
+                max-width: 280px;
+                left: 50% !important;
+                right: auto !important;
+                transform: translateX(-50%);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 0.85em;
+            }
+
+            table {
+                min-width: 600px;
+                font-size: 0.75em;
+            }
+
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <h1><i class="fa-solid fa-chart-pie"></i> <span data-i18n="headerTitle">Tayeba Company Survey Dashboard - Follow-up and Control Department</span>
+            </h1>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <span id="updateTime" style="font-size:0.9em; opacity:0.9;"></span>
+            <button class="lang-btn" onclick="toggleLanguage()" id="langBtn">العربية</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="dashboard-card">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('workers')" data-i18n="tabWorkers">Workers
+                    Survey</button>
+                <button class="tab-btn" onclick="switchTab('managers')" data-i18n="tabManagers">Managers Survey</button>
+            </div>
+
+            <div class="controls">
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="searchInput" data-placeholder-i18n="searchPlaceholder"
+                        placeholder="Search all fields..." onkeyup="globalSearch()">
+                </div>
+                <button class="action-btn" onclick="exportToExcel()">
+                    <i class="fa-solid fa-file-excel"></i> <span data-i18n="btnExport">Export to Excel</span>
+                </button>
+                <button class="action-btn secondary" onclick="fetchData()">
+                    <i class="fa-solid fa-sync"></i> <span data-i18n="btnRefresh">Refresh</span>
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="dataTable">
+                    <thead><!-- Dynamic Headers --></thead>
+                    <tbody><!-- Dynamic Rows --></tbody>
+                </table>
+                <div id="emptyState" class="empty-state" style="display:none;">
+                    <i class="fa-regular fa-folder-open" style="font-size: 3em; margin-bottom: 10px;"></i>
+                    <p data-i18n="noData">No data available currently.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cell Text Details -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('detailModal')">&times;</span>
+            <h3 id="modalTitle" style="color:var(--main-green); margin-top:0;" data-i18n="modalTitle">Details</h3>
+            <p id="modalText" style="line-height:1.6; white-space: pre-wrap;"></p>
+        </div>
+    </div>
+
+    <!-- Modal: Full Record Details -->
+    <div id="fullViewModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('fullViewModal')">&times;</span>
+            <h3 style="color:var(--main-green); margin-top:0;" data-i18n="fullViewTitle">Record Details</h3>
+            <div id="fullViewContent"></div>
+        </div>
+    </div>
+
+    <!-- Filter Popover -->
+    <div id="filterPopover" class="filter-popover" style="display:none;">
+        <div class="filter-header" data-i18n="filterValues">Filter Values</div>
+        <div class="filter-list" id="filterList"></div>
+        <div class="filter-actions">
+            <button class="btn-mini clear" onclick="clearCurrentFilter()" data-i18n="filterClear">Clear</button>
+            <button class="btn-mini primary" onclick="applyCurrentFilter()" data-i18n="filterApply">Apply</button>
+        </div>
+    </div>
+
+    <script>
+        let allData = { workers: [], managers: [] };
+        let currentTab = 'workers';
+        let currentSort = { col: null, asc: true };
+        let activeFilters = {};
+        let globalSearchTerm = "";
+        let openFilterCol = null;
+        let currentLang = 'en';
+
+        const TRANSLATIONS = {
+            en: {
+                pageTitle: "Tayeba Company Survey Dashboard - Follow-up and Control Department",
+                headerTitle: "Tayeba Company Survey Dashboard - Follow-up and Control Department",
+                tabWorkers: "Workers Survey",
+                tabManagers: "Managers Survey",
+                searchPlaceholder: "Search all fields...",
+                btnExport: "Export to Excel",
+                btnRefresh: "Refresh",
+                noData: "No data available currently.",
+                modalTitle: "Details",
+                fullViewTitle: "Record Details",
+                filterValues: "Filter Values",
+                filterClear: "Clear",
+                filterApply: "Apply",
+                colTime: "Time",
+                colActions: "Actions",
+                langBtn: "العربية",
+                lastUpdate: "Last Update: ",
+                btnView: "View",
+                btnDelete: "Delete",
+                confirmDelete: "Are you sure you want to delete this record? This cannot be undone.",
+                deleteSuccess: "Record deleted successfully.",
+                deleteFail: "Failed to delete record. Ensure server is running.",
+            },
+            ar: {
+                pageTitle: "لوحة تحكم استبيانات شركة طيبة قسم المتابعة والرقابة",
+                headerTitle: "لوحة تحكم استبيانات شركة طيبة قسم المتابعة والرقابة",
+                tabWorkers: "استبيان العمال",
+                tabManagers: "استبيان المدراء",
+                searchPlaceholder: "بحث في جميع الحقول...",
+                btnExport: "تصدير إلى Excel",
+                btnRefresh: "تحديث",
+                noData: "لا توجد بيانات متاحة حالياً.",
+                modalTitle: "التفاصيل",
+                fullViewTitle: "تفاصيل السجل",
+                filterValues: "تصفية القيم",
+                filterClear: "مسح",
+                filterApply: "تطبيق",
+                colTime: "وقت الاستلام",
+                colActions: "إجراءات",
+                langBtn: "English",
+                lastUpdate: "آخر تحديث: ",
+                btnView: "عرض",
+                btnDelete: "حذف",
+                confirmDelete: "هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.",
+                deleteSuccess: "تم حذف السجل بنجاح.",
+                deleteFail: "فشل حذف السجل. تأكد من تشغيل السيرفر.",
+            }
+        };
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            applyLanguage();
+            renderTable();
+        }
+
+        function applyLanguage() {
+            const t = TRANSLATIONS[currentLang];
+            document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+            document.documentElement.lang = currentLang;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+
+            document.querySelectorAll('[data-placeholder-i18n]').forEach(el => {
+                const key = el.getAttribute('data-placeholder-i18n');
+                if (t[key]) el.placeholder = t[key];
+            });
+
+            document.getElementById('langBtn').textContent = t.langBtn;
+            if (allData[currentTab].length > 0) updateTimeLabel();
+        }
+
+        function updateTimeLabel() {
+            const now = new Date();
+            const prefix = TRANSLATIONS[currentLang].lastUpdate;
+            const timeStr = now.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
+            document.getElementById('updateTime').textContent = prefix + timeStr;
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/surveys');
+                if (!response.ok) throw new Error("Failed to fetch");
+                allData = await response.json();
+                renderTable();
+                updateTimeLabel();
+            } catch (err) {
+                console.error(err);
+                alert("Failed to connect to server.");
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            activeFilters = {};
+            currentSort = { col: null, asc: true };
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderTable();
+        }
+
+        function getAllKeys(dataArray) {
+            const keys = new Set();
+            keys.add('receivedAt');
+            dataArray.forEach(item => {
+                Object.keys(item).forEach(k => {
+                    if (k !== 'id' && k !== 'receivedAt' && !k.startsWith('_')) {
+                        keys.add(k);
+                    }
+                });
+            });
+            return Array.from(keys);
+        }
+
+        function getDisplayValue(row, key) {
+            let val = row[key] || '';
+            if (key === 'receivedAt' && val) {
+                // Ensure valid date
+                const date = new Date(val);
+                if (!isNaN(date.getTime())) {
+                    val = date.toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
+                }
+            }
+            if (Array.isArray(val)) return val.join(', ');
+            return String(val);
+        }
+
+        function globalSearch() {
+            globalSearchTerm = document.getElementById('searchInput').value.toLowerCase();
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.querySelector('#dataTable tbody');
+            const thead = document.querySelector('#dataTable thead');
+            const emptyState = document.getElementById('emptyState');
+            const table = document.getElementById('dataTable');
+
+            tbody.innerHTML = '';
+            thead.innerHTML = '';
+
+            let rawData = allData[currentTab] || [];
+
+            // 1. Filter
+            let filteredData = rawData.filter(row => {
+                if (globalSearchTerm) {
+                    const matchGlobal = Object.keys(row).some(k =>
+                        k !== 'id' && !k.startsWith('_') && getDisplayValue(row, k).toLowerCase().includes(globalSearchTerm)
+                    );
+                    if (!matchGlobal) return false;
+                }
+                for (const [colKey, allowedSet] of Object.entries(activeFilters)) {
+                    if (allowedSet.size > 0) {
+                        const val = getDisplayValue(row, colKey);
+                        if (!allowedSet.has(val)) return false;
+                    }
+                }
+                return true;
+            });
+
+            // 2. Sort
+            if (currentSort.col) {
+                filteredData.sort((a, b) => {
+                    let valA = a[currentSort.col];
+                    let valB = b[currentSort.col];
+
+                    // Normalize for comparison
+                    if (valA === null || valA === undefined) valA = "";
+                    if (valB === null || valB === undefined) valB = "";
+
+                    // Numeric objects check? mostly strings here.
+                    // Date strings (ISO) sort correctly as strings.
+
+                    if (valA < valB) return currentSort.asc ? -1 : 1;
+                    if (valA > valB) return currentSort.asc ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            if (filteredData.length === 0 && rawData.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+            } else {
+                table.style.display = 'table';
+                emptyState.style.display = 'none';
+
+                const keys = getAllKeys(rawData);
+                renderHeader(keys, thead);
+
+                if (filteredData.length === 0) {
+                    const tr = document.createElement('tr');
+                    const msg = currentLang === 'ar' ? "لا توجد نتائج مطابقة." : "No results matching filters.";
+                    tr.innerHTML = `<td colspan="${keys.length + 1}" style="text-align:center; padding:20px;">${msg}</td>`;
+                    tbody.appendChild(tr);
+                } else {
+                    renderRows(filteredData, keys, tbody);
+                }
+            }
+        }
+
+        function renderHeader(keys, thead) {
+            const headerRow = document.createElement('tr');
+
+            keys.forEach(k => {
+                const th = document.createElement('th');
+                let label = k;
+                if (k === 'receivedAt') label = TRANSLATIONS[currentLang].colTime;
+
+                const isFiltered = activeFilters[k] && activeFilters[k].size > 0;
+                const isSorted = currentSort.col === k;
+
+                th.innerHTML = `
+                    <div class="th-content">
+                        <span>${label}</span>
+                        <div class="th-icons ${isFiltered || isSorted ? 'active' : ''}">
+                             <i class="fa-solid fa-filter icon-btn ${isFiltered ? 'active-filter' : ''}" data-col="${k}" title="Filter"></i>
+                             <i class="fa-solid ${isSorted && !currentSort.asc ? 'fa-sort-up' : 'fa-sort-down'} icon-btn" data-sort="${k}" style="${isSorted ? 'color:var(--main-green)' : ''}" title="Sort"></i>
+                        </div>
+                    </div>
+                `;
+
+                // Bind events programmatically to avoid HTML injection issues or scope issues
+                const filterBtn = th.querySelector('[data-col]');
+                filterBtn.onclick = (e) => startFilter(e, k);
+
+                const sortBtn = th.querySelector('[data-sort]');
+                sortBtn.onclick = () => startSort(k);
+
+                headerRow.appendChild(th);
+            });
+
+            const thActions = document.createElement('th');
+            thActions.textContent = TRANSLATIONS[currentLang].colActions;
+            thActions.style.width = "140px";
+            headerRow.appendChild(thActions);
+
+            thead.appendChild(headerRow);
+        }
+
+        function renderRows(data, keys, tbody) {
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+
+                keys.forEach(k => {
+                    const td = document.createElement('td');
+                    let val = getDisplayValue(row, k);
+                    if (val.length > 50) {
+                        td.textContent = val.substring(0, 50) + '...';
+                        td.className = 'clickable-cell';
+                        td.style.cursor = "pointer";
+                        td.style.color = "var(--main-green)";
+                        td.onclick = () => showTextModal(k, val);
+                    } else {
+                        td.textContent = val || '—';
+                    }
+                    tr.appendChild(td);
+                });
+
+                const tdAction = document.createElement('td');
+                const t = TRANSLATIONS[currentLang];
+
+                const btnView = document.createElement('button');
+                btnView.className = 'row-btn btn-view';
+                btnView.innerHTML = `<i class="fa-solid fa-eye"></i> ${t.btnView}`;
+                btnView.onclick = () => viewRecord(row);
+
+                const btnDelete = document.createElement('button');
+                btnDelete.className = 'row-btn btn-delete';
+                btnDelete.innerHTML = `<i class="fa-solid fa-trash"></i> ${t.btnDelete}`;
+                btnDelete.onclick = () => deleteRecord(row.id);
+
+                tdAction.appendChild(btnView);
+                tdAction.appendChild(btnDelete);
+                tr.appendChild(tdAction);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function viewRecord(row) {
+            const container = document.getElementById('fullViewContent');
+            container.innerHTML = '';
+            const keys = Object.keys(row).filter(k => !k.startsWith('_') && k !== 'id').sort((a, b) => {
+                if (a === 'receivedAt') return -1;
+                if (b === 'receivedAt') return 1;
+                return 0;
+            });
+            keys.forEach(k => {
+                let label = k;
+                if (k === 'receivedAt') label = TRANSLATIONS[currentLang].colTime;
+
+                const div = document.createElement('div');
+                div.className = 'detail-row';
+
+                const b = document.createElement('b');
+                b.className = 'detail-key';
+                b.textContent = label;
+
+                const s = document.createElement('div');
+                s.className = 'detail-val';
+                s.textContent = getDisplayValue(row, k);
+
+                div.appendChild(b);
+                div.appendChild(s);
+                container.appendChild(div);
+            });
+            openModal('fullViewModal');
+        }
+
+        async function deleteRecord(id) {
+            const t = TRANSLATIONS[currentLang];
+            if (!confirm(t.confirmDelete)) return;
+            const typeParam = currentTab === 'workers' ? 'worker' : 'manager';
+            try {
+                const res = await fetch(`/api/survey/${typeParam}/${id}`, { method: 'DELETE' });
+                if (res.status === 404) {
+                    alert('Endpoint not found. Server restart needed?');
+                    return;
+                }
+                const json = await res.json();
+                if (json.status === 'success') {
+                    allData[currentTab] = allData[currentTab].filter(item => item.id !== id);
+                    renderTable();
+                } else {
+                    alert(t.deleteFail + ' ' + (json.message || ''));
+                }
+            } catch (err) {
+                console.error(err);
+                alert(t.deleteFail);
+            }
+        }
+
+        function startSort(key) {
+            if (currentSort.col === key) {
+                currentSort.asc = !currentSort.asc;
+            } else {
+                currentSort.col = key;
+                currentSort.asc = true;
+            }
+            renderTable();
+        }
+
+        function startFilter(e, key) {
+            e.stopPropagation();
+            openFilterCol = key;
+            const rawData = allData[currentTab] || [];
+            const uniqueValues = new Set();
+            rawData.forEach(r => uniqueValues.add(getDisplayValue(r, key) || '—'));
+            const sortedValues = Array.from(uniqueValues).sort();
+
+            const container = document.getElementById('filterList');
+            container.innerHTML = '';
+
+            const currentSet = activeFilters[key];
+
+            sortedValues.forEach(val => {
+                const label = document.createElement('label');
+                label.className = 'filter-item';
+
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.value = val;
+                if (currentSet ? currentSet.has(val) : true) input.checked = true;
+
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(' ' + val));
+                container.appendChild(label);
+            });
+
+            const popover = document.getElementById('filterPopover');
+            popover.querySelector('.filter-header').textContent = TRANSLATIONS[currentLang].filterValues;
+
+            popover.style.display = 'flex';
+            const rect = e.target.getBoundingClientRect();
+            let top = rect.bottom + window.scrollY + 5;
+            let left = rect.left + window.scrollX - 180;
+            if (currentLang === 'ar') left = rect.right + window.scrollX - 200;
+
+            // Boundary checks
+            if (left < 10) left = 10;
+            popover.style.top = top + 'px';
+            popover.style.left = left + 'px';
+        }
+
+        function applyCurrentFilter() {
+            if (!openFilterCol) return;
+            const container = document.getElementById('filterList');
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            const selected = new Set();
+            let allChecked = true;
+            checkboxes.forEach(cb => {
+                if (cb.checked) selected.add(cb.value);
+                else allChecked = false;
+            });
+            if (allChecked || selected.size === 0) {
+                delete activeFilters[openFilterCol];
+            } else {
+                activeFilters[openFilterCol] = selected;
+            }
+            document.getElementById('filterPopover').style.display = 'none';
+            openFilterCol = null;
+            renderTable();
+        }
+
+        function clearCurrentFilter() {
+            if (!openFilterCol) return;
+            delete activeFilters[openFilterCol];
+            document.getElementById('filterPopover').style.display = 'none';
+            openFilterCol = null;
+            renderTable();
+        }
+
+        function showTextModal(title, text) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').textContent = text;
+            openModal('detailModal');
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function exportToExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('Excel library not loaded. Please refresh the page.');
+                return;
+            }
+            let rawData = allData[currentTab] || [];
+            let filteredData = rawData.filter(row => {
+                if (globalSearchTerm) {
+                    const matchGlobal = Object.keys(row).some(k =>
+                        k !== 'id' && !k.startsWith('_') && getDisplayValue(row, k).toLowerCase().includes(globalSearchTerm)
+                    );
+                    if (!matchGlobal) return false;
+                }
+                for (const [colKey, allowedSet] of Object.entries(activeFilters)) {
+                    if (allowedSet.size > 0) {
+                        const val = getDisplayValue(row, colKey);
+                        if (!allowedSet.has(val)) return false;
+                    }
+                }
+                return true;
+            });
+            if (currentSort.col) {
+                filteredData.sort((a, b) => {
+                    let valA = a[currentSort.col] ?? "";
+                    let valB = b[currentSort.col] ?? "";
+                    if (valA < valB) return currentSort.asc ? -1 : 1;
+                    if (valA > valB) return currentSort.asc ? 1 : -1;
+                    return 0;
+                });
+            }
+            const keys = getAllKeys(rawData);
+            const headerLabels = keys.map(k => k === 'receivedAt' ? TRANSLATIONS[currentLang].colTime : k);
+            const rows = filteredData.map(row => {
+                const arr = [];
+                keys.forEach(k => arr.push(getDisplayValue(row, k)));
+                return arr;
+            });
+            const wsData = [headerLabels, ...rows];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            const wb = XLSX.utils.book_new();
+            const tabName = currentTab === 'workers' ? 'Workers' : 'Managers';
+            XLSX.utils.book_append_sheet(wb, ws, tabName);
+            const fileName = `survey-${currentTab}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        window.onclick = function (event) {
+            if (event.target.classList.contains('modal')) event.target.style.display = 'none';
+            const popover = document.getElementById('filterPopover');
+            if (popover && popover.style.display === 'flex' && !event.target.closest('.icon-btn') && !event.target.closest('.filter-popover')) {
+                popover.style.display = 'none';
+                openFilterCol = null;
+            }
+        }
+
+        applyLanguage();
+        fetchData();
+    </script>
+</body>
+
+</html>

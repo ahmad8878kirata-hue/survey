@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>استبيان سري لرأي مدير المحطة في مشرف القاطع</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --main-green: #219150;
+            --main-green-dark: #17693a;
+            --main-green-light: #e6f7ed;
+            --accent-green: #43a047;
+            --border-green: #b2dfdb;
+            --text-dark: #1b3a2b;
+            --gray-bg: #f4f6fa;
+            --white: #fff;
+            --shadow: 0 0 24px 2px #b2dfdb;
+            --mframe-thick: 9px;
+            --mframe-color: #219150;
+            --mframe-double: #e8f3e4;
+        }
+
+        body {
+            font-family: 'Cairo', Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--main-green-light) 0%, var(--gray-bg) 100%);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* إطار زخرفي للنموذج */
+        .decorative-frame {
+            background: var(--mframe-double);
+            padding: 12px;
+            border-radius: 20px;
+            border: var(--mframe-thick) double var(--mframe-color);
+            box-shadow: 0 0 32px 2px #c6efc9a0;
+            margin: 30px auto;
+            width: 850px;
+            max-width: 96vw;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .container {
+            width: 794px;
+            min-height: 1123px;
+            margin: 0px auto 0px auto;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            border-radius: 14px;
+            padding: 24px 24px 24px 24px;
+            border: 2px solid var(--main-green);
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+            box-sizing: border-box;
+        }
+
+        .container:before,
+        .container:after {
+            content: "";
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle, var(--main-green-light) 60%, transparent 100%);
+            z-index: 0;
+        }
+
+        .container:before {
+            top: -30px;
+            left: -30px;
+        }
+
+        .container:after {
+            bottom: -30px;
+            right: -30px;
+        }
+
+        .header-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-logo-row img {
+            height: 64px;
+            width: auto;
+            max-width: 240px;
+            margin: 0;
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 2px solid var(--main-green);
+            background: #ffffff;
+            box-shadow: 0 6px 18px rgba(33, 145, 80, 0.18);
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: env(safe-area-inset-bottom, 0);
+            }
+
+            .decorative-frame {
+                margin: 16px auto;
+                padding: 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .container {
+                width: 100%;
+                min-height: auto;
+                padding: 16px;
+            }
+
+            .header-logo-row img {
+                height: 48px;
+                max-width: 180px;
+            }
+
+            h1 {
+                font-size: 1.05em;
+                line-height: 1.5;
+                padding: 0 8px;
+            }
+
+            .subtitle {
+                font-size: 0.95em;
+                padding: 0 4px;
+            }
+
+            .instructions {
+                padding: 10px 12px;
+                font-size: 0.95em;
+            }
+
+            .basic-info label {
+                min-width: 100%;
+                margin-bottom: 4px;
+                display: block;
+            }
+
+            .basic-info input.input-line {
+                width: 100% !important;
+                min-width: 100%;
+                margin: 4px 0 12px 0;
+                box-sizing: border-box;
+            }
+
+            .open-question {
+                padding: 12px;
+                margin: 14px 0;
+            }
+
+            .open-question label {
+                font-size: 1em;
+            }
+
+            .open-question textarea {
+                min-height: 70px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .submit-btn {
+                padding: 14px 24px;
+                font-size: 1em;
+                margin: 24px auto 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .print-btn {
+                left: 10px;
+                top: 10px;
+                padding: 8px 12px;
+                font-size: 0.9em;
+            }
+
+            .results-card {
+                width: 95%;
+                padding: 20px 16px;
+                max-height: 90vh;
+                margin: 10px;
+            }
+
+            .results-footer {
+                flex-direction: column;
+            }
+
+            .results-footer button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 0.95em;
+            }
+
+            .subtitle {
+                font-size: 0.9em;
+            }
+
+            .header-logo-row img {
+                height: 44px;
+                max-width: 160px;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 4px;
+            display: inline-block;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, var(--main-green), var(--main-green-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.05em;
+            color: var(--main-green-dark);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .instructions {
+            background: var(--main-green-light);
+            border-right: 4px solid var(--main-green);
+            border-radius: 6px 0 0 6px;
+            padding: 10px 14px;
+            margin-bottom: 18px;
+            font-size: 1em;
+            color: var(--main-green-dark);
+            font-weight: 500;
+        }
+
+        .basic-info {
+            margin-bottom: 18px;
+            font-size: 1em;
+        }
+
+        .basic-info label {
+            display: inline-block;
+            min-width: 120px;
+            font-weight: 600;
+            color: var(--main-green-dark);
+        }
+
+        input.input-line {
+            border: none;
+            border-bottom: 1.5px dotted var(--main-green);
+            min-width: 120px;
+            padding: 2px 8px;
+            vertical-align: middle;
+            background: #eafaf2;
+            border-radius: 2px;
+            margin-left: 10px;
+            margin-right: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1em;
+            outline: none;
+            color: var(--text-dark);
+        }
+
+        input.input-line:focus {
+            background: #d4f3e1;
+            border-bottom: 1.5px solid var(--main-green-dark);
+        }
+
+        .submit-btn {
+            background: var(--main-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 40px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto 10px auto;
+            box-shadow: 0 4px 12px rgba(33, 145, 80, 0.3);
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .submit-btn:hover {
+            background: var(--main-green-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(33, 145, 80, 0.4);
+        }
+
+        .open-question {
+            margin-top: 18px;
+            margin-bottom: 18px;
+            background: var(--main-green-light);
+            padding: 14px 16px 16px 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px #b2dfdb33;
+            border: 1.5px solid var(--border-green);
+            position: relative;
+        }
+
+        .open-question label {
+            display: block;
+            font-weight: 600;
+            color: var(--main-green-dark);
+            margin-bottom: 8px;
+            font-size: 1.07em;
+        }
+
+        .open-question textarea {
+            width: 100%;
+            resize: vertical;
+            min-height: 54px;
+            font-family: 'Cairo', Arial, sans-serif;
+            font-size: 1em;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-green);
+            box-sizing: border-box;
+            background: #f7fcfa;
+            transition: border 0.18s;
+            direction: rtl;
+        }
+
+        .open-question textarea:focus {
+            outline: none;
+            border: 1.6px solid var(--main-green-dark);
+        }
+
+        .print-btn {
+            position: fixed;
+            left: 15px;
+            top: 15px;
+            background: var(--main-green);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            padding: 6px 14px;
+            font-size: 0.95em;
+            cursor: pointer;
+            box-shadow: 0 1px 4px #b2dfdb55;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        .print-btn:hover {
+            background: var(--main-green-dark);
+        }
+
+        /* Results Overlay Styles */
+        #resultsOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .results-card {
+            background: white;
+            width: 600px;
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 15px;
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 3px solid var(--main-green);
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--main-green-light);
+            padding-bottom: 15px;
+        }
+
+        .results-header h2 {
+            color: var(--main-green-dark);
+            margin: 0;
+        }
+
+        .result-item {
+            margin-bottom: 12px;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .result-q {
+            font-weight: 700;
+            color: var(--main-green-dark);
+            display: block;
+        }
+
+        .result-a {
+            color: #333;
+            padding-right: 15px;
+            display: block;
+        }
+
+        .results-footer {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-close {
+            background: #eee;
+            color: #555;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+        }
+
+        .btn-copy {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .decorative-frame {
+                border: var(--mframe-thick) double var(--main-green);
+                box-shadow: none;
+            }
+
+            .container {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                min-height: initial;
+                padding: 10px;
+                background: #fff !important;
+                border: none;
+            }
+
+            .header-logo-row img {
+                height: 40px;
+                max-width: 220px;
+                padding: 2px 6px;
+                box-shadow: none;
+            }
+
+            .print-btn {
+                display: none;
+            }
+
+            .open-question {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                background: #fff;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <form id="managerSurveyForm">
+        <!-- Fields will be gathered by JavaScript -->
+        <div class="decorative-frame">
+            <div class="container">
+                <div class="green-bar"></div>
+                <div class="header-logo-row">
+                    <img src="logo.png" alt="شعار المحطة">
+                    <h1>
+                        <i class="fa-solid fa-clipboard-question icon-title"></i>
+                        استبيان سري لرأي مدير المحطة في مشرف القاطع
+                    </h1>
+                </div>
+                <div class="subtitle">
+                    (يُرجى تعبئة الاستبيان بسرية تامة — الهدف تحسين جودة المتابعة والتعاون)
+                </div>
+                <div class="instructions">
+                    <div><b>الهدف:</b> قياس مستوى رضا مديري المحطات عن أسلوب إشراف ومتابعة مشرف القاطع بهدف تحسين
+                        التعاون وجودة العمل.</div>
+                    <div style="margin-top:6px;"><b>تعليمات:</b> يرجى الإجابة عن الأسئلة التالية بإجابات نصية مفصلة
+                        وصادقة تعكس تجربتك ورأيك.
+                        جميع الإجابات سرية ولن تُستخدم ضدك أو ضد محطتك بأي شكل من الأشكال.</div>
+                </div>
+                <div class="basic-info">
+                    <div>
+                        <label for="branch_name">اسم الفرع:</label>
+                        <input type="text" id="branch_name" name="اسم الفرع" class="input-line" style="width:200px;"
+                            required>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <label for="duration">المدة في منصب مدير محطة:</label>
+                        <input type="text" id="duration" name="مدة العمل في منصب مدير محطة" class="input-line"
+                            style="width:160px;" required>
+                    </div>
+                </div>
+                <!-- بداية الأسئلة المفتوحة (بصيغ مفتوحة ومحايدة) -->
+                <div class="open-question">
+                    <label for="q1">
+                        1. كيف تقيّم أسلوب تواصل مشرف القاطع معك كمدير محطة؟ هل هو واضح ومحترم وفي الوقت المناسب؟ اذكر
+                        أمثلة إن وجدت.
+                    </label>
+                    <textarea id="q1" name="1. أسلوب تواصل مشرف القاطع"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q2">
+                        2. كيف يتعامل مشرف القاطع مع مقترحاتك وملاحظاتك ومشاكلك التشغيلية؟ هل تشعر أنه ينصت ويتابع الحل؟
+                        صف موقفاً يؤكد ذلك.
+                    </label>
+                    <textarea id="q2" name="2. التعامل مع المقترحات والمشاكل"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q3">
+                        3. برأيك، هل مشرف القاطع يتعامل بعدل وبدون تحيز بين المحطات/المدراء؟ وضّح وجهة نظرك مع أمثلة إذا
+                        وجدت.
+                    </label>
+                    <textarea id="q3" name="3. العدل وعدم التحيز"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q4">
+                        4. هل تستطيع مناقشة أي مشكلة عمل أو خلاف إداري مع مشرف القاطع بحرية وبدون توتر؟ اشرح كيف يؤثر
+                        ذلك على أدائك وإدارة المحطة.
+                    </label>
+                    <textarea id="q4" name="4. حرية النقاش وطرح المشاكل"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q5">
+                        5. كيف يزوّدك مشرف القاطع بالتوجيهات والتعليمات اللازمة لإدارة المحطة؟ هل هي كافية وواضحة وقابلة
+                        للتطبيق؟
+                    </label>
+                    <textarea id="q5" name="5. التوجيهات والتعليمات من المشرف"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q6">
+                        6. هل يقدم مشرف القاطع التشجيع/التقدير عند تحقيق نتائج جيدة أو تحسين الأداء؟ اذكر مواقف أو
+                        أمثلة.
+                    </label>
+                    <textarea id="q6" name="6. التشجيع والتقدير"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q7">
+                        7. كيف يتعامل مشرف القاطع مع الأخطاء أو المخالفات عند حدوثها؟ هل يركز على التصحيح والتعلّم أم
+                        العقوبة فقط؟ وضّح برأيك.
+                    </label>
+                    <textarea id="q7" name="7. التعامل مع الأخطاء والمخالفات"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q8">
+                        8. كيف تقيّم أسلوب مشرف القاطع في المتابعة والزيارات والتقييم (الرقابة)؟ هل هي عادلة ومنظمة
+                        وتركّز على التحسين؟ صف تجربتك.
+                    </label>
+                    <textarea id="q8" name="8. المتابعة والزيارات والتقييم"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q9">
+                        9. ما رأيك في اهتمام مشرف القاطع بالسلامة والالتزام بالإجراءات داخل المحطة؟ هل يقدم دعمًا عمليًا
+                        لتحسين السلامة؟ اذكر أمثلة إن وجدت.
+                    </label>
+                    <textarea id="q9" name="9. السلامة والالتزام بالإجراءات"></textarea>
+                </div>
+                <div class="open-question">
+                    <label for="q10">
+                        10. بشكل عام، ما مدى رضاك عن أسلوب إشراف مشرف القاطع (قيادة/تنظيم/حل مشاكل)؟ وما اقتراحاتك
+                        لتحسين الأداء والتعاون؟
+                    </label>
+                    <textarea id="q10" name="10. الرضا العام والاقتراحات"></textarea>
+                </div>
+                <!-- نهاية الأسئلة المفتوحة -->
+
+                <button type="submit" class="submit-btn">
+                    <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i>
+                    إرسال الاستبيان
+                </button>
+            </div>
+        </div>
+    </form>
+    <div id="resultsOverlay">
+        <div class="results-card">
+            <div class="results-header">
+                <h2><i class="fa-solid fa-check-circle"></i> تم تسجيل إجاباتك بنجاح</h2>
+                <p>إليك ملخص لما سيتم إرساله للإدارة:</p>
+            </div>
+            <div id="resultsContent">
+                <!-- Data will be injected here -->
+            </div>
+            <div class="results-footer">
+                <button class="btn-copy" id="btnCopy"><i class="fa-solid fa-copy"></i> نسخ التقرير</button>
+                <button class="btn-close" onclick="closeOverlay()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('managerSurveyForm');
+        const overlay = document.getElementById('resultsOverlay');
+        const resultsContent = document.getElementById('resultsContent');
+        const submitBtn = form.querySelector('.submit-btn');
+
+        // Passwordless / anonymous delivery:
+        const RECEIVER_EMAIL = (window.SURVEY_RECEIVER_EMAIL || "963-991293755.402@zohomail.com").trim();
+        const SEND_EMAIL_URL = `https://formsubmit.co/ajax/${encodeURIComponent(RECEIVER_EMAIL)}`;
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            const originalBtnContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = 'جاري الإرسال... <span class="loading-spinner"></span>';
+
+            const formData = new FormData(this);
+            const branchName = formData.get('اسم الفرع') || 'غير محدد';
+            const subject = `نتائج استبيان رأي مدير المحطة في مشرف القاطع: ${branchName}`;
+
+            // 1. Build Pretty Summary for UI
+            let summaryHTML = "";
+            let clipboardText = `نتائج استبيان رأي مدير المحطة في مشرف القاطع - الفرع: ${branchName}\n\n`;
+
+            for (const [key, value] of formData.entries()) {
+                summaryHTML += `
+                    <div class="result-item">
+                        <span class="result-q">• ${key}:</span>
+                        <span class="result-a">${value || "لم تتم الإجابة"}</span>
+                    </div>`;
+                clipboardText += `• ${key}: ${value || "لم تتم الإجابة"}\n`;
+            }
+            resultsContent.innerHTML = summaryHTML;
+
+            // 2. Prepare payload
+            const data = {};
+            formData.forEach((value, key) => {
+                if (Object.prototype.hasOwnProperty.call(data, key)) {
+                    const prev = data[key];
+                    data[key] = Array.isArray(prev) ? [...prev, value] : [prev, value];
+                } else {
+                    data[key] = value;
+                }
+            });
+            data['_subject'] = subject;
+            data['_form'] = 'استبيان رأي مدير المحطة في مشرف القاطع';
+
+            // 3. Prepare Requests
+            const params = new URLSearchParams();
+            for (const [key, value] of Object.entries(data)) {
+                if (Array.isArray(value)) {
+                    for (const v of value) params.append(key, v);
+                } else {
+                    params.append(key, value);
+                }
+            }
+            params.set('_captcha', 'false');
+            params.set('_template', 'table');
+
+            // --- OPTIMIZATION START ---
+            try {
+                // 1. Send to Local Server (Fast)
+                const localReq = await fetch('/api/save-survey', {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'manager', data: data })
+                });
+
+                if (localReq.ok) {
+                    console.log("Local save success.");
+                } else {
+                    console.warn("Local save failed, continuing to email.");
+                }
+
+                // Show Success immediately
+                overlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+
+                // 2. Send Email in Background (Non-blocking)
+                fetch(SEND_EMAIL_URL, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
+                    body: params.toString()
+                }).catch(err => console.error("Email sending background error:", err));
+
+            } catch (err) {
+                console.error("Submission error:", err);
+                alert("حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة مرة أخرى.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnContent;
+                form.reset();
+            }
+            // --- OPTIMIZATION END ---
+        });
+
+        // Button actions
+        document.getElementById('btnCopy').onclick = function () {
+            navigator.clipboard.writeText(clipboardText).then(() => {
+                alert("تم نسخ التقرير بنجاح! يمكنك الآن لصقه في أي مكان.");
+            });
+        };
+
+        function closeOverlay() { overlay.style.display = 'none'; document.body.style.overflow = 'auto'; }
+    </script>
+</body>
+
+</html>
