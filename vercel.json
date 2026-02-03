@@ -1,31 +1,17 @@
 {
     "version": 2,
-    "builds": [
+    "rewrites": [
         {
-            "src": "server.js",
-            "use": "@vercel/node"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(index.html|dashboard.html|استبيان%20عمال.html|استبيان%20مدراء.html|login.html|logo.png)",
-            "dest": "/$1"
+            "source": "/api/(.*)",
+            "destination": "/server.js"
         },
         {
-            "src": "/api/(.*)",
-            "dest": "server.js"
+            "source": "/send-email",
+            "destination": "/server.js"
         },
         {
-            "src": "/send-email",
-            "dest": "server.js"
-        },
-        {
-            "src": "/",
-            "dest": "server.js"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/$1"
+            "source": "/((?!api|send-email).*)",
+            "destination": "/server.js"
         }
     ]
 }

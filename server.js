@@ -83,6 +83,10 @@ const authMiddleware = (req, res, next) => {
 app.use(authMiddleware);
 app.use(express.static(__dirname));
 
+// Explicitly serve Arabic files to avoid 404 on Vercel
+app.get('/استبيان%20عمال.html', (req, res) => res.sendFile(path.join(__dirname, 'استبيان عمال.html')));
+app.get('/استبيان%20مدراء.html', (req, res) => res.sendFile(path.join(__dirname, 'استبيان مدراء.html')));
+
 // Login Endpoint
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
@@ -323,6 +327,14 @@ app.listen(PORT, () => {
     `✉️  SMTP (SMTP_USER): ${process.env.SMTP_USER ? redactEmailAddress(process.env.SMTP_USER) : '(not set)'}`,
   );
   console.log(`=========================================`);
+});
+
+// For Vercel/Single Page Routing: Redirect any unknown GET requests to index.html
+// (Only if they aren't API calls)
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api/') && !req.path.startsWith('/send-email')) {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  }
 });
 
 module.exports = app;
