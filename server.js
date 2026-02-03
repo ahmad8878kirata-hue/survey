@@ -9,12 +9,25 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
-const DB_PATH = path.join(__dirname, 'database.json');
 
-// Ensure DB exists
-if (!fs.existsSync(DB_PATH)) {
-  fs.writeFileSync(DB_PATH, JSON.stringify({ managers: [], workers: [] }, null, 2));
+// Handle DB path for Vercel (must use /tmp for write access)
+const IS_VERCEL = process.env.VERCEL === '1';
+const DB_PATH = IS_VERCEL
+  ? path.join('/tmp', 'database.json')
+  : path.join(__dirname, 'database.json');
+
+// Ensure DB exists safely
+function initDB() {
+  try {
+    if (!fs.existsSync(DB_PATH)) {
+      fs.writeFileSync(DB_PATH, JSON.stringify({ managers: [], workers: [] }, null, 2));
+      console.log('Database initialized at:', DB_PATH);
+    }
+  } catch (err) {
+    console.warn('Warning: Could not initialize database file. This is expected if the filesystem is read-only and not on /tmp.', err.message);
+  }
 }
+initDB();
 
 function readDB() {
   try {
@@ -30,7 +43,7 @@ function writeDB(data) {
   try {
     fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
   } catch (err) {
-    console.error('Error writing DB:', err);
+    console.error('Error writing DB (Check permissions):', err.message);
   }
 }
 
