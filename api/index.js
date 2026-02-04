@@ -3,52 +3,15 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
-const fs = require('fs');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const db = require('./database');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
 // Unique secret for this server instance (resets on restart)
 const SESSION_SECRET = Date.now().toString(36) + Math.random().toString(36).slice(2);
-
-// Handle DB path for Vercel (must use /tmp for write access)
-const IS_VERCEL = process.env.VERCEL === '1';
-const DB_PATH = IS_VERCEL
-  ? path.join('/tmp', 'database.json')
-  : path.join(__dirname, 'database.json');
-
-// Ensure DB exists safely
-function initDB() {
-  try {
-    if (!fs.existsSync(DB_PATH)) {
-      fs.writeFileSync(DB_PATH, JSON.stringify({ managers: [], workers: [] }, null, 2));
-      console.log('Database initialized at:', DB_PATH);
-    }
-  } catch (err) {
-    console.warn('Warning: Could not initialize database file. This is expected if the filesystem is read-only and not on /tmp.', err.message);
-  }
-}
-initDB();
-
-function readDB() {
-  try {
-    const data = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch (err) {
-    console.error('Error reading DB:', err);
-    return { managers: [], workers: [] };
-  }
-}
-
-function writeDB(data) {
-  try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error('Error writing DB (Check permissions):', err.message);
-  }
-}
 
 // Middleware
 app.use(
@@ -226,8 +189,9 @@ app.get('/health', (_req, res) => {
 // --- NEW DASHBOARD API ---
 
 app.get('/api/surveys', (_req, res) => {
-  const data = readDB();
-  res.json(data);
+  const managers = db.getAllManagers();
+  const workers = db.getAllWorkers();
+  res.json({ managers, workers });
 });
 
 app.post('/api/save-survey', (req, res) => {
@@ -237,50 +201,50 @@ app.post('/api/save-survey', (req, res) => {
     return res.status(400).json({ status: 'error', message: 'Missing type or data' });
   }
 
-  const db = readDB();
   const entry = {
     ...data,
     id: Date.now().toString(),
     receivedAt: new Date().toISOString()
   };
 
-  if (type === 'manager') {
-    if (!db.managers) db.managers = [];
-    db.managers.push(entry);
-  } else if (type === 'worker') {
-    if (!db.workers) db.workers = [];
-    db.workers.push(entry);
-  } else {
-    return res.status(400).json({ status: 'error', message: 'Invalid survey type' });
+  try {
+    if (type === 'manager') {
+      db.addManager(entry);
+    } else if (type === 'worker') {
+      db.addWorker(entry);
+    } else {
+      return res.status(400).json({ status: 'error', message: 'Invalid survey type' });
+    }
+    console.log(`Saved ${type} survey to SQLite.`);
+    res.json({ status: 'success' });
+  } catch (err) {
+    console.error('Error saving survey:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to save survey' });
   }
-
-  writeDB(db);
-  console.log(`Saved ${type} survey locally.`);
-  res.json({ status: 'success' });
 });
 
 app.delete('/api/survey/:type/:id', (req, res) => {
   const { type, id } = req.params;
-  const db = readDB();
 
-  let targetArray = null;
-  if (type === 'manager') targetArray = db.managers;
-  else if (type === 'worker') targetArray = db.workers;
-  else return res.status(400).json({ status: 'error', message: 'Invalid type' });
+  try {
+    let deleted = false;
+    if (type === 'manager') {
+      deleted = db.deleteManager(id);
+    } else if (type === 'worker') {
+      deleted = db.deleteWorker(id);
+    } else {
+      return res.status(400).json({ status: 'error', message: 'Invalid type' });
+    }
 
-  if (!targetArray) return res.status(404).json({ status: 'error', message: 'Not found' });
-
-  const initialLength = targetArray.length;
-  // Filter out the item
-  if (type === 'manager') {
-    db.managers = db.managers.filter(item => item.id !== id);
-  } else {
-    db.workers = db.workers.filter(item => item.id !== id);
+    if (!deleted) {
+      return res.status(404).json({ status: 'error', message: 'Not found' });
+    }
+    console.log(`Deleted ${type} survey ID ${id}`);
+    res.json({ status: 'success' });
+  } catch (err) {
+    console.error('Error deleting survey:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to delete survey' });
   }
-
-  writeDB(db);
-  console.log(`Deleted ${type} survey ID ${id}`);
-  res.json({ status: 'success' });
 });
 
 // --- END DASHBOARD API ---
