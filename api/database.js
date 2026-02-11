@@ -2,14 +2,37 @@ const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
 
-// Handle DB path for Vercel (must use /tmp for write access)
+// --- SQLite file location ---
+// On some hosts (e.g. serverless), the filesystem can be ephemeral.
+// For persistent hosting (VPS/shared hosting running Node), store the DB in a persistent folder.
+//
+// You can override the database file location with:
+//   SQLITE_DB_PATH=/absolute/or/relative/path/to/survey.db
+//
+// If deployed on Vercel, we must use /tmp for write access (but it is NOT permanent there).
 const IS_VERCEL = process.env.VERCEL === '1';
-const DB_PATH = IS_VERCEL
-  ? path.join('/tmp', 'survey.db')
-  : path.join(__dirname, 'survey.db');
+const ENV_DB_PATH = process.env.SQLITE_DB_PATH && String(process.env.SQLITE_DB_PATH).trim();
+
+function resolveDbPath() {
+  if (ENV_DB_PATH) {
+    // If a relative path is provided, resolve it from the project root (process cwd).
+    return path.isAbsolute(ENV_DB_PATH) ? ENV_DB_PATH : path.resolve(process.cwd(), ENV_DB_PATH);
+  }
+
+  if (IS_VERCEL) return path.join('/tmp', 'survey.db');
+
+  // Default: persist under <projectRoot>/data/survey.db
+  return path.join(process.cwd(), 'data', 'survey.db');
+}
+
+const DB_PATH = resolveDbPath();
 
 // Initialize database
 function initDatabase() {
+  // Ensure parent directory exists (important for ./data/survey.db)
+  const dir = path.dirname(DB_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
   const db = new Database(DB_PATH);
   
   // Enable foreign keys
@@ -146,12 +169,13 @@ const dbOperations = {
     const db = getDB();
     const { id, receivedAt, ...data } = entry;
     const insert = db.prepare('INSERT INTO managers (id, receivedAt, data) VALUES (?, ?, ?)');
+    const newId = id || (Date.now().toString() + Math.random().toString(36).slice(2));
     insert.run(
-      id || Date.now().toString() + Math.random().toString(36).slice(2),
+      newId,
       receivedAt || new Date().toISOString(),
       JSON.stringify(data)
     );
-    return id || Date.now().toString() + Math.random().toString(36).slice(2);
+    return newId;
   },
   
   // Add a worker survey
@@ -159,12 +183,13 @@ const dbOperations = {
     const db = getDB();
     const { id, receivedAt, ...data } = entry;
     const insert = db.prepare('INSERT INTO workers (id, receivedAt, data) VALUES (?, ?, ?)');
+    const newId = id || (Date.now().toString() + Math.random().toString(36).slice(2));
     insert.run(
-      id || Date.now().toString() + Math.random().toString(36).slice(2),
+      newId,
       receivedAt || new Date().toISOString(),
       JSON.stringify(data)
     );
-    return id || Date.now().toString() + Math.random().toString(36).slice(2);
+    return newId;
   },
   
   // Delete a manager survey
