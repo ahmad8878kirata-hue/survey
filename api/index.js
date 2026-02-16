@@ -10,8 +10,8 @@ const db = require('./database');
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-// Unique secret for this server instance (resets on restart)
-const SESSION_SECRET = Date.now().toString(36) + Math.random().toString(36).slice(2);
+// Session secret for authentication (saved in .env for persistence)
+const SESSION_SECRET = process.env.SESSION_SECRET || 'default_secret_key_change_me';
 
 // Middleware
 app.use(
@@ -72,7 +72,13 @@ app.get('/dashboard.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'dash
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   if (username === 'admin' && password === 'Admin@2000') {
-    res.cookie('auth', SESSION_SECRET, { httpOnly: true, secure: true, sameSite: 'strict' });
+    // secure: false allows cookie over HTTP (common on VPS without SSL)
+    res.cookie('auth', SESSION_SECRET, { 
+      httpOnly: true, 
+      secure: false, 
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
     return res.json({ status: 'success' });
   }
   res.status(401).json({ status: 'error', message: 'Invalid credentials' });
