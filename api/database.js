@@ -117,6 +117,7 @@ function getSQLite() {
 const dbOperations = {
   // Get all managers with pagination
   async getAllManagers(limit = 50, offset = 0) {
+    console.log(`[DB DEBUG] getAllManagers: limit=${limit}, offset=${offset}, IS_MYSQL=${IS_MYSQL}`);
     if (IS_MYSQL) {
       const pool = await initMySQL();
       const [rows] = await pool.query(
@@ -141,6 +142,7 @@ const dbOperations = {
 
   // Get all workers with pagination
   async getAllWorkers(limit = 50, offset = 0) {
+    console.log(`[DB DEBUG] getAllWorkers: limit=${limit}, offset=${offset}, IS_MYSQL=${IS_MYSQL}`);
     if (IS_MYSQL) {
       const pool = await initMySQL();
       const [rows] = await pool.query(

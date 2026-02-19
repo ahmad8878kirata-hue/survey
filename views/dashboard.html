@@ -861,19 +861,34 @@
             showLoading(true);
             try {
                 const response = await fetch(`/api/surveys?page=${paginationInfo.page}&limit=${paginationInfo.limit}`);
-                if (!response.ok) throw new Error("Failed to fetch");
+
+                if (response.status === 401) {
+                    throw new Error("Unauthorized: Please log in again.");
+                }
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.message || `Server error: ${response.status}`);
+                }
+
                 const result = await response.json();
                 allData = {
-                    workers: result.workers,
-                    managers: result.managers
+                    workers: result.workers || [],
+                    managers: result.managers || []
                 };
-                paginationInfo = result.pagination;
+                if (result.pagination) {
+                    paginationInfo = result.pagination;
+                }
                 renderTable();
                 updatePaginationUI();
                 updateTimeLabel();
             } catch (err) {
-                console.error(err);
-                alert("Failed to connect to server.");
+                console.error('Fetch Error:', err);
+                alert(`Error: ${err.message}`);
+
+                if (err.message.includes("Unauthorized")) {
+                    window.location.href = "/login.html";
+                }
             } finally {
                 showLoading(false);
             }
@@ -884,8 +899,9 @@
         }
 
         function updatePaginationUI() {
-            const page = paginationInfo.page;
-            const total = currentTab === 'workers' ? paginationInfo.totalPagesWorkers : paginationInfo.totalPagesManagers;
+            if (!paginationInfo) return;
+            const page = paginationInfo.page || 1;
+            const total = currentTab === 'workers' ? (paginationInfo.totalPagesWorkers || 1) : (paginationInfo.totalPagesManagers || 1);
 
             document.getElementById('currentPageNum').textContent = page;
             document.getElementById('totalPagesNum').textContent = total || 1;
@@ -899,8 +915,9 @@
         }
 
         async function changePage(delta) {
-            const newPage = paginationInfo.page + delta;
-            const total = currentTab === 'workers' ? paginationInfo.totalPagesWorkers : paginationInfo.totalPagesManagers;
+            if (!paginationInfo) return;
+            const newPage = (paginationInfo.page || 1) + delta;
+            const total = currentTab === 'workers' ? (paginationInfo.totalPagesWorkers || 1) : (paginationInfo.totalPagesManagers || 1);
 
             if (newPage >= 1 && newPage <= total) {
                 paginationInfo.page = newPage;
@@ -910,12 +927,23 @@
 
         function switchTab(tab) {
             currentTab = tab;
-            paginationInfo.page = 1; // Reset to first page
+            if (paginationInfo) {
+                paginationInfo.page = 1;
+            } else {
+                paginationInfo = { page: 1, limit: 50 };
+            }
             activeFilters = {};
             currentSort = { col: null, asc: true };
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            fetchData(); // Re-fetch for the other tab
+
+            // Update UI
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('onclick').includes(`'${tab}'`)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            fetchData();
         }
 
         function getAllKeys(dataArray) {

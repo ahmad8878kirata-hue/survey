@@ -5,7 +5,6 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const compression = require('compression');
 const db = require('./database');
 
 const app = express();
@@ -15,7 +14,6 @@ const PORT = Number(process.env.PORT) || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'default_secret_key_change_me';
 
 // Middleware
-app.use(compression());
 app.use(
   cors({
     origin: true,
@@ -197,16 +195,24 @@ app.get('/health', (_req, res) => {
 // --- NEW DASHBOARD API ---
 
 app.get('/api/surveys', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const offset = (page - 1) * limit;
+
+  console.log(`[API] Fetch surveys: page=${page}, limit=${limit}`);
+  const startTime = Date.now();
+
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const offset = (page - 1) * limit;
+    // Run all database queries in parallel for maximum speed
+    const [managers, workers, totalManagers, totalWorkers] = await Promise.all([
+      db.getAllManagers(limit, offset),
+      db.getAllWorkers(limit, offset),
+      db.getManagersCount(),
+      db.getWorkersCount()
+    ]);
 
-    const managers = await db.getAllManagers(limit, offset);
-    const workers = await db.getAllWorkers(limit, offset);
-
-    const totalManagers = await db.getManagersCount();
-    const totalWorkers = await db.getWorkersCount();
+    const duration = Date.now() - startTime;
+    console.log(`[API] Surveys fetched successfully in ${duration}ms`);
 
     res.json({
       managers,
@@ -221,8 +227,12 @@ app.get('/api/surveys', async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Error fetching surveys:', err);
-    res.status(500).json({ status: 'error', message: 'Failed to fetch surveys' });
+    console.error(`[API ERROR] ${err.message}`);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error while fetching data',
+      detail: err.message
+    });
   }
 });
 
