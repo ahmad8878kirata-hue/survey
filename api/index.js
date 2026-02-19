@@ -196,17 +196,17 @@ app.get('/health', (_req, res) => {
 
 // --- NEW DASHBOARD API ---
 
-app.get('/api/surveys', (req, res) => {
+app.get('/api/surveys', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const offset = (page - 1) * limit;
 
-    const managers = db.getAllManagers(limit, offset);
-    const workers = db.getAllWorkers(limit, offset);
+    const managers = await db.getAllManagers(limit, offset);
+    const workers = await db.getAllWorkers(limit, offset);
 
-    const totalManagers = db.getManagersCount();
-    const totalWorkers = db.getWorkersCount();
+    const totalManagers = await db.getManagersCount();
+    const totalWorkers = await db.getWorkersCount();
 
     res.json({
       managers,
@@ -226,7 +226,7 @@ app.get('/api/surveys', (req, res) => {
   }
 });
 
-app.post('/api/save-survey', (req, res) => {
+app.post('/api/save-survey', async (req, res) => {
   const { type, data } = req.body;
 
   if (!type || !data) {
@@ -241,13 +241,13 @@ app.post('/api/save-survey', (req, res) => {
 
   try {
     if (type === 'manager') {
-      db.addManager(entry);
+      await db.addManager(entry);
     } else if (type === 'worker') {
-      db.addWorker(entry);
+      await db.addWorker(entry);
     } else {
       return res.status(400).json({ status: 'error', message: 'Invalid survey type' });
     }
-    console.log(`Saved ${type} survey to SQLite.`);
+    console.log(`Saved ${type} survey to database.`);
     res.json({ status: 'success' });
   } catch (err) {
     console.error('Error saving survey:', err);
@@ -255,15 +255,15 @@ app.post('/api/save-survey', (req, res) => {
   }
 });
 
-app.delete('/api/survey/:type/:id', (req, res) => {
+app.delete('/api/survey/:type/:id', async (req, res) => {
   const { type, id } = req.params;
 
   try {
     let deleted = false;
     if (type === 'manager') {
-      deleted = db.deleteManager(id);
+      deleted = await db.deleteManager(id);
     } else if (type === 'worker') {
-      deleted = db.deleteWorker(id);
+      deleted = await db.deleteWorker(id);
     } else {
       return res.status(400).json({ status: 'error', message: 'Invalid type' });
     }

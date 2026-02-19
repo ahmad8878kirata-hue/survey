@@ -1,254 +1,316 @@
 const Database = require('better-sqlite3');
+const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
+// --- Environment Variables for MySQL ---
+const {
+  DB_HOST,
+  DB_USER,
+  DB_PASS,
+  DB_NAME,
+  DB_PORT = 3306,
+  USE_MYSQL = 'false'
+} = process.env;
+
+const IS_MYSQL = USE_MYSQL === 'true';
+
 // --- SQLite file location ---
-// On some hosts (e.g. serverless), the filesystem can be ephemeral.
-// For persistent hosting (VPS/shared hosting running Node), store the DB in a persistent folder.
-//
-// You can override the database file location with:
-//   SQLITE_DB_PATH=/absolute/or/relative/path/to/survey.db
-//
-// If deployed on Vercel, we must use /tmp for write access (but it is NOT permanent there).
 const IS_VERCEL = process.env.VERCEL === '1';
 const ENV_DB_PATH = process.env.SQLITE_DB_PATH && String(process.env.SQLITE_DB_PATH).trim();
 
 function resolveDbPath() {
   if (ENV_DB_PATH) {
-    // If a relative path is provided, resolve it from the project root (process cwd).
     return path.isAbsolute(ENV_DB_PATH) ? ENV_DB_PATH : path.resolve(process.cwd(), ENV_DB_PATH);
   }
-
   if (IS_VERCEL) return path.join('/tmp', 'survey.db');
-
-  // Default: persist under <projectRoot>/data/survey.db
   return path.join(process.cwd(), 'data', 'survey.db');
 }
 
 const DB_PATH = resolveDbPath();
 
-// Initialize database
-function initDatabase() {
-  // Ensure parent directory exists (important for ./data/survey.db)
+// --- Database Instances ---
+let sqliteDb = null;
+let mysqlPool = null;
+
+// Initialize SQLite
+function initSQLite() {
   const dir = path.dirname(DB_PATH);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
   const db = new Database(DB_PATH);
-  
-  // Enable foreign keys
   db.pragma('foreign_keys = ON');
-  
-  // Create managers table
   db.exec(`
     CREATE TABLE IF NOT EXISTS managers (
-      id TEXT PRIMARY KEY,
-      receivedAt TEXT NOT NULL,
-      data TEXT NOT NULL
+      id VARCHAR(255) PRIMARY KEY,
+      receivedAt DATETIME NOT NULL,
+      data JSON NOT NULL
     )
   `);
-  
-  // Create workers table
   db.exec(`
     CREATE TABLE IF NOT EXISTS workers (
-      id TEXT PRIMARY KEY,
-      receivedAt TEXT NOT NULL,
-      data TEXT NOT NULL
+      id VARCHAR(255) PRIMARY KEY,
+      receivedAt DATETIME NOT NULL,
+      data JSON NOT NULL
     )
   `);
-  
-  // Create indexes for faster queries
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_managers_receivedAt ON managers(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_workers_receivedAt ON workers(receivedAt);
   `);
-  
   console.log('SQLite database initialized at:', DB_PATH);
   return db;
 }
 
-// Get database instance
-let dbInstance = null;
-function getDB() {
-  if (!dbInstance) {
-    dbInstance = initDatabase();
+// Initialize MySQL
+async function initMySQL() {
+  if (mysqlPool) return mysqlPool;
+
+  try {
+    mysqlPool = mysql.createPool({
+      host: DB_HOST,
+      user: DB_USER,
+      password: DB_PASS,
+      database: DB_NAME,
+      port: DB_PORT,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    });
+
+    // Create tables if they don't exist
+    const connection = await mysqlPool.getConnection();
+    try {
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS managers (
+          id VARCHAR(255) PRIMARY KEY,
+          receivedAt DATETIME NOT NULL,
+          data JSON NOT NULL,
+          INDEX idx_managers_receivedAt (receivedAt)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS workers (
+          id VARCHAR(255) PRIMARY KEY,
+          receivedAt DATETIME NOT NULL,
+          data JSON NOT NULL,
+          INDEX idx_workers_receivedAt (receivedAt)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('MySQL connection pool initialized and tables verified.');
+    } finally {
+      connection.release();
+    }
+    return mysqlPool;
+  } catch (err) {
+    console.error('Failed to initialize MySQL pool:', err.message);
+    throw err;
   }
-  return dbInstance;
 }
 
-// Migrate data from JSON to SQLite
-function migrateFromJSON() {
-  // JSON file is always in api/ directory (or deployment root)
-  const jsonPath = path.join(__dirname, 'database.json');
-  
-  // Check if JSON file exists
-  if (!fs.existsSync(jsonPath)) {
-    console.log('No JSON database file found, skipping migration');
-    return;
-  }
-  
-  const db = getDB();
-  
-  try {
-    const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-    
-    // Check if tables already have data
-    const managerCount = db.prepare('SELECT COUNT(*) as count FROM managers').get();
-    const workerCount = db.prepare('SELECT COUNT(*) as count FROM workers').get();
-    
-    if (managerCount.count > 0 || workerCount.count > 0) {
-      console.log('Database already contains data, skipping migration');
-      return;
-    }
-    
-    // Migrate managers
-    if (jsonData.managers && Array.isArray(jsonData.managers)) {
-      const insertManager = db.prepare('INSERT INTO managers (id, receivedAt, data) VALUES (?, ?, ?)');
-      const insertManagers = db.transaction((managers) => {
-        for (const manager of managers) {
-          const { id, receivedAt, ...data } = manager;
-          insertManager.run(
-            id || Date.now().toString() + Math.random().toString(36).slice(2),
-            receivedAt || new Date().toISOString(),
-            JSON.stringify(data)
-          );
-        }
-      });
-      insertManagers(jsonData.managers);
-      console.log(`Migrated ${jsonData.managers.length} manager records`);
-    }
-    
-    // Migrate workers
-    if (jsonData.workers && Array.isArray(jsonData.workers)) {
-      const insertWorker = db.prepare('INSERT INTO workers (id, receivedAt, data) VALUES (?, ?, ?)');
-      const insertWorkers = db.transaction((workers) => {
-        for (const worker of workers) {
-          const { id, receivedAt, ...data } = worker;
-          insertWorker.run(
-            id || Date.now().toString() + Math.random().toString(36).slice(2),
-            receivedAt || new Date().toISOString(),
-            JSON.stringify(data)
-          );
-        }
-      });
-      insertWorkers(jsonData.workers);
-      console.log(`Migrated ${jsonData.workers.length} worker records`);
-    }
-    
-    console.log('Migration completed successfully');
-  } catch (err) {
-    console.error('Error during migration:', err);
-  }
+// Get Database Instance
+function getSQLite() {
+  if (!sqliteDb) sqliteDb = initSQLite();
+  return sqliteDb;
 }
 
 // Database operations
 const dbOperations = {
   // Get all managers with pagination
-  getAllManagers(limit = 50, offset = 0) {
-    const db = getDB();
-    const rows = db.prepare('SELECT * FROM managers ORDER BY receivedAt DESC LIMIT ? OFFSET ?').all(limit, offset);
-    return rows.map(row => ({
-      id: row.id,
-      receivedAt: row.receivedAt,
-      ...JSON.parse(row.data)
-    }));
+  async getAllManagers(limit = 50, offset = 0) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query(
+        'SELECT id, receivedAt, data FROM managers ORDER BY receivedAt DESC LIMIT ? OFFSET ?',
+        [limit, offset]
+      );
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      }));
+    } else {
+      const db = getSQLite();
+      const rows = db.prepare('SELECT * FROM managers ORDER BY receivedAt DESC LIMIT ? OFFSET ?').all(limit, offset);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      }));
+    }
   },
-  
+
   // Get all workers with pagination
-  getAllWorkers(limit = 50, offset = 0) {
-    const db = getDB();
-    const rows = db.prepare('SELECT * FROM workers ORDER BY receivedAt DESC LIMIT ? OFFSET ?').all(limit, offset);
-    return rows.map(row => ({
-      id: row.id,
-      receivedAt: row.receivedAt,
-      ...JSON.parse(row.data)
-    }));
+  async getAllWorkers(limit = 50, offset = 0) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query(
+        'SELECT id, receivedAt, data FROM workers ORDER BY receivedAt DESC LIMIT ? OFFSET ?',
+        [limit, offset]
+      );
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      }));
+    } else {
+      const db = getSQLite();
+      const rows = db.prepare('SELECT * FROM workers ORDER BY receivedAt DESC LIMIT ? OFFSET ?').all(limit, offset);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      }));
+    }
   },
 
   // Get total manager count
-  getManagersCount() {
-    const db = getDB();
-    const result = db.prepare('SELECT COUNT(*) as count FROM managers').get();
-    return result ? result.count : 0;
+  async getManagersCount() {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query('SELECT COUNT(*) as count FROM managers');
+      return rows[0].count;
+    } else {
+      const db = getSQLite();
+      const result = db.prepare('SELECT COUNT(*) as count FROM managers').get();
+      return result ? result.count : 0;
+    }
   },
 
   // Get total worker count
-  getWorkersCount() {
-    const db = getDB();
-    const result = db.prepare('SELECT COUNT(*) as count FROM workers').get();
-    return result ? result.count : 0;
+  async getWorkersCount() {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query('SELECT COUNT(*) as count FROM workers');
+      return rows[0].count;
+    } else {
+      const db = getSQLite();
+      const result = db.prepare('SELECT COUNT(*) as count FROM workers').get();
+      return result ? result.count : 0;
+    }
   },
-  
+
   // Add a manager survey
-  addManager(entry) {
-    const db = getDB();
+  async addManager(entry) {
     const { id, receivedAt, ...data } = entry;
-    const insert = db.prepare('INSERT INTO managers (id, receivedAt, data) VALUES (?, ?, ?)');
     const newId = id || (Date.now().toString() + Math.random().toString(36).slice(2));
-    insert.run(
-      newId,
-      receivedAt || new Date().toISOString(),
-      JSON.stringify(data)
-    );
+    const finalReceivedAt = receivedAt || new Date().toISOString();
+    const finalData = JSON.stringify(data);
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      await pool.query(
+        'INSERT INTO managers (id, receivedAt, data) VALUES (?, ?, ?)',
+        [newId, finalReceivedAt.replace('T', ' ').replace('Z', ''), finalData]
+      );
+    } else {
+      const db = getSQLite();
+      const insert = db.prepare('INSERT INTO managers (id, receivedAt, data) VALUES (?, ?, ?)');
+      insert.run(newId, finalReceivedAt, finalData);
+    }
     return newId;
   },
-  
+
   // Add a worker survey
-  addWorker(entry) {
-    const db = getDB();
+  async addWorker(entry) {
     const { id, receivedAt, ...data } = entry;
-    const insert = db.prepare('INSERT INTO workers (id, receivedAt, data) VALUES (?, ?, ?)');
     const newId = id || (Date.now().toString() + Math.random().toString(36).slice(2));
-    insert.run(
-      newId,
-      receivedAt || new Date().toISOString(),
-      JSON.stringify(data)
-    );
+    const finalReceivedAt = receivedAt || new Date().toISOString();
+    const finalData = JSON.stringify(data);
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      await pool.query(
+        'INSERT INTO workers (id, receivedAt, data) VALUES (?, ?, ?)',
+        [newId, finalReceivedAt.replace('T', ' ').replace('Z', ''), finalData]
+      );
+    } else {
+      const db = getSQLite();
+      const insert = db.prepare('INSERT INTO workers (id, receivedAt, data) VALUES (?, ?, ?)');
+      insert.run(newId, finalReceivedAt, finalData);
+    }
     return newId;
   },
-  
+
   // Delete a manager survey
-  deleteManager(id) {
-    const db = getDB();
-    const deleteStmt = db.prepare('DELETE FROM managers WHERE id = ?');
-    const result = deleteStmt.run(id);
-    return result.changes > 0;
+  async deleteManager(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [result] = await pool.query('DELETE FROM managers WHERE id = ?', [id]);
+      return result.affectedRows > 0;
+    } else {
+      const db = getSQLite();
+      const deleteStmt = db.prepare('DELETE FROM managers WHERE id = ?');
+      const result = deleteStmt.run(id);
+      return result.changes > 0;
+    }
   },
-  
+
   // Delete a worker survey
-  deleteWorker(id) {
-    const db = getDB();
-    const deleteStmt = db.prepare('DELETE FROM workers WHERE id = ?');
-    const result = deleteStmt.run(id);
-    return result.changes > 0;
+  async deleteWorker(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [result] = await pool.query('DELETE FROM workers WHERE id = ?', [id]);
+      return result.affectedRows > 0;
+    } else {
+      const db = getSQLite();
+      const deleteStmt = db.prepare('DELETE FROM workers WHERE id = ?');
+      const result = deleteStmt.run(id);
+      return result.changes > 0;
+    }
   },
-  
+
   // Get a manager by ID
-  getManagerById(id) {
-    const db = getDB();
-    const row = db.prepare('SELECT * FROM managers WHERE id = ?').get(id);
-    if (!row) return null;
-    return {
-      id: row.id,
-      receivedAt: row.receivedAt,
-      ...JSON.parse(row.data)
-    };
+  async getManagerById(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query('SELECT * FROM managers WHERE id = ?', [id]);
+      if (rows.length === 0) return null;
+      const row = rows[0];
+      return {
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      };
+    } else {
+      const db = getSQLite();
+      const row = db.prepare('SELECT * FROM managers WHERE id = ?').get(id);
+      if (!row) return null;
+      return {
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      };
+    }
   },
-  
+
   // Get a worker by ID
-  getWorkerById(id) {
-    const db = getDB();
-    const row = db.prepare('SELECT * FROM workers WHERE id = ?').get(id);
-    if (!row) return null;
-    return {
-      id: row.id,
-      receivedAt: row.receivedAt,
-      ...JSON.parse(row.data)
-    };
+  async getWorkerById(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query('SELECT * FROM workers WHERE id = ?', [id]);
+      if (rows.length === 0) return null;
+      const row = rows[0];
+      return {
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      };
+    } else {
+      const db = getSQLite();
+      const row = db.prepare('SELECT * FROM workers WHERE id = ?').get(id);
+      if (!row) return null;
+      return {
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      };
+    }
   }
 };
 
-// Initialize database and migrate on first load
-getDB();
-migrateFromJSON();
+// Initialize SQLite if not using MySQL
+if (!IS_MYSQL) {
+  getSQLite();
+}
 
 module.exports = dbOperations;
