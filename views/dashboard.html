@@ -425,6 +425,82 @@
             color: #333;
         }
 
+        /* Loading Spinner */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--main-green-light);
+            border-top: 5px solid var(--main-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .pagination-info {
+            font-size: 0.95em;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .pg-btn {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .pg-btn:hover:not(:disabled) {
+            border-color: var(--main-green);
+            color: var(--main-green);
+            background: var(--main-green-light);
+        }
+
+        .pg-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             body {
@@ -572,6 +648,10 @@
 </head>
 
 <body>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div id="loadingText" style="font-weight: 600; color: var(--main-green);">Loading...</div>
+    </div>
 
     <div class="header">
         <div style="display:flex; align-items:center; gap:15px;">
@@ -620,6 +700,19 @@
                     <p data-i18n="noData">No data available currently.</p>
                 </div>
             </div>
+
+            <div class="pagination-container" id="paginationControls">
+                <button class="pg-btn" id="prevBtn" onclick="changePage(-1)">
+                    <i class="fa-solid fa-chevron-left"></i> <span data-i18n="btnPrev">Previous</span>
+                </button>
+                <div class="pagination-info">
+                    <span data-i18n="pageLabel">Page</span> <span id="currentPageNum">1</span> / <span
+                        id="totalPagesNum">1</span>
+                </div>
+                <button class="pg-btn" id="nextBtn" onclick="changePage(1)">
+                    <span data-i18n="btnNext">Next</span> <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -653,6 +746,14 @@
 
     <script>
         let allData = { workers: [], managers: [] };
+        let paginationInfo = {
+            page: 1,
+            limit: 50,
+            totalManagers: 0,
+            totalWorkers: 0,
+            totalPagesManagers: 1,
+            totalPagesWorkers: 1
+        };
         let currentTab = 'workers';
         let currentSort = { col: null, asc: true };
         let activeFilters = {};
@@ -685,6 +786,10 @@
                 deleteSuccess: "Record deleted successfully.",
                 deleteFail: "Failed to delete record. Ensure server is running.",
                 btnLogout: "Logout",
+                btnPrev: "Previous",
+                btnNext: "Next",
+                pageLabel: "Page",
+                loading: "Loading data...",
             },
             ar: {
                 pageTitle: "لوحة تحكم استبيانات شركة طيبة قسم المتابعة والرقابة",
@@ -710,6 +815,10 @@
                 deleteSuccess: "تم حذف السجل بنجاح.",
                 deleteFail: "فشل حذف السجل. تأكد من تشغيل السيرفر.",
                 btnLogout: "تسجيل الخروج",
+                btnPrev: "السابق",
+                btnNext: "التالي",
+                pageLabel: "صفحة",
+                loading: "جاري تحميل البيانات...",
             }
         };
 
@@ -736,6 +845,9 @@
 
             document.getElementById('langBtn').textContent = t.langBtn;
             if (allData[currentTab].length > 0) updateTimeLabel();
+
+            // Update static dynamic text
+            document.getElementById('loadingText').textContent = t.loading;
         }
 
         function updateTimeLabel() {
@@ -746,25 +858,64 @@
         }
 
         async function fetchData() {
+            showLoading(true);
             try {
-                const response = await fetch('/api/surveys');
+                const response = await fetch(`/api/surveys?page=${paginationInfo.page}&limit=${paginationInfo.limit}`);
                 if (!response.ok) throw new Error("Failed to fetch");
-                allData = await response.json();
+                const result = await response.json();
+                allData = {
+                    workers: result.workers,
+                    managers: result.managers
+                };
+                paginationInfo = result.pagination;
                 renderTable();
+                updatePaginationUI();
                 updateTimeLabel();
             } catch (err) {
                 console.error(err);
                 alert("Failed to connect to server.");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function updatePaginationUI() {
+            const page = paginationInfo.page;
+            const total = currentTab === 'workers' ? paginationInfo.totalPagesWorkers : paginationInfo.totalPagesManagers;
+
+            document.getElementById('currentPageNum').textContent = page;
+            document.getElementById('totalPagesNum').textContent = total || 1;
+
+            document.getElementById('prevBtn').disabled = (page <= 1);
+            document.getElementById('nextBtn').disabled = (page >= total || total === 0);
+
+            // Show/hide controls if no data
+            const hasData = (currentTab === 'workers' ? paginationInfo.totalWorkers : paginationInfo.totalManagers) > 0;
+            document.getElementById('paginationControls').style.display = hasData ? 'flex' : 'none';
+        }
+
+        async function changePage(delta) {
+            const newPage = paginationInfo.page + delta;
+            const total = currentTab === 'workers' ? paginationInfo.totalPagesWorkers : paginationInfo.totalPagesManagers;
+
+            if (newPage >= 1 && newPage <= total) {
+                paginationInfo.page = newPage;
+                await fetchData();
             }
         }
 
         function switchTab(tab) {
             currentTab = tab;
+            paginationInfo.page = 1; // Reset to first page
             activeFilters = {};
             currentSort = { col: null, asc: true };
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            renderTable();
+            fetchData(); // Re-fetch for the other tab
         }
 
         function getAllKeys(dataArray) {

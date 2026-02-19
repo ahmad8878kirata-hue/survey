@@ -142,10 +142,10 @@ function migrateFromJSON() {
 
 // Database operations
 const dbOperations = {
-  // Get all managers
-  getAllManagers() {
+  // Get all managers with pagination
+  getAllManagers(limit = 50, offset = 0) {
     const db = getDB();
-    const rows = db.prepare('SELECT * FROM managers ORDER BY receivedAt DESC').all();
+    const rows = db.prepare('SELECT * FROM managers ORDER BY receivedAt DESC LIMIT ? OFFSET ?').all(limit, offset);
     return rows.map(row => ({
       id: row.id,
       receivedAt: row.receivedAt,
@@ -153,15 +153,29 @@ const dbOperations = {
     }));
   },
   
-  // Get all workers
-  getAllWorkers() {
+  // Get all workers with pagination
+  getAllWorkers(limit = 50, offset = 0) {
     const db = getDB();
-    const rows = db.prepare('SELECT * FROM workers ORDER BY receivedAt DESC').all();
+    const rows = db.prepare('SELECT * FROM workers ORDER BY receivedAt DESC LIMIT ? OFFSET ?').all(limit, offset);
     return rows.map(row => ({
       id: row.id,
       receivedAt: row.receivedAt,
       ...JSON.parse(row.data)
     }));
+  },
+
+  // Get total manager count
+  getManagersCount() {
+    const db = getDB();
+    const result = db.prepare('SELECT COUNT(*) as count FROM managers').get();
+    return result ? result.count : 0;
+  },
+
+  // Get total worker count
+  getWorkersCount() {
+    const db = getDB();
+    const result = db.prepare('SELECT COUNT(*) as count FROM workers').get();
+    return result ? result.count : 0;
   },
   
   // Add a manager survey

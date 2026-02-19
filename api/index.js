@@ -5,6 +5,7 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 const db = require('./database');
 
 const app = express();
@@ -14,6 +15,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'default_secret_key_change_me';
 
 // Middleware
+app.use(compression());
 app.use(
   cors({
     origin: true,
@@ -73,9 +75,9 @@ app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   if (username === 'admin' && password === 'Admin@2000') {
     // secure: false allows cookie over HTTP (common on VPS without SSL)
-    res.cookie('auth', SESSION_SECRET, { 
-      httpOnly: true, 
-      secure: false, 
+    res.cookie('auth', SESSION_SECRET, {
+      httpOnly: true,
+      secure: false,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
@@ -194,10 +196,34 @@ app.get('/health', (_req, res) => {
 
 // --- NEW DASHBOARD API ---
 
-app.get('/api/surveys', (_req, res) => {
-  const managers = db.getAllManagers();
-  const workers = db.getAllWorkers();
-  res.json({ managers, workers });
+app.get('/api/surveys', (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    const managers = db.getAllManagers(limit, offset);
+    const workers = db.getAllWorkers(limit, offset);
+
+    const totalManagers = db.getManagersCount();
+    const totalWorkers = db.getWorkersCount();
+
+    res.json({
+      managers,
+      workers,
+      pagination: {
+        page,
+        limit,
+        totalManagers,
+        totalWorkers,
+        totalPagesManagers: Math.ceil(totalManagers / limit),
+        totalPagesWorkers: Math.ceil(totalWorkers / limit)
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching surveys:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch surveys' });
+  }
 });
 
 app.post('/api/save-survey', (req, res) => {
