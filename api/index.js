@@ -51,14 +51,15 @@ const authMiddleware = (req, res, next) => {
   // If it's an API call that should be protected, check for auth cookie
   const isProtectedApi =
     req.path.startsWith('/api/surveys') ||
-    req.path === '/api/backup' ||
+    req.path.startsWith('/api/backup') ||
     (req.path.startsWith('/api/survey-locks') && req.method === 'POST') ||
-    (req.path.startsWith('/api/survey') && req.method === 'DELETE');
+    (req.path.startsWith('/api/survey/') && req.method === 'DELETE');
 
   if (isProtectedApi) {
     if (req.cookies.auth === SESSION_SECRET) {
       return next();
     } else {
+      console.log(`[AUTH] Unauthorized API access blocked: ${req.method} ${req.path}`);
       return res.status(401).json({ status: 'error', message: 'Unauthorized' });
     }
   }
@@ -352,6 +353,16 @@ app.get('/api/backup', (req, res) => {
         res.status(500).json({ status: 'error', message: 'Failed to download backup file.' });
       }
     }
+  });
+});
+
+// --- Catch-all for unknown /api routes ---
+app.use('/api', (req, res) => {
+  console.log(`[404 NOT FOUND] ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    status: 'error',
+    message: `API endpoint ${req.method} ${req.path} not found.`,
+    hint: 'Ensure your server is running the latest code and has been restarted.'
   });
 });
 
