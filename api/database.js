@@ -54,6 +54,12 @@ function initSQLite() {
     )
   `);
   db.exec(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_managers_receivedAt ON managers(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_workers_receivedAt ON workers(receivedAt);
   `);
@@ -94,6 +100,12 @@ async function initMySQL() {
           receivedAt DATETIME NOT NULL,
           data JSON NOT NULL,
           INDEX idx_workers_receivedAt (receivedAt)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS settings (
+          \`key\` VARCHAR(255) PRIMARY KEY,
+          \`value\` VARCHAR(255) NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
       `);
       console.log('MySQL connection pool initialized and tables verified.');
@@ -307,6 +319,56 @@ const dbOperations = {
         ...JSON.parse(row.data)
       };
     }
+  },
+
+  // Get lock status for surveys
+  async getSurveyLockStatus() {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query('SELECT `key`, `value` FROM settings WHERE `key` IN (?, ?)', [
+        'lock_worker',
+        'lock_manager'
+      ]);
+      let worker = false;
+      let manager = false;
+      for (const row of rows) {
+        if (row.key === 'lock_worker') worker = row.value === '1';
+        if (row.key === 'lock_manager') manager = row.value === '1';
+      }
+      return { worker, manager };
+    } else {
+      const db = getSQLite();
+      const rows = db
+        .prepare('SELECT key, value FROM settings WHERE key IN (?, ?)')
+        .all('lock_worker', 'lock_manager');
+      let worker = false;
+      let manager = false;
+      for (const row of rows) {
+        if (row.key === 'lock_worker') worker = row.value === '1';
+        if (row.key === 'lock_manager') manager = row.value === '1';
+      }
+      return { worker, manager };
+    }
+  },
+
+  // Set lock status for a specific survey type
+  async setSurveyLock(type, locked) {
+    const key = type === 'worker' ? 'lock_worker' : 'lock_manager';
+    const value = locked ? '1' : '0';
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      await pool.query(
+        'INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+        [key, value]
+      );
+    } else {
+      const db = getSQLite();
+      const stmt = db.prepare(
+        'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+      );
+      stmt.run(key, value);
+    }
   }
 };
 
@@ -314,5 +376,9 @@ const dbOperations = {
 if (!IS_MYSQL) {
   getSQLite();
 }
+
+// Expose some internals for other modules (read-only usage)
+dbOperations.DB_PATH = DB_PATH;
+dbOperations.IS_MYSQL = IS_MYSQL;
 
 module.exports = dbOperations;

@@ -5,6 +5,7 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const fs = require('fs');
 const db = require('./database');
 
 const app = express();
@@ -47,8 +48,14 @@ const authMiddleware = (req, res, next) => {
     }
   }
 
-  // If it's an API call to surveys, check for auth cookie
-  if (req.path.startsWith('/api/surveys') || (req.path.startsWith('/api/survey') && req.method === 'DELETE')) {
+  // If it's an API call that should be protected, check for auth cookie
+  const isProtectedApi =
+    req.path.startsWith('/api/surveys') ||
+    req.path === '/api/backup' ||
+    (req.path.startsWith('/api/survey-locks') && req.method === 'POST') ||
+    (req.path.startsWith('/api/survey') && req.method === 'DELETE');
+
+  if (isProtectedApi) {
     if (req.cookies.auth === SESSION_SECRET) {
       return next();
     } else {
@@ -287,6 +294,65 @@ app.delete('/api/survey/:type/:id', async (req, res) => {
     console.error('Error deleting survey:', err);
     res.status(500).json({ status: 'error', message: 'Failed to delete survey' });
   }
+});
+
+// Get current lock status for surveys (public read so forms can know they are closed)
+app.get('/api/survey-locks', async (_req, res) => {
+  try {
+    const locks = await db.getSurveyLockStatus();
+    res.json(locks);
+  } catch (err) {
+    console.error('Error fetching survey lock status:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch lock status' });
+  }
+});
+
+// Update lock status for a specific survey (protected by auth middleware)
+app.post('/api/survey-locks', async (req, res) => {
+  const { type, locked } = req.body || {};
+
+  if (type !== 'worker' && type !== 'manager') {
+    return res.status(400).json({ status: 'error', message: 'Invalid survey type' });
+  }
+
+  const lockedBool = Boolean(locked);
+
+  try {
+    await db.setSurveyLock(type, lockedBool);
+    const locks = await db.getSurveyLockStatus();
+    res.json({ status: 'success', locks });
+  } catch (err) {
+    console.error('Error updating survey lock status:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to update lock status' });
+  }
+});
+
+// Download backup of the SQLite database file
+app.get('/api/backup', (req, res) => {
+  if (db.IS_MYSQL) {
+    return res
+      .status(400)
+      .json({ status: 'error', message: 'Backup download is only supported for SQLite mode.' });
+  }
+
+  const dbPath = db.DB_PATH;
+  if (!dbPath) {
+    return res.status(500).json({ status: 'error', message: 'Database path is not configured.' });
+  }
+
+  if (!fs.existsSync(dbPath)) {
+    return res.status(404).json({ status: 'error', message: 'Database file not found.' });
+  }
+
+  const fileName = `survey-backup-${new Date().toISOString().slice(0, 10)}.db`;
+  res.download(dbPath, fileName, (err) => {
+    if (err) {
+      console.error('Error sending backup file:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ status: 'error', message: 'Failed to download backup file.' });
+      }
+    }
+  });
 });
 
 // --- END DASHBOARD API ---
