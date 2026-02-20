@@ -202,6 +202,15 @@ app.get('/health', (_req, res) => {
 
 // --- NEW DASHBOARD API ---
 
+// Diagnostic route to verify server is running latest code
+app.get('/api/ping', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Server is running latest code',
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/api/surveys', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 50;
@@ -329,7 +338,7 @@ app.post('/api/survey-locks', async (req, res) => {
 });
 
 // Download backup of the SQLite database file
-app.get('/api/backup', (req, res) => {
+app.get(['/api/backup', '/api/backup/'], (req, res) => {
   if (db.IS_MYSQL) {
     return res
       .status(400)
