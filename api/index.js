@@ -69,6 +69,15 @@ const authMiddleware = (req, res, next) => {
 app.use(authMiddleware);
 app.use(express.static(PUBLIC_DIR));
 
+// Root-level ping to verify server update on Hostinger
+app.get('/ping', (req, res) => {
+  res.json({
+    status: 'ok',
+    source: 'api/index.js',
+    last_updated: '2026-02-20 18:30'
+  });
+});
+
 // Explicitly serve Arabic files to avoid encoding issues on Vercel
 app.get(['/استبيان عمال.html', '/استبيان%20عمال.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان عمال.html')));
 app.get(['/استبيان مدراء.html', '/استبيان%20مدراء.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان مدراء.html')));
