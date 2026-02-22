@@ -328,11 +328,19 @@
             renderTimeline('managerTimelineChart', 'استبيانات المدراء', data.manager?.timeline || {}, '#8b5cf6');
 
             // 1. Satisfaction Pie Chart (Workers)
-            const sData = data.worker?.satisfaction || {};
-            renderPie('satisfactionChart', sData, ['#22c55e', '#3b82f6', '#ef4444']);
+            const satisfactionColors = {
+                'راضي جداً': '#22c55e',
+                'راضي': '#3b82f6',
+                'غير راضي أبداً': '#ef4444'
+            };
+            renderPie('satisfactionChart', data.worker?.satisfaction || {}, satisfactionColors);
 
             // 1.5 Supervision Pie Chart
-            renderPie('supervisionChart', data.worker?.supervision || {}, ['#22c55e', '#ef4444']);
+            const supervisionColors = {
+                'نعم': '#22c55e',
+                'لا': '#ef4444'
+            };
+            renderPie('supervisionChart', data.worker?.supervision || {}, supervisionColors);
 
             // 2. Work Conditions Bar Chart (Workers)
             const conditions = {
@@ -390,9 +398,19 @@
             });
         }
 
-        function renderPie(id, dataMap, colors) {
+        function renderPie(id, dataMap, colorMapping) {
             const labels = Object.keys(dataMap);
             const values = Object.values(dataMap);
+
+            let colors = [];
+            if (colorMapping && !Array.isArray(colorMapping)) {
+                colors = labels.map(label => {
+                    const l = label.trim();
+                    return colorMapping[l] || '#94a3b8';
+                });
+            } else {
+                colors = colorMapping || generateColors(labels.length);
+            }
 
             if (charts[id]) charts[id].destroy();
 
@@ -402,7 +420,7 @@
                     labels: labels,
                     datasets: [{
                         data: values,
-                        backgroundColor: colors || generateColors(labels.length),
+                        backgroundColor: colors,
                         borderWidth: 0
                     }]
                 },
@@ -416,9 +434,13 @@
             });
         }
 
-        function renderBar(id, dataMap, color, axis = 'y') {
+        function renderBar(id, dataMap, defaultColor, axis = 'y') {
             const labels = Object.keys(dataMap);
             const values = Object.values(dataMap);
+
+            // Highlight the highest column in red
+            const maxVal = Math.max(...values);
+            const backgroundColors = values.map(v => v === maxVal && v > 0 ? '#ef4444' : defaultColor);
 
             if (charts[id]) charts[id].destroy();
 
@@ -429,7 +451,7 @@
                     datasets: [{
                         label: 'العدد',
                         data: values,
-                        backgroundColor: color,
+                        backgroundColor: backgroundColors,
                         borderRadius: 6
                     }]
                 },
@@ -454,7 +476,7 @@
                     labels: labels,
                     datasets: [
                         { label: 'نعم', data: datasetValues[0], backgroundColor: '#22c55e' },
-                        { label: 'لا', data: datasetValues[1], backgroundColor: '#cbd5e1' }
+                        { label: 'لا', data: datasetValues[1], backgroundColor: '#ef4444' }
                     ]
                 },
                 options: {
