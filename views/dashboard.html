@@ -753,8 +753,14 @@
         <div class="filter-header" data-i18n="filterValues">Filter Values</div>
         <div class="filter-list" id="filterList"></div>
         <div class="filter-actions">
-            <button class="btn-mini clear" onclick="clearCurrentFilter()" data-i18n="filterClear">Clear</button>
-            <button class="btn-mini primary" onclick="applyCurrentFilter()" data-i18n="filterApply">Apply</button>
+            <div style="display: flex; gap: 4px;">
+                <button class="btn-mini clear" onclick="deselectAllFilters()" data-i18n="filterDeselectAll">Deselect
+                    All</button>
+            </div>
+            <div style="display: flex; gap: 4px;">
+                <button class="btn-mini clear" onclick="clearCurrentFilter()" data-i18n="filterClear">Clear</button>
+                <button class="btn-mini primary" onclick="applyCurrentFilter()" data-i18n="filterApply">Apply</button>
+            </div>
         </div>
     </div>
 
@@ -811,6 +817,7 @@
                 unlockManager: "Unlock Manager Survey",
                 btnCopyDetails: "Copy Details",
                 copyDetailsSuccess: "Record details copied to clipboard!",
+                filterDeselectAll: "Deselect All",
             },
             ar: {
                 pageTitle: "لوحة تحكم استبيانات شركة طيبة قسم المتابعة والرقابة",
@@ -847,6 +854,7 @@
                 unlockManager: "فتح استبيان المدراء",
                 btnCopyDetails: "نسخ التفاصيل",
                 copyDetailsSuccess: "تم نسخ تفاصيل السجل إلى الحافظة!",
+                filterDeselectAll: "إلغاء تحديد الكل",
             }
         };
 
@@ -888,7 +896,20 @@
         async function fetchData() {
             showLoading(true);
             try {
-                const response = await fetch(`/api/surveys?page=${paginationInfo.page}&limit=${paginationInfo.limit}`);
+                // Convert Sets in activeFilters to arrays for JSON serialization
+                const serializedFilters = {};
+                for (const [key, set] of Object.entries(activeFilters)) {
+                    if (set.size > 0) serializedFilters[key] = Array.from(set);
+                }
+
+                const queryParams = new URLSearchParams({
+                    page: paginationInfo.page,
+                    limit: paginationInfo.limit,
+                    search: globalSearchTerm,
+                    filters: JSON.stringify(serializedFilters)
+                });
+
+                const response = await fetch(`/api/surveys?${queryParams.toString()}`);
 
                 if (response.status === 401) {
                     throw new Error("Unauthorized: Please log in again.");
@@ -923,8 +944,13 @@
             }
         }
 
-        function showLoading(show) {
+        function showLoading(show, text) {
             document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+            if (show && text) {
+                document.getElementById('loadingText').textContent = text;
+            } else if (show) {
+                document.getElementById('loadingText').textContent = TRANSLATIONS[currentLang].loading;
+            }
         }
 
         function updatePaginationUI() {
@@ -1001,9 +1027,14 @@
             return String(val);
         }
 
+        let searchTimeout;
         function globalSearch() {
             globalSearchTerm = document.getElementById('searchInput').value.toLowerCase();
-            renderTable();
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                paginationInfo.page = 1;
+                fetchData();
+            }, 500);
         }
 
         function renderTable() {
@@ -1015,26 +1046,9 @@
             tbody.innerHTML = '';
             thead.innerHTML = '';
 
-            let rawData = allData[currentTab] || [];
+            let filteredData = allData[currentTab] || [];
 
-            // 1. Filter
-            let filteredData = rawData.filter(row => {
-                if (globalSearchTerm) {
-                    const matchGlobal = Object.keys(row).some(k =>
-                        k !== 'id' && !k.startsWith('_') && getDisplayValue(row, k).toLowerCase().includes(globalSearchTerm)
-                    );
-                    if (!matchGlobal) return false;
-                }
-                for (const [colKey, allowedSet] of Object.entries(activeFilters)) {
-                    if (allowedSet.size > 0) {
-                        const val = getDisplayValue(row, colKey);
-                        if (!allowedSet.has(val)) return false;
-                    }
-                }
-                return true;
-            });
-
-            // 2. Sort
+            // 1. Sort (still handles local sorting for the current page)
             if (currentSort.col) {
                 filteredData.sort((a, b) => {
                     let valA = a[currentSort.col];
@@ -1044,23 +1058,20 @@
                     if (valA === null || valA === undefined) valA = "";
                     if (valB === null || valB === undefined) valB = "";
 
-                    // Numeric objects check? mostly strings here.
-                    // Date strings (ISO) sort correctly as strings.
-
                     if (valA < valB) return currentSort.asc ? -1 : 1;
                     if (valA > valB) return currentSort.asc ? 1 : -1;
                     return 0;
                 });
             }
 
-            if (filteredData.length === 0 && rawData.length === 0) {
+            if (filteredData.length === 0 && (allData.workers.length === 0 && allData.managers.length === 0)) {
                 table.style.display = 'none';
                 emptyState.style.display = 'block';
             } else {
                 table.style.display = 'table';
                 emptyState.style.display = 'none';
 
-                const keys = getAllKeys(rawData);
+                const keys = getAllKeys(filteredData);
                 renderHeader(keys, thead);
 
                 if (filteredData.length === 0) {
@@ -1318,46 +1329,61 @@
             renderTable();
         }
 
-        function startFilter(e, key) {
+        async function startFilter(e, key) {
             e.stopPropagation();
             openFilterCol = key;
-            const rawData = allData[currentTab] || [];
-            const uniqueValues = new Set();
-            rawData.forEach(r => uniqueValues.add(getDisplayValue(r, key) || '—'));
-            const sortedValues = Array.from(uniqueValues).sort();
-
-            const container = document.getElementById('filterList');
-            container.innerHTML = '';
-
-            const currentSet = activeFilters[key];
-
-            sortedValues.forEach(val => {
-                const label = document.createElement('label');
-                label.className = 'filter-item';
-
-                const input = document.createElement('input');
-                input.type = 'checkbox';
-                input.value = val;
-                if (currentSet ? currentSet.has(val) : true) input.checked = true;
-
-                label.appendChild(input);
-                label.appendChild(document.createTextNode(' ' + val));
-                container.appendChild(label);
-            });
 
             const popover = document.getElementById('filterPopover');
-            popover.querySelector('.filter-header').textContent = TRANSLATIONS[currentLang].filterValues;
+            const container = document.getElementById('filterList');
+            container.innerHTML = `<div style="padding:10px;text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i></div>`;
 
             popover.style.display = 'flex';
             const rect = e.target.getBoundingClientRect();
             let top = rect.bottom + window.scrollY + 5;
             let left = rect.left + window.scrollX - 180;
             if (currentLang === 'ar') left = rect.right + window.scrollX - 200;
-
-            // Boundary checks
             if (left < 10) left = 10;
             popover.style.top = top + 'px';
             popover.style.left = left + 'px';
+
+            try {
+                const res = await fetch(`/api/surveys/unique-values?type=${currentTab === 'workers' ? 'worker' : 'manager'}&field=${key}`);
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    const sortedValues = data.values;
+                    container.innerHTML = '';
+                    const currentSet = activeFilters[key];
+
+                    sortedValues.forEach(val => {
+                        const label = document.createElement('label');
+                        label.className = 'filter-item';
+
+                        const input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.value = val;
+                        // If no filter is active, everything is checked by default in the UI to imply "all"
+                        if (!currentSet || currentSet.has(val)) input.checked = true;
+
+                        label.appendChild(input);
+                        label.appendChild(document.createTextNode(' ' + val));
+                        container.appendChild(label);
+                    });
+                } else {
+                    container.innerHTML = '<div style="padding:10px;color:red;">Error loading values</div>';
+                }
+            } catch (err) {
+                console.error("Filter values fetch failed:", err);
+                container.innerHTML = '<div style="padding:10px;color:red;">Fetch error</div>';
+            }
+
+            popover.querySelector('.filter-header').textContent = TRANSLATIONS[currentLang].filterValues;
+        }
+
+        function deselectAllFilters() {
+            const container = document.getElementById('filterList');
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
         }
 
         function applyCurrentFilter() {
@@ -1377,7 +1403,8 @@
             }
             document.getElementById('filterPopover').style.display = 'none';
             openFilterCol = null;
-            renderTable();
+            paginationInfo.page = 1;
+            fetchData();
         }
 
         function clearCurrentFilter() {
@@ -1385,7 +1412,8 @@
             delete activeFilters[openFilterCol];
             document.getElementById('filterPopover').style.display = 'none';
             openFilterCol = null;
-            renderTable();
+            paginationInfo.page = 1;
+            fetchData();
         }
 
         function showTextModal(title, text) {
@@ -1397,50 +1425,66 @@
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        function exportToExcel() {
+        async function exportToExcel() {
             if (typeof XLSX === 'undefined') {
                 alert('Excel library not loaded. Please refresh the page.');
                 return;
             }
-            let rawData = allData[currentTab] || [];
-            let filteredData = rawData.filter(row => {
-                if (globalSearchTerm) {
-                    const matchGlobal = Object.keys(row).some(k =>
-                        k !== 'id' && !k.startsWith('_') && getDisplayValue(row, k).toLowerCase().includes(globalSearchTerm)
-                    );
-                    if (!matchGlobal) return false;
+
+            showLoading(true, currentLang === 'ar' ? 'جاري تصدير البيانات...' : 'Exporting data to Excel...');
+            try {
+                const serializedFilters = {};
+                for (const [key, set] of Object.entries(activeFilters)) {
+                    if (set.size > 0) serializedFilters[key] = Array.from(set);
                 }
-                for (const [colKey, allowedSet] of Object.entries(activeFilters)) {
-                    if (allowedSet.size > 0) {
-                        const val = getDisplayValue(row, colKey);
-                        if (!allowedSet.has(val)) return false;
-                    }
-                }
-                return true;
-            });
-            if (currentSort.col) {
-                filteredData.sort((a, b) => {
-                    let valA = a[currentSort.col] ?? "";
-                    let valB = b[currentSort.col] ?? "";
-                    if (valA < valB) return currentSort.asc ? -1 : 1;
-                    if (valA > valB) return currentSort.asc ? 1 : -1;
-                    return 0;
+
+                const queryParams = new URLSearchParams({
+                    limit: 'all',
+                    search: globalSearchTerm,
+                    filters: JSON.stringify(serializedFilters)
                 });
+
+                const response = await fetch(`/api/surveys?${queryParams.toString()}`);
+                if (!response.ok) throw new Error("Failed to fetch data for export");
+
+                const result = await response.json();
+                const exportData = result[currentTab] || [];
+
+                if (exportData.length === 0) {
+                    alert(currentLang === 'ar' ? "لا توجد بيانات للتصدير." : "No data to export with current filters.");
+                    return;
+                }
+
+                if (currentSort.col) {
+                    exportData.sort((a, b) => {
+                        let valA = a[currentSort.col] ?? "";
+                        let valB = b[currentSort.col] ?? "";
+                        if (valA < valB) return currentSort.asc ? -1 : 1;
+                        if (valA > valB) return currentSort.asc ? 1 : -1;
+                        return 0;
+                    });
+                }
+
+                const keys = getAllKeys(exportData);
+                const headerLabels = keys.map(k => k === 'receivedAt' ? TRANSLATIONS[currentLang].colTime : k);
+                const rows = exportData.map(row => {
+                    const arr = [];
+                    keys.forEach(k => arr.push(getDisplayValue(row, k)));
+                    return arr;
+                });
+                const wsData = [headerLabels, ...rows];
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                const wb = XLSX.utils.book_new();
+                const tabName = currentTab === 'workers' ? 'Workers' : 'Managers';
+                XLSX.utils.book_append_sheet(wb, ws, tabName);
+                const fileName = `survey-${currentTab}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+            } catch (err) {
+                console.error("Export Error:", err);
+                alert("Failed to export: " + err.message);
+            } finally {
+                showLoading(false);
             }
-            const keys = getAllKeys(rawData);
-            const headerLabels = keys.map(k => k === 'receivedAt' ? TRANSLATIONS[currentLang].colTime : k);
-            const rows = filteredData.map(row => {
-                const arr = [];
-                keys.forEach(k => arr.push(getDisplayValue(row, k)));
-                return arr;
-            });
-            const wsData = [headerLabels, ...rows];
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            const wb = XLSX.utils.book_new();
-            const tabName = currentTab === 'workers' ? 'Workers' : 'Managers';
-            XLSX.utils.book_append_sheet(wb, ws, tabName);
-            const fileName = `survey-${currentTab}-${new Date().toISOString().slice(0, 10)}.xlsx`;
-            XLSX.writeFile(wb, fileName);
         }
 
         window.onclick = function (event) {

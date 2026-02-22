@@ -222,19 +222,30 @@ app.get('/api/ping', (req, res) => {
 
 app.get('/api/surveys', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 50;
-  const offset = (page - 1) * limit;
+  const limitQuery = req.query.limit;
+  const limit = limitQuery === 'all' ? 'all' : (parseInt(limitQuery) || 50);
+  const offset = limit === 'all' ? 0 : (page - 1) * limit;
+  const search = req.query.search || '';
+  let filters = {};
 
-  console.log(`[API] Fetch surveys: page=${page}, limit=${limit}`);
+  try {
+    if (req.query.filters) {
+      filters = JSON.parse(req.query.filters);
+    }
+  } catch (e) {
+    console.error("Error parsing filters:", e);
+  }
+
+  console.log(`[API] Fetch surveys: page=${page}, limit=${limit}, search=${search}, filters=${JSON.stringify(filters)}`);
   const startTime = Date.now();
 
   try {
     // Run all database queries in parallel for maximum speed
     const [managers, workers, totalManagers, totalWorkers] = await Promise.all([
-      db.getAllManagers(limit, offset),
-      db.getAllWorkers(limit, offset),
-      db.getManagersCount(),
-      db.getWorkersCount()
+      db.getAllManagers(limit, offset, search, filters),
+      db.getAllWorkers(limit, offset, search, filters),
+      db.getManagersCount(search, filters),
+      db.getWorkersCount(search, filters)
     ]);
 
     const duration = Date.now() - startTime;
@@ -245,11 +256,11 @@ app.get('/api/surveys', async (req, res) => {
       workers,
       pagination: {
         page,
-        limit,
+        limit: limit === 'all' ? Math.max(totalManagers, totalWorkers) : limit,
         totalManagers,
         totalWorkers,
-        totalPagesManagers: Math.ceil(totalManagers / limit),
-        totalPagesWorkers: Math.ceil(totalWorkers / limit)
+        totalPagesManagers: limit === 'all' ? 1 : Math.ceil(totalManagers / (limit || 50)),
+        totalPagesWorkers: limit === 'all' ? 1 : Math.ceil(totalWorkers / (limit || 50))
       }
     });
   } catch (err) {
@@ -259,6 +270,21 @@ app.get('/api/surveys', async (req, res) => {
       message: 'Internal server error while fetching data',
       detail: err.message
     });
+  }
+});
+
+app.get('/api/surveys/unique-values', async (req, res) => {
+  const { type, field } = req.query;
+  if (!type || !field) {
+    return res.status(400).json({ status: 'error', message: 'Missing type or field' });
+  }
+
+  try {
+    const values = await db.getUniqueValues(type, field);
+    res.json({ status: 'success', values });
+  } catch (err) {
+    console.error(`[API ERROR] ${err.message}`);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch unique values' });
   }
 });
 

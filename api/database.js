@@ -125,17 +125,62 @@ function getSQLite() {
   return sqliteDb;
 }
 
+// Helper to build WHERE clause for filtering and searching
+function buildWhereClause(search, filters, isMysql) {
+  const conditions = [];
+  const params = [];
+
+  if (search) {
+    if (isMysql) {
+      conditions.push("(CAST(data AS CHAR) LIKE ? OR receivedAt LIKE ?)");
+    } else {
+      conditions.push("(data LIKE ? OR receivedAt LIKE ?)");
+    }
+    params.push(`%${search}%`, `%${search}%`);
+  }
+
+  if (filters && typeof filters === 'object') {
+    for (const [key, values] of Object.entries(filters)) {
+      if (Array.isArray(values) && values.length > 0) {
+        if (key === 'receivedAt') {
+          conditions.push(`receivedAt IN (${values.map(() => '?').join(',')})`);
+          params.push(...values);
+        } else {
+          let condition;
+          if (isMysql) {
+            condition = `data->>'$.${key}' IN (${values.map(() => '?').join(',')})`;
+          } else {
+            condition = `json_extract(data, '$.${key}') IN (${values.map(() => '?').join(',')})`;
+          }
+          conditions.push(condition);
+          params.push(...values);
+        }
+      }
+    }
+  }
+
+  const whereFragment = conditions.length > 0 ? "WHERE " + conditions.join(" AND ") : "";
+  return { whereFragment, params };
+}
+
 // Database operations
 const dbOperations = {
   // Get all managers with pagination
-  async getAllManagers(limit = 50, offset = 0) {
-    console.log(`[DB DEBUG] getAllManagers: limit=${limit}, offset=${offset}, IS_MYSQL=${IS_MYSQL}`);
+  async getAllManagers(limit = 50, offset = 0, search = '', filters = {}) {
+    console.log(`[DB DEBUG] getAllManagers: limit=${limit}, offset=${offset}, search=${search}, filters=${JSON.stringify(filters)}, IS_MYSQL=${IS_MYSQL}`);
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+
     if (IS_MYSQL) {
       const pool = await initMySQL();
-      const [rows] = await pool.query(
-        'SELECT id, receivedAt, data FROM managers ORDER BY receivedAt DESC LIMIT ? OFFSET ?',
-        [limit, offset]
-      );
+      let query = `SELECT id, receivedAt, data FROM managers ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const [rows] = await pool.query(query, queryParams);
       return rows.map(row => ({
         id: row.id,
         receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
@@ -143,7 +188,15 @@ const dbOperations = {
       }));
     } else {
       const db = getSQLite();
-      const rows = db.prepare('SELECT * FROM managers ORDER BY receivedAt DESC LIMIT ? OFFSET ?').all(limit, offset);
+      let query = `SELECT * FROM managers ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const rows = db.prepare(query).all(...queryParams);
       return rows.map(row => ({
         id: row.id,
         receivedAt: row.receivedAt,
@@ -153,14 +206,21 @@ const dbOperations = {
   },
 
   // Get all workers with pagination
-  async getAllWorkers(limit = 50, offset = 0) {
-    console.log(`[DB DEBUG] getAllWorkers: limit=${limit}, offset=${offset}, IS_MYSQL=${IS_MYSQL}`);
+  async getAllWorkers(limit = 50, offset = 0, search = '', filters = {}) {
+    console.log(`[DB DEBUG] getAllWorkers: limit=${limit}, offset=${offset}, search=${search}, filters=${JSON.stringify(filters)}, IS_MYSQL=${IS_MYSQL}`);
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+
     if (IS_MYSQL) {
       const pool = await initMySQL();
-      const [rows] = await pool.query(
-        'SELECT id, receivedAt, data FROM workers ORDER BY receivedAt DESC LIMIT ? OFFSET ?',
-        [limit, offset]
-      );
+      let query = `SELECT id, receivedAt, data FROM workers ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const [rows] = await pool.query(query, queryParams);
       return rows.map(row => ({
         id: row.id,
         receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
@@ -168,7 +228,15 @@ const dbOperations = {
       }));
     } else {
       const db = getSQLite();
-      const rows = db.prepare('SELECT * FROM workers ORDER BY receivedAt DESC LIMIT ? OFFSET ?').all(limit, offset);
+      let query = `SELECT * FROM workers ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const rows = db.prepare(query).all(...queryParams);
       return rows.map(row => ({
         id: row.id,
         receivedAt: row.receivedAt,
@@ -178,27 +246,29 @@ const dbOperations = {
   },
 
   // Get total manager count
-  async getManagersCount() {
+  async getManagersCount(search = '', filters = {}) {
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
     if (IS_MYSQL) {
       const pool = await initMySQL();
-      const [rows] = await pool.query('SELECT COUNT(*) as count FROM managers');
+      const [rows] = await pool.query(`SELECT COUNT(*) as count FROM managers ${whereFragment}`, params);
       return rows[0].count;
     } else {
       const db = getSQLite();
-      const result = db.prepare('SELECT COUNT(*) as count FROM managers').get();
+      const result = db.prepare(`SELECT COUNT(*) as count FROM managers ${whereFragment}`).get(...params);
       return result ? result.count : 0;
     }
   },
 
   // Get total worker count
-  async getWorkersCount() {
+  async getWorkersCount(search = '', filters = {}) {
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
     if (IS_MYSQL) {
       const pool = await initMySQL();
-      const [rows] = await pool.query('SELECT COUNT(*) as count FROM workers');
+      const [rows] = await pool.query(`SELECT COUNT(*) as count FROM workers ${whereFragment}`, params);
       return rows[0].count;
     } else {
       const db = getSQLite();
-      const result = db.prepare('SELECT COUNT(*) as count FROM workers').get();
+      const result = db.prepare(`SELECT COUNT(*) as count FROM workers ${whereFragment}`).get(...params);
       return result ? result.count : 0;
     }
   },
@@ -368,6 +438,33 @@ const dbOperations = {
         'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
       );
       stmt.run(key, value);
+    }
+  },
+
+  // Get unique values for a specific column/field
+  async getUniqueValues(type, field) {
+    const table = type === 'worker' ? 'workers' : 'managers';
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      let query;
+      if (field === 'receivedAt') {
+        query = `SELECT DISTINCT receivedAt as value FROM ${table} ORDER BY receivedAt DESC`;
+      } else {
+        query = `SELECT DISTINCT data->>'$.${field}' as value FROM ${table} ORDER BY value ASC`;
+      }
+      const [rows] = await pool.query(query);
+      return rows.map(r => r.value).filter(v => v !== null);
+    } else {
+      const db = getSQLite();
+      let query;
+      if (field === 'receivedAt') {
+        query = `SELECT DISTINCT receivedAt as value FROM ${table} ORDER BY receivedAt DESC`;
+      } else {
+        query = `SELECT DISTINCT json_extract(data, '$.${field}') as value FROM ${table} ORDER BY value ASC`;
+      }
+      const rows = db.prepare(query).all();
+      return rows.map(r => r.value).filter(v => v !== null);
     }
   }
 };
