@@ -264,25 +264,26 @@
             color: var(--main-green-dark);
         }
 
-        input.input-line {
-            border: none;
-            border-bottom: 1.5px dotted var(--main-green);
+        .input-line {
+            border: 1.5px solid var(--border-green);
             min-width: 120px;
-            padding: 2px 8px;
+            padding: 6px 10px;
             vertical-align: middle;
-            background: #eafaf2;
-            border-radius: 2px;
-            margin-left: 10px;
-            margin-right: 10px;
+            background: #f7fcfa;
+            border-radius: 6px;
+            margin-left: 5px;
+            margin-right: 5px;
             font-family: 'Cairo', sans-serif;
             font-size: 1em;
             outline: none;
             color: var(--text-dark);
+            box-sizing: border-box;
+            transition: border 0.2s;
         }
 
-        input.input-line:focus {
-            background: #d4f3e1;
-            border-bottom: 1.5px solid var(--main-green-dark);
+        .input-line:focus {
+            background: #ffffff;
+            border: 1.5px solid var(--main-green-dark);
         }
 
         .submit-btn {
@@ -608,9 +609,24 @@
                             style="width:200px;" required>
                     </div>
                     <div>
-                        <label for="branch_name">اسم الفرع:</label>
-                        <input type="text" id="branch_name" name="اسم الفرع" class="input-line" style="width:200px;"
-                            required>
+                        <label for="branch_name">اسم الفرع (المحافظة):</label>
+                        <select id="branch_name" name="اسم الفرع" class="input-line" style="width:220px;" required>
+                            <option value="" disabled selected>اختر المحافظة...</option>
+                            <option value="دمشق">دمشق</option>
+                            <option value="ريف دمشق">ريف دمشق</option>
+                            <option value="حلب">حلب</option>
+                            <option value="حمص">حمص</option>
+                            <option value="حماة">حماة</option>
+                            <option value="اللاذقية">اللاذقية</option>
+                            <option value="طرطوس">طرطوس</option>
+                            <option value="إدلب">إدلب</option>
+                            <option value="درعا">درعا</option>
+                            <option value="السويداء">السويداء</option>
+                            <option value="القنيطرة">القنيطرة</option>
+                            <option value="دير الزور">دير الزور</option>
+                            <option value="الحسكة">الحسكة</option>
+                            <option value="الرقة">الرقة</option>
+                        </select>
                     </div>
                     <div style="margin-top:8px;">
                         <label for="duration">المدة في منصب مدير محطة:</label>
