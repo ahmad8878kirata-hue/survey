@@ -7,6 +7,7 @@
     <title>تحليل البيانات - شركة طيبة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
         :root {
             --main-green: #219150;
@@ -380,18 +381,50 @@
 
             charts[id] = new Chart(document.getElementById(id), {
                 type: 'line',
+                plugins: [ChartDataLabels],
                 data: {
                     labels: allDates,
                     datasets: [
-                        { label: label, data: values, borderColor: color, backgroundColor: color + '1a', fill: true, tension: 0.3 }
+                        {
+                            label: label,
+                            data: values,
+                            borderColor: color,
+                            backgroundColor: color + '1a',
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#ef4444',
+                            pointBorderColor: '#ef4444',
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            display: true,
+                            align: 'top',
+                            anchor: 'end',
+                            offset: 4,
+                            color: '#e11d48',
+                            font: { weight: 'bold', size: 12 },
+                            formatter: (value) => value
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            top: 25
+                        }
+                    },
                     scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 },
+                            grace: '10%'
+                        },
                         x: { ticks: { maxRotation: 45, minRotation: 45 } }
                     }
                 }
