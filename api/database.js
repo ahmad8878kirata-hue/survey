@@ -474,81 +474,75 @@ const dbOperations = {
     const workers = await this.getAllWorkers('all');
     const managers = await this.getAllManagers('all');
 
-    const aggregate = (data, field, mapFn = (v) => v) => {
+    const aggregate = (data, field) => {
+      const counts = {};
+      data.forEach(row => {
+        let val = row[field];
+        if (typeof val === 'string') val = val.trim();
+        if (val) counts[val] = (counts[val] || 0) + 1;
+      });
+      return counts;
+    };
+
+    const aggregateMulti = (data, field) => {
+      const counts = {};
+      data.forEach(row => {
+        const val = row[field];
+        if (typeof val === 'string') {
+          val.split(',').forEach(v => {
+            const trimmed = v.trim();
+            if (trimmed) counts[trimmed] = (counts[trimmed] || 0) + 1;
+          });
+        } else if (Array.isArray(val)) {
+          val.forEach(v => {
+            const trimmed = typeof v === 'string' ? v.trim() : v;
+            if (trimmed) counts[trimmed] = (counts[trimmed] || 0) + 1;
+          });
+        }
+      });
+      return counts;
+    };
+
+    const getTimeline = (data) => {
       return data.reduce((acc, row) => {
-        const val = mapFn(row[field]);
-        if (val) acc[val] = (acc[val] || 0) + 1;
-        const aggregate = (data, field) => {
-          const counts = {};
-          data.forEach(row => {
-            let val = row[field];
-            if (typeof val === 'string') val = val.trim();
-            if (val) counts[val] = (counts[val] || 0) + 1;
-          });
-          return counts;
-        };
+        if (!row.receivedAt) return acc;
+        const date = row.receivedAt.includes('T') ? row.receivedAt.split('T')[0] : row.receivedAt.split(' ')[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      }, {});
+    };
 
-        // Helper for multi-choice checkboxes
-        const aggregateMulti = (data, field) => {
-          const counts = {};
-          data.forEach(row => {
-            const val = row[field];
-            if (typeof val === 'string') {
-              val.split(',').forEach(v => {
-                const trimmed = v.trim();
-                if (trimmed) counts[trimmed] = (counts[trimmed] || 0) + 1;
-              });
-            } else if (Array.isArray(val)) {
-              val.forEach(v => {
-                const trimmed = typeof v === 'string' ? v.trim() : v;
-                if (trimmed) counts[trimmed] = (counts[trimmed] || 0) + 1;
-              });
-            }
-          });
-          return counts;
-        };
-
-        const getTimeline = (data) => {
-          return data.reduce((acc, row) => {
-            if (!row.receivedAt) return acc;
-            // Handle both ISO (2023-10-01T...) and SQL (2023-10-01 ...) formats
-            const date = row.receivedAt.includes('T') ? row.receivedAt.split('T')[0] : row.receivedAt.split(' ')[0];
-            acc[date] = (acc[date] || 0) + 1;
-            return acc;
-          }, {});
-        };
-
-        return {
-          worker: {
-            total: workers.length || 0,
-            satisfaction: aggregate(workers, 'مدى الرضا عن العمل') || {},
-            supervision: aggregate(workers, 'الرقابة عادلة؟') || {},
-            salary: aggregate(workers, 'الراتب مناسب؟') || {},
-            hours: aggregate(workers, 'ساعات العمل مناسبة؟') || {},
-            appreciation: aggregate(workers, 'الشعور بالتقدير؟') || {},
-            stability: aggregate(workers, 'الاستقرار الوظيفي؟') || {},
-            recommendation: aggregate(workers, 'هل تنصح بالعمل في المحطة؟') || {},
-            violations: aggregateMulti(workers, 'أسباب المخالفات') || {},
-            branches: aggregate(workers, 'اسم الفرع') || {},
-            timeline: getTimeline(workers) || {}
-          },
-          manager: {
-            total: managers.length || 0,
-            branches: aggregate(managers, 'اسم الفرع') || {},
-            durations: aggregate(managers, 'مدة العمل في منصب مدير محطة') || {},
-            timeline: getTimeline(managers) || {}
-          }
-        };
+    return {
+      worker: {
+        total: workers.length || 0,
+        satisfaction: aggregate(workers, 'مدى الرضا عن العمل'),
+        supervision: aggregate(workers, 'الرقابة عادلة؟'),
+        salary: aggregate(workers, 'الراتب مناسب؟'),
+        hours: aggregate(workers, 'ساعات العمل مناسبة؟'),
+        appreciation: aggregate(workers, 'الشعور بالتقدير؟'),
+        stability: aggregate(workers, 'الاستقرار الوظيفي؟'),
+        recommendation: aggregate(workers, 'هل تنصح بالعمل في المحطة؟'),
+        violations: aggregateMulti(workers, 'أسباب المخالفات'),
+        branches: aggregate(workers, 'اسم الفرع'),
+        timeline: getTimeline(workers)
+      },
+      manager: {
+        total: managers.length || 0,
+        branches: aggregate(managers, 'اسم الفرع'),
+        durations: aggregate(managers, 'مدة العمل في منصب مدير محطة'),
+        timeline: getTimeline(managers)
       }
+    };
+  }
 };
 
-    // Initialize SQLite if not using MySQL
-    if (!IS_MYSQL) {
-      getSQLite();
-    }
+// Initialize SQLite if not using MySQL
+if (!IS_MYSQL) {
+  getSQLite();
+}
 
-    // Expose some internals for other modules (read-only usage)
-    dbOperations.DB_PATH = DB_PATH;
-    dbOperations.IS_MYSQL = IS_MYSQL;
+// Expose some internals for other modules (read-only usage)
+dbOperations.DB_PATH = DB_PATH;
+dbOperations.IS_MYSQL = IS_MYSQL;
 
-    module.exports = dbOperations;
+module.exports = dbOperations;
