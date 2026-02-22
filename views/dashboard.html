@@ -1028,6 +1028,14 @@
             return String(val);
         }
 
+        function normalizeString(str) {
+            if (!str) return "";
+            return str.trim()
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي');
+        }
+
         let searchTimeout;
         function globalSearch() {
             globalSearchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -1356,18 +1364,35 @@
                     container.innerHTML = '';
                     const currentSet = activeFilters[key];
 
+                    // Smart Grouping: Group values by normalized form
+                    const groups = {};
                     sortedValues.forEach(val => {
+                        const norm = normalizeString(val);
+                        if (!groups[norm]) groups[norm] = [];
+                        groups[norm].push(val);
+                    });
+
+                    Object.keys(groups).sort().forEach(norm => {
+                        const originalValues = groups[norm];
+                        const displayLabel = originalValues[0]; // Use the first encounter as the display label
+
                         const label = document.createElement('label');
                         label.className = 'filter-item';
 
                         const input = document.createElement('input');
                         input.type = 'checkbox';
-                        input.value = val;
-                        // If no filter is active, everything is checked by default in the UI to imply "all"
-                        if (!currentSet || currentSet.has(val)) input.checked = true;
+                        // Store all original variations as a JSON string to filter correctly later
+                        input.value = JSON.stringify(originalValues);
+
+                        // If any variation is in the active filter, check this box
+                        if (!currentSet) {
+                            input.checked = true;
+                        } else {
+                            input.checked = originalValues.some(v => currentSet.has(v));
+                        }
 
                         label.appendChild(input);
-                        label.appendChild(document.createTextNode(' ' + val));
+                        label.appendChild(document.createTextNode(' ' + displayLabel));
                         container.appendChild(label);
                     });
                 } else {
@@ -1393,11 +1418,28 @@
             const checkboxes = container.querySelectorAll('input[type="checkbox"]');
             const selected = new Set();
             let allChecked = true;
+            let someChecked = false;
+
             checkboxes.forEach(cb => {
-                if (cb.checked) selected.add(cb.value);
-                else allChecked = false;
+                if (cb.checked) {
+                    someChecked = true;
+                    // Parse the JSON string containing all variations for this normalized group
+                    try {
+                        const vals = JSON.parse(cb.value);
+                        if (Array.isArray(vals)) {
+                            vals.forEach(v => selected.add(v));
+                        } else {
+                            selected.add(cb.value);
+                        }
+                    } catch (e) {
+                        selected.add(cb.value);
+                    }
+                } else {
+                    allChecked = false;
+                }
             });
-            if (allChecked || selected.size === 0) {
+
+            if (allChecked || !someChecked) {
                 delete activeFilters[openFilterCol];
             } else {
                 activeFilters[openFilterCol] = selected;

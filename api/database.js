@@ -451,20 +451,22 @@ const dbOperations = {
       if (field === 'receivedAt') {
         query = `SELECT DISTINCT receivedAt as value FROM ${table} ORDER BY receivedAt DESC`;
       } else {
-        query = `SELECT DISTINCT data->>'$.${field}' as value FROM ${table} ORDER BY value ASC`;
+        query = `SELECT DISTINCT TRIM(data->>'$.${field}') as value FROM ${table} ORDER BY value ASC`;
       }
       const [rows] = await pool.query(query);
-      return rows.map(r => r.value).filter(v => v !== null);
+      const uniqueValues = Array.from(new Set(rows.map(r => r.value).filter(v => v !== null && v !== '')));
+      return uniqueValues.sort();
     } else {
       const db = getSQLite();
       let query;
       if (field === 'receivedAt') {
         query = `SELECT DISTINCT receivedAt as value FROM ${table} ORDER BY receivedAt DESC`;
       } else {
-        query = `SELECT DISTINCT json_extract(data, '$.${field}') as value FROM ${table} ORDER BY value ASC`;
+        query = `SELECT DISTINCT TRIM(json_extract(data, '$.${field}')) as value FROM ${table} ORDER BY value ASC`;
       }
       const rows = db.prepare(query).all();
-      return rows.map(r => r.value).filter(v => v !== null);
+      const uniqueValues = Array.from(new Set(rows.map(r => r.value).filter(v => v !== null && v !== '')));
+      return uniqueValues.sort();
     }
   }
 };
