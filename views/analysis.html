@@ -406,17 +406,25 @@
                         legend: { display: false },
                         datalabels: {
                             display: true,
-                            align: 'top',
+                            align: (context) => {
+                                const index = context.dataIndex;
+                                const count = context.dataset.data.length;
+                                if (index === 0) return 'right';
+                                if (index === count - 1) return 'left';
+                                return 'top';
+                            },
                             anchor: 'end',
                             offset: 4,
                             color: '#e11d48',
-                            font: { weight: 'bold', size: 12 },
+                            font: { weight: 'bold', size: 11 },
                             formatter: (value) => value + ' استبيان تم جمعه'
                         }
                     },
                     layout: {
                         padding: {
-                            top: 25
+                            top: 30,
+                            left: 50,
+                            right: 50
                         }
                     },
                     scales: {
