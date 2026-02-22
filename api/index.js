@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 });
 
 // Authentication Middleware
-const PROTECTED_PAGES = ['/', '/index.html', '/dashboard.html'];
+const PROTECTED_PAGES = ['/', '/index.html', '/dashboard.html', '/analysis'];
 const authMiddleware = (req, res, next) => {
   const cleanPath = req.path === '/' ? '/index.html' : req.path;
 
@@ -85,6 +85,7 @@ app.get(['/استبيان مدراء.html', '/استبيان%20مدراء.html']
 // Specific routes for protected views
 app.get('/index.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'index.html')));
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'dashboard.html')));
+app.get('/analysis', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'analysis.html')));
 
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
@@ -285,6 +286,16 @@ app.get('/api/surveys/unique-values', async (req, res) => {
   } catch (err) {
     console.error(`[API ERROR] ${err.message}`);
     res.status(500).json({ status: 'error', message: 'Failed to fetch unique values' });
+  }
+});
+
+app.get('/api/analysis', async (req, res) => {
+  try {
+    const analysis = await db.getAnalysisAggregation();
+    res.json({ status: 'success', data: analysis });
+  } catch (err) {
+    console.error(`[API ERROR] ${err.message}`);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch analysis data' });
   }
 });
 

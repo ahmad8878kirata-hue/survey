@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحليل البيانات - شركة طيبة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --main-green: #219150;
+            --main-green-light: #e4ffeb;
+            --bg-gray: #f8fafc;
+            --text-dark: #1e293b;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-container img {
+            height: 40px;
+        }
+
+        .nav-btn {
+            background: var(--main-green);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            color: #64748b;
+        }
+
+        .tab-btn.active {
+            background: var(--main-green-light);
+            color: var(--main-green);
+        }
+
+        .analysis-section {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+        }
+
+        .analysis-section.active {
+            display: grid;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid #f1f5f9;
+        }
+
+        .card h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stats-grid {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: var(--main-green);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        .stat-card .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        canvas {
+            max-height: 350px;
+        }
+
+        @media (max-width: 600px) {
+            .analysis-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            background-image: url('/logo.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            animation: spin 2s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div style="font-weight: 600; color: var(--main-green);">جاري تحليل البيانات...</div>
+    </div>
+
+    <header class="header">
+        <div class="logo-container">
+            <img src="/logo.png" alt="Logo">
+            <h1 style="font-size: 1.25rem;">لوحة تحليل البيانات</h1>
+        </div>
+        <a href="/dashboard.html" class="nav-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+            العودة للوحة التحكم
+        </a>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('worker')">تحليل بيانات الموظفين</button>
+            <button class="tab-btn" onclick="switchTab('manager')">تحليل بيانات المدراء</button>
+        </div>
+
+        <!-- Worker Analysis -->
+        <div id="workerSection" class="analysis-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="value" id="totalWorkers">0</span>
+                    <span class="label">إجمالي استبيانات العمال</span>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3><i class="fa-solid fa-chart-line"></i> الجدول الزمني لجمع استبيانات العمال</h3>
+                <canvas id="workerTimelineChart" style="max-height: 250px;"></canvas>
+            </div>
+
+            <div class="card">
+                <h3><i class="fa-solid fa-face-smile"></i> مدى الرضا عن العمل</h3>
+                <canvas id="satisfactionChart"></canvas>
+            </div>
+
+            <div class="card">
+                <h3><i class="fa-solid fa-scale-balanced"></i> عدالة الرقابة</h3>
+                <canvas id="supervisionChart"></canvas>
+            </div>
+
+            <div class="card">
+                <h3><i class="fa-solid fa-thumbs-up"></i> تقييم ظروف العمل</h3>
+                <canvas id="conditionsChart"></canvas>
+            </div>
+
+            <div class="card">
+                <h3><i class="fa-solid fa-circle-exclamation"></i> أسباب المخالفات</h3>
+                <canvas id="violationsChart"></canvas>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3><i class="fa-solid fa-location-dot"></i> توزيع الاستبيانات حسب الفروع (أرقام العمليات)</h3>
+                <canvas id="workerBranchesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Manager Analysis -->
+        <div id="managerSection" class="analysis-section">
+            <div class="stats-grid">
+                <div class="stat-card" style="background: #8b5cf6;">
+                    <span class="value" id="totalManagers">0</span>
+                    <span class="label">إجمالي استبيانات المدراء</span>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3><i class="fa-solid fa-chart-line"></i> الجدول الزمني لجمع استبيانات المدراء</h3>
+                <canvas id="managerTimelineChart" style="max-height: 250px;"></canvas>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3><i class="fa-solid fa-city"></i> توزيع المدراء حسب الفروع (أرقام العمليات)</h3>
+                <canvas id="managerBranchesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+
+        async function init() {
+            try {
+                const res = await fetch('/api/analysis');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    renderAnalysis(data.data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch analysis:", err);
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.analysis-section').forEach(sec => sec.classList.remove('active'));
+
+            if (type === 'worker') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('workerSection').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('managerSection').classList.add('active');
+            }
+        }
+
+        function renderAnalysis(data) {
+            // Stats
+            document.getElementById('totalWorkers').textContent = data.worker.total;
+            document.getElementById('totalManagers').textContent = data.manager.total;
+
+            // Individual Timelines
+            renderTimeline('workerTimelineChart', 'استبيانات العمال', data.worker?.timeline || {}, '#22c55e');
+            renderTimeline('managerTimelineChart', 'استبيانات المدراء', data.manager?.timeline || {}, '#8b5cf6');
+
+            // 1. Satisfaction Pie Chart (Workers)
+            const sData = data.worker?.satisfaction || {};
+            renderPie('satisfactionChart', sData, ['#22c55e', '#3b82f6', '#ef4444']);
+
+            // 1.5 Supervision Pie Chart
+            renderPie('supervisionChart', data.worker?.supervision || {}, ['#22c55e', '#ef4444']);
+
+            // 2. Work Conditions Bar Chart (Workers)
+            const conditions = {
+                'الراتب': data.worker.salary['نعم'] || 0,
+                'الساعات': data.worker.hours['نعم'] || 0,
+                'التقدير': data.worker.appreciation['نعم'] || 0,
+                'الاستقرار': data.worker.stability['نعم'] || 0,
+                'النصيحة': data.worker.recommendation['نعم'] || 0
+            };
+            const conditionsNo = {
+                'الراتب': data.worker.salary['لا'] || 0,
+                'الساعات': data.worker.hours['لا'] || 0,
+                'التقدير': data.worker.appreciation['لا'] || 0,
+                'الاستقرار': data.worker.stability['لا'] || 0,
+                'النصيحة': data.worker.recommendation['لا'] || 0
+            };
+            renderStackedBar('conditionsChart',
+                ['الراتب مناسب', 'ساعات مناسبة', 'شعور بالتقدير', 'استقرار وظيفي', 'ينصح بالعمل'],
+                [Object.values(conditions), Object.values(conditionsNo)]
+            );
+
+            // 3. Violations Bar Chart
+            renderBar('violationsChart', data.worker?.violations || {}, '#f59e0b');
+
+            // 4. Worker Branches Bar (Raw Figures)
+            renderBar('workerBranchesChart', data.worker?.branches || {}, '#22c55e', 'x');
+
+            // 5. Manager Branches Bar (Raw Figures)
+            renderBar('managerBranchesChart', data.manager?.branches || {}, '#8b5cf6', 'x');
+        }
+
+        function renderTimeline(id, label, timelineData, color) {
+            const allDates = Object.keys(timelineData || {}).sort();
+            const values = allDates.map(d => timelineData[d] || 0);
+
+            if (charts[id]) charts[id].destroy();
+
+            charts[id] = new Chart(document.getElementById(id), {
+                type: 'line',
+                data: {
+                    labels: allDates,
+                    datasets: [
+                        { label: label, data: values, borderColor: color, backgroundColor: color + '1a', fill: true, tension: 0.3 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        x: { ticks: { maxRotation: 45, minRotation: 45 } }
+                    }
+                }
+            });
+        }
+
+        function renderPie(id, dataMap, colors) {
+            const labels = Object.keys(dataMap);
+            const values = Object.values(dataMap);
+
+            if (charts[id]) charts[id].destroy();
+
+            charts[id] = new Chart(document.getElementById(id), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors || generateColors(labels.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', rtl: true, labels: { font: { size: 12 } } }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        function renderBar(id, dataMap, color, axis = 'y') {
+            const labels = Object.keys(dataMap);
+            const values = Object.values(dataMap);
+
+            if (charts[id]) charts[id].destroy();
+
+            charts[id] = new Chart(document.getElementById(id), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'العدد',
+                        data: values,
+                        backgroundColor: color,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: axis,
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        y: { ticks: { font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        function renderStackedBar(id, labels, datasetValues) {
+            if (charts[id]) charts[id].destroy();
+
+            charts[id] = new Chart(document.getElementById(id), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'نعم', data: datasetValues[0], backgroundColor: '#22c55e' },
+                        { label: 'لا', data: datasetValues[1], backgroundColor: '#cbd5e1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function generateColors(count) {
+            const palette = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#10b981'];
+            let colors = [];
+            for (let i = 0; i < count; i++) {
+                colors.push(palette[i % palette.length]);
+            }
+            return colors;
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
