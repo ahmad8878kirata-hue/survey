@@ -170,9 +170,52 @@
             height: 500px !important;
         }
 
+        /* --- Mobile Responsiveness --- */
         @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+                text-align: center;
+            }
+
+            .logo-container {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .tabs {
+                flex-direction: column;
+                gap: 8px;
+                padding: 0 10px;
+            }
+
+            .tab-btn {
+                width: 100%;
+                border-radius: 8px !important;
+                padding: 12px;
+            }
+
             .analysis-section {
                 grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stat-card .value {
+                font-size: 2rem;
+            }
+
+            .large-chart {
+                max-height: 350px !important;
+                height: 350px !important;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .card h3 {
+                font-size: 1.1rem;
             }
         }
 
