@@ -524,6 +524,10 @@ const dbOperations = {
         recommendation: aggregate(workers, 'هل تنصح بالعمل في المحطة؟'),
         violations: aggregateMulti(workers, 'أسباب المخالفات'),
         branches: aggregate(workers, 'اسم الفرع'),
+        dissatisfactionByBranch: (function () {
+          const dissatisfiedWorkers = workers.filter(w => w['مدى الرضا عن العمل'] === 'غير راضي أبداً');
+          return aggregate(dissatisfiedWorkers, 'اسم الفرع');
+        })(),
         timeline: getTimeline(workers)
       },
       manager: {

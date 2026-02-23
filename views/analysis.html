@@ -300,6 +300,11 @@
                 <canvas id="supervisionChart"></canvas>
             </div>
 
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> نسبة عدم الرضا حسب المحافظة (أرقام العمليات)</h3>
+                <canvas id="dissatisfactionByBranchChart" class="large-chart"></canvas>
+            </div>
+
             <div class="card">
                 <h3><i class="fa-solid fa-thumbs-up"></i> تقييم ظروف العمل</h3>
                 <canvas id="conditionsChart"></canvas>
@@ -390,6 +395,9 @@
                 'لا': '#ef4444'
             };
             renderPie('supervisionChart', data.worker?.supervision || {}, supervisionColors);
+
+            // 1.6 Dissatisfaction by Branch Bar Chart
+            renderBar('dissatisfactionByBranchChart', data.worker?.dissatisfactionByBranch || {}, '#ef4444', 'x');
 
             // 2. Work Conditions Bar Chart (Workers)
             const conditions = {
