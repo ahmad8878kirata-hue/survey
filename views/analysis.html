@@ -165,6 +165,11 @@
             max-height: 350px;
         }
 
+        .large-chart {
+            max-height: 500px !important;
+            height: 500px !important;
+        }
+
         @media (max-width: 600px) {
             .analysis-section {
                 grid-template-columns: 1fr;
@@ -263,8 +268,8 @@
             </div>
 
             <div class="card" style="grid-column: 1 / -1;">
-                <h3><i class="fa-solid fa-location-dot"></i> توزيع الاستبيانات حسب الفروع (أرقام العمليات)</h3>
-                <canvas id="workerBranchesChart"></canvas>
+                <h3><i class="fa-solid fa-location-dot"></i> توزيع الاستبيانات حسب الفروع (أعلى 10 فروع)</h3>
+                <canvas id="workerBranchesChart" class="large-chart"></canvas>
             </div>
         </div>
 
@@ -283,8 +288,8 @@
             </div>
 
             <div class="card" style="grid-column: 1 / -1;">
-                <h3><i class="fa-solid fa-city"></i> توزيع المدراء حسب الفروع (أرقام العمليات)</h3>
-                <canvas id="managerBranchesChart"></canvas>
+                <h3><i class="fa-solid fa-city"></i> توزيع المدراء حسب الفروع (أعلى 10 فروع)</h3>
+                <canvas id="managerBranchesChart" class="large-chart"></canvas>
             </div>
         </div>
     </div>
@@ -366,11 +371,17 @@
             // 3. Violations Bar Chart
             renderBar('violationsChart', data.worker?.violations || {}, '#f59e0b');
 
-            // 4. Worker Branches Bar (Raw Figures)
-            renderBar('workerBranchesChart', data.worker?.branches || {}, '#22c55e', 'x');
+            // 4. Worker Branches Bar (Top 10)
+            const workerBranches = Object.entries(data.worker?.branches || {})
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            renderBar('workerBranchesChart', Object.fromEntries(workerBranches), '#22c55e', 'x');
 
-            // 5. Manager Branches Bar (Raw Figures)
-            renderBar('managerBranchesChart', data.manager?.branches || {}, '#8b5cf6', 'x');
+            // 5. Manager Branches Bar (Top 10)
+            const managerBranches = Object.entries(data.manager?.branches || {})
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            renderBar('managerBranchesChart', Object.fromEntries(managerBranches), '#8b5cf6', 'x');
         }
 
         function renderTimeline(id, label, timelineData, color) {

@@ -533,6 +533,134 @@ const dbOperations = {
         timeline: getTimeline(managers)
       }
     };
+  },
+
+  async cleanBranchNames() {
+    const tables = ['workers', 'managers'];
+    let updatedCount = 0;
+
+    // Helper to normalize Arabic characters for better matching
+    const normalizeAr = (text) => {
+      if (!text || typeof text !== 'string') return '';
+      return text
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/[ة]/g, 'ه')
+        .replace(/[ى]/g, 'ي')
+        .replace(/\./g, '') // Remove dots (e.g., القر.احه)
+        .trim();
+    };
+
+    const idlibKeywords = [
+      'ادلب', 'سرمدا', 'اريحا', 'القصور', 'المدنيه', 'الغابات', 'الفاروق', 'الفرع', 'الدانه',
+      'جسر الشغور', 'حارم', 'دلب', 'سراقب', 'باب الهوي', 'صرمدا', 'معره النعمان', 'كنصفره',
+      'جبل الزاويه', 'اداب', 'عزمارين', 'معره مصرين', 'معرتمصرين', 'الدانا',
+      'الاول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر',
+      'المدينه', 'المدينة', 'معرة نعمان', 'الحساوي'
+    ].map(normalizeAr);
+
+    const lattakiaKeywords = [
+      'اللاذقيه', 'الاذقيه', 'حسدؤه', 'حيدره', 'الرمل الشمالي', 'القraحه', 'القرداحه',
+      'طيب الرحمن', 'الرحمن', 'دوار الجامعه', 'الزقيه', 'دم صرخه', 'للاللاذقيه',
+      'دمسرخو', 'للاذقيه', 'الزقيه', 'القرداحة', 'القرداحه', 'حيدره', 'الذقية', 'دمسرخو', 'للاذقية',
+      'اللازقيه', 'الساحل'
+    ].map(normalizeAr);
+
+    const aleppoKeywords = ['حلب', 'اعزاز', 'الشعار', 'خان السبل', 'عفرين', 'منبج', 'الجنوبي'].map(normalizeAr);
+    const tartusKeywords = ['طرطوس', 'الرمال', 'بانياس', 'صرصوس'].map(normalizeAr);
+    const raqqaKeywords = ['الرقة', 'الرقه', 'الطبفه', 'الطبقه'].map(normalizeAr);
+    const homsKeywords = ['حمص', 'تدمر'].map(normalizeAr);
+    const hamaKeywords = ['حماه', 'حماة', 'مصياف'].map(normalizeAr);
+    const daraaKeywords = ['درعا'].map(normalizeAr);
+    const deirEzorKeywords = ['دير الزور', 'ديرالزور'].map(normalizeAr);
+    const damascusKeywords = ['دمشق', 'دمش', 'دمشف', 'المجتهد', 'زين الشام', 'الزبداني', 'الحسين', 'حسين'].map(normalizeAr);
+
+    for (const table of tables) {
+      let rows = [];
+      if (IS_MYSQL) {
+        const pool = await initMySQL();
+        const [mysqlRows] = await pool.query(`SELECT id, data FROM ${table}`);
+        rows = mysqlRows;
+      } else {
+        const db = getSQLite();
+        rows = db.prepare(`SELECT id, data FROM ${table}`).all();
+      }
+
+      console.log(`[CLEAN] Scanning table: ${table}, rows: ${rows.length}`);
+
+      for (const row of rows) {
+        const data = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+
+        // Robust key finding
+        let branchKey = 'اسم الفرع';
+        let branchValue = data[branchKey];
+        if (branchValue === undefined) {
+          const foundKey = Object.keys(data).find(k => {
+            const nk = normalizeAr(k);
+            return nk.includes('فرع') || nk.includes('محطه');
+          });
+          if (foundKey) {
+            branchKey = foundKey;
+            branchValue = data[foundKey];
+          }
+        }
+
+        branchValue = branchValue || '';
+        if (typeof branchValue !== 'string') branchValue = String(branchValue);
+
+        const branchNormalized = normalizeAr(branchValue);
+        let newBranch = null;
+
+        // Matching Logic
+        if (aleppoKeywords.some(k => branchNormalized.includes(k))) {
+          newBranch = 'حلب';
+        }
+        else if (tartusKeywords.some(k => branchNormalized.includes(k))) {
+          newBranch = 'طرطوس';
+        }
+        else if (raqqaKeywords.some(k => branchNormalized.includes(k))) {
+          newBranch = 'الرقة';
+        }
+        else if (hamaKeywords.some(k => branchNormalized.includes(k))) {
+          newBranch = 'حماه';
+        }
+        else if (daraaKeywords.some(k => branchNormalized.includes(k))) {
+          newBranch = 'درعا';
+        }
+        else if (deirEzorKeywords.some(k => branchNormalized.includes(k))) {
+          newBranch = 'دير الزور';
+        }
+        else if (homsKeywords.some(k => branchNormalized.includes(k))) {
+          newBranch = 'حمص';
+        }
+        else if (lattakiaKeywords.some(k => branchNormalized.includes(k))) {
+          newBranch = 'اللاذقية';
+        }
+        else if (damascusKeywords.some(k => branchNormalized.includes(k))) {
+          newBranch = 'دمشق';
+        }
+        // Idlib: matches keywords, English numbers, or Arabic numbers ١-١٠
+        else if (idlibKeywords.some(k => branchNormalized.includes(k)) || /\d+/.test(branchValue) || /[١٢٣٤٥٦٧٨٩٠]/.test(branchValue)) {
+          newBranch = 'إدلب';
+        }
+
+        if (newBranch && newBranch !== branchValue) {
+          console.log(`[CLEAN] Updated ID ${row.id}: "${branchValue}" -> "${newBranch}"`);
+          data[branchKey] = newBranch;
+          const updatedJson = JSON.stringify(data);
+
+          if (IS_MYSQL) {
+            const pool = await initMySQL();
+            await pool.query(`UPDATE ${table} SET data = ? WHERE id = ?`, [updatedJson, row.id]);
+          } else {
+            const db = getSQLite();
+            db.prepare(`UPDATE ${table} SET data = ? WHERE id = ?`).run(updatedJson, row.id);
+          }
+          updatedCount++;
+        }
+      }
+    }
+    console.log(`[CLEAN] Finished. Total updated: ${updatedCount}`);
+    return updatedCount;
   }
 };
 

@@ -707,6 +707,9 @@
                     onclick="toggleLock('manager')">
                     <i class="fa-solid fa-lock"></i> <span id="lockManagerText">Lock Manager Survey</span>
                 </button>
+                <button class="action-btn" style="background-color: #ec4899;" onclick="cleanData()">
+                    <i class="fa-solid fa-broom"></i> <span data-i18n="btnCleanData">Clean Branch Names</span>
+                </button>
             </div>
 
             <div class="table-wrapper">
@@ -824,6 +827,7 @@
                 copyDetailsSuccess: "Record details copied to clipboard!",
                 filterDeselectAll: "Deselect All",
                 btnAnalysis: "Data Analysis",
+                btnCleanData: "Clean Branch Names",
             },
             ar: {
                 pageTitle: "لوحة تحكم استبيانات شركة طيبة قسم المتابعة والرقابة",
@@ -862,6 +866,7 @@
                 copyDetailsSuccess: "تم نسخ تفاصيل السجل إلى الحافظة!",
                 filterDeselectAll: "إلغاء تحديد الكل",
                 btnAnalysis: "تحليل البيانات",
+                btnCleanData: "تنظيف أسماء الفروع",
             }
         };
 
@@ -1473,6 +1478,33 @@
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        async function cleanData() {
+            const confirmMsg = currentLang === 'ar'
+                ? 'هل أنت متأكد من تنظيف بيانات أسماء الفروع؟ سيتم توحيد الأسماء بناءً على الكلمات المفتاحية لمناطق (إدلب، اللاذقية، حمص).'
+                : 'Are you sure you want to clean branch name data? Names will be normalized based on keywords for (Idlib, Lattakia, Homs).';
+
+            if (!confirm(confirmMsg)) return;
+
+            showLoading(true, currentLang === 'ar' ? 'جاري تنظيف البيانات...' : 'Cleaning data...');
+            try {
+                const response = await fetch('/api/clean-branches', { method: 'POST' });
+                if (!response.ok) throw new Error("Failed to clean data");
+
+                const result = await response.json();
+                const successMsg = currentLang === 'ar'
+                    ? `تم تنظيف البيانات بنجاح! تم تحديث ${result.updatedCount} سجل.`
+                    : `Data cleaned successfully! Updated ${result.updatedCount} records.`;
+
+                alert(successMsg);
+                await fetchData();
+            } catch (err) {
+                console.error("Clean Error:", err);
+                alert("Failed to clean data: " + err.message);
+            } finally {
+                showLoading(false);
+            }
+        }
 
         async function exportToExcel() {
             if (typeof XLSX === 'undefined') {

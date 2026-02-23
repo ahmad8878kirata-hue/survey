@@ -52,6 +52,7 @@ const authMiddleware = (req, res, next) => {
   const isProtectedApi =
     req.path.startsWith('/api/surveys') ||
     req.path.startsWith('/api/backup') ||
+    req.path.startsWith('/api/clean-branches') ||
     (req.path.startsWith('/api/survey-locks') && req.method === 'POST') ||
     (req.path.startsWith('/api/survey/') && req.method === 'DELETE');
 
@@ -106,6 +107,17 @@ app.post('/api/login', (req, res) => {
 app.get('/api/logout', (req, res) => {
   res.clearCookie('auth');
   res.redirect('/login.html');
+});
+
+// Cleaning Utility Endpoint
+app.post('/api/clean-branches', async (req, res) => {
+  try {
+    const updatedCount = await db.cleanBranchNames();
+    res.json({ status: 'success', updatedCount });
+  } catch (err) {
+    console.error('[CLEAN] Error cleaning branch names:', err);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
 });
 
 function redactEmailAddress(email) {
