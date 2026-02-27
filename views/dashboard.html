@@ -1182,7 +1182,7 @@
                         editBtn.title = TRANSLATIONS[currentLang].btnEditBranch;
                         editBtn.onclick = (e) => {
                             e.stopPropagation();
-                            editBranchName(row.id, val);
+                            editFieldValue(row.id, val, k);
                         };
                         td.appendChild(editBtn);
                     }
@@ -1376,7 +1376,7 @@
             renderTable();
         }
 
-        async function editBranchName(id, currentName) {
+        async function editFieldValue(id, currentName, fieldKey) {
             const t = TRANSLATIONS[currentLang];
             const newName = prompt(t.promptEditBranch, currentName);
             if (newName === null || newName.trim() === '' || newName === currentName) {
@@ -1385,10 +1385,10 @@
 
             const typeParam = currentTab === 'workers' ? 'worker' : 'manager';
             try {
-                const res = await fetch(`/api/survey/${typeParam}/${id}/branch`, {
+                const res = await fetch(`/api/survey/${typeParam}/${id}/field`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ newBranchName: newName.trim() })
+                    body: JSON.stringify({ field: fieldKey, newValue: newName.trim() })
                 });
 
                 const json = await res.json();
@@ -1396,12 +1396,7 @@
                     // Update the local data to reflect the change immediately
                     const rowIndex = allData[currentTab].findIndex(item => item.id === id);
                     if (rowIndex !== -1) {
-                        // Find the right key (it could be various variations of 'branch')
-                        const item = allData[currentTab][rowIndex];
-                        const branchKey = Object.keys(item).find(k => k === 'اسم الفرع' || k.includes('فرع') || k.includes('محط'));
-                        if (branchKey) {
-                            item[branchKey] = newName.trim();
-                        }
+                        allData[currentTab][rowIndex][fieldKey] = newName.trim();
                     }
                     renderTable();
                     alert(t.editSuccess);

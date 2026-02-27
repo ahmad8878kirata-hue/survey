@@ -391,8 +391,8 @@ const dbOperations = {
     }
   },
 
-  // Update branch name for a specific survey
-  async updateBranchName(type, id, newBranchName) {
+  // Update a specific field for a survey
+  async updateField(type, id, fieldKey, newValue) {
     const table = type === 'worker' ? 'workers' : 'managers';
 
     // First, fetch the existing record to get its data
@@ -411,15 +411,7 @@ const dbOperations = {
 
     try {
       const data = JSON.parse(existingDataStr);
-
-      // Find the correct branch key
-      let branchKey = 'اسم الفرع';
-      if (data[branchKey] === undefined) {
-        const foundKey = Object.keys(data).find(k => k.includes('فرع') || k.includes('محط'));
-        if (foundKey) branchKey = foundKey;
-      }
-
-      data[branchKey] = newBranchName;
+      data[fieldKey] = newValue;
       const updatedDataStr = JSON.stringify(data);
 
       if (IS_MYSQL) {
@@ -432,7 +424,7 @@ const dbOperations = {
         return result.changes > 0;
       }
     } catch (e) {
-      console.error("Error updating branch name:", e);
+      console.error("Error updating field:", e);
       return false;
     }
   },
