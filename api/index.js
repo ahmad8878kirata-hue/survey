@@ -375,6 +375,31 @@ app.delete('/api/survey/:type/:id', async (req, res) => {
   }
 });
 
+app.post('/api/survey/:type/:id/branch', async (req, res) => {
+  const { type, id } = req.params;
+  const { newBranchName } = req.body;
+
+  if (type !== 'manager' && type !== 'worker') {
+    return res.status(400).json({ status: 'error', message: 'Invalid type' });
+  }
+
+  if (!newBranchName || typeof newBranchName !== 'string') {
+    return res.status(400).json({ status: 'error', message: 'Missing new branch name' });
+  }
+
+  try {
+    const updated = await db.updateBranchName(type, id, newBranchName);
+    if (!updated) {
+      return res.status(404).json({ status: 'error', message: 'Not found or unchanged' });
+    }
+    console.log(`Updated branch name for ${type} survey ID ${id} to ${newBranchName}`);
+    res.json({ status: 'success' });
+  } catch (err) {
+    console.error('Error updating branch name:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to update branch name' });
+  }
+});
+
 // Get current lock status for surveys (public read so forms can know they are closed)
 app.get('/api/survey-locks', async (_req, res) => {
   try {
