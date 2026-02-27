@@ -288,12 +288,22 @@ app.get('/api/surveys', async (req, res) => {
 
 app.get('/api/surveys/unique-values', async (req, res) => {
   const { type, field } = req.query;
+  let filters = {};
+
+  try {
+    if (req.query.filters) {
+      filters = JSON.parse(req.query.filters);
+    }
+  } catch (e) {
+    console.error("Error parsing filters:", e);
+  }
+
   if (!type || !field) {
     return res.status(400).json({ status: 'error', message: 'Missing type or field' });
   }
 
   try {
-    const values = await db.getUniqueValues(type, field);
+    const values = await db.getUniqueValues(type, field, filters);
     res.json({ status: 'success', values });
   } catch (err) {
     console.error(`[API ERROR] ${err.message}`);
@@ -302,8 +312,9 @@ app.get('/api/surveys/unique-values', async (req, res) => {
 });
 
 app.get('/api/analysis', async (req, res) => {
+  const branch = req.query.branch || null;
   try {
-    const analysis = await db.getAnalysisAggregation();
+    const analysis = await db.getAnalysisAggregation(branch);
     res.json({ status: 'success', data: analysis });
   } catch (err) {
     console.error(`[API ERROR] ${err.message}`);

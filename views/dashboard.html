@@ -1367,7 +1367,21 @@
             popover.style.left = left + 'px';
 
             try {
-                const res = await fetch(`/api/surveys/unique-values?type=${currentTab === 'workers' ? 'worker' : 'manager'}&field=${key}`);
+                const filtersToSend = { ...activeFilters };
+                delete filtersToSend[key]; // Do not filter options of the current column by its own active filter
+
+                const serializedFilters = {};
+                for (const [k, set] of Object.entries(filtersToSend)) {
+                    if (set.size > 0) serializedFilters[k] = Array.from(set);
+                }
+
+                const queryParams = new URLSearchParams({
+                    type: currentTab === 'workers' ? 'worker' : 'manager',
+                    field: key,
+                    filters: JSON.stringify(serializedFilters)
+                });
+
+                const res = await fetch(`/api/surveys/unique-values?${queryParams.toString()}`);
                 const data = await res.json();
 
                 if (data.status === 'success') {

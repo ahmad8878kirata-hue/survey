@@ -442,37 +442,42 @@ const dbOperations = {
   },
 
   // Get unique values for a specific column/field
-  async getUniqueValues(type, field) {
+  async getUniqueValues(type, field, filters = {}) {
     const table = type === 'worker' ? 'workers' : 'managers';
+    const { whereFragment, params } = buildWhereClause('', filters, IS_MYSQL);
 
     if (IS_MYSQL) {
       const pool = await initMySQL();
       let query;
       if (field === 'receivedAt') {
-        query = `SELECT DISTINCT receivedAt as value FROM ${table} ORDER BY receivedAt DESC`;
+        query = `SELECT DISTINCT receivedAt as value FROM ${table} ${whereFragment} ORDER BY receivedAt DESC`;
       } else {
-        query = `SELECT DISTINCT TRIM(data->>'$.${field}') as value FROM ${table} ORDER BY value ASC`;
+        query = `SELECT DISTINCT TRIM(data->>'$.${field}') as value FROM ${table} ${whereFragment} ORDER BY value ASC`;
       }
-      const [rows] = await pool.query(query);
+      const [rows] = await pool.query(query, params);
       const uniqueValues = Array.from(new Set(rows.map(r => r.value).filter(v => v !== null && v !== '')));
       return uniqueValues.sort();
     } else {
       const db = getSQLite();
       let query;
       if (field === 'receivedAt') {
-        query = `SELECT DISTINCT receivedAt as value FROM ${table} ORDER BY receivedAt DESC`;
+        query = `SELECT DISTINCT receivedAt as value FROM ${table} ${whereFragment} ORDER BY receivedAt DESC`;
       } else {
-        query = `SELECT DISTINCT TRIM(json_extract(data, '$.${field}')) as value FROM ${table} ORDER BY value ASC`;
+        query = `SELECT DISTINCT TRIM(json_extract(data, '$.${field}')) as value FROM ${table} ${whereFragment} ORDER BY value ASC`;
       }
-      const rows = db.prepare(query).all();
+      const rows = db.prepare(query).all(...params);
       const uniqueValues = Array.from(new Set(rows.map(r => r.value).filter(v => v !== null && v !== '')));
       return uniqueValues.sort();
     }
   },
 
-  async getAnalysisAggregation() {
-    const workers = await this.getAllWorkers('all');
-    const managers = await this.getAllManagers('all');
+  async getAnalysisAggregation(branchName = null) {
+    let filters = {};
+    if (branchName) {
+      filters['اسم الفرع'] = [branchName];
+    }
+    const workers = await this.getAllWorkers('all', 0, '', filters);
+    const managers = await this.getAllManagers('all', 0, '', filters);
 
     const aggregate = (data, field) => {
       const counts = {};
