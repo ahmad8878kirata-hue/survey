@@ -564,7 +564,7 @@ const dbOperations = {
       'جسر الشغور', 'حارم', 'دلب', 'سراقب', 'باب الهوي', 'صرمدا', 'معره النعمان', 'كنصفره',
       'جبل الزاويه', 'اداب', 'عزمارين', 'معره مصرين', 'معرتمصرين', 'الدانا',
       'الاول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر',
-      'المدينه', 'المدينة', 'معرة نعمان', 'الحساوي'
+      'المدينه', 'المدينة', 'معرة نعمان', 'الحساوي', 'الامانه', 'الجسر', 'القنيه', 'بسيدا', 'وتار', 'حساوي'
     ].map(normalizeAr);
 
     const lattakiaKeywords = [
@@ -574,14 +574,14 @@ const dbOperations = {
       'اللازقيه', 'الساحل'
     ].map(normalizeAr);
 
-    const aleppoKeywords = ['حلب', 'اعزاز', 'الشعار', 'خان السبل', 'عفرين', 'منبج', 'الجنوبي'].map(normalizeAr);
+    const aleppoKeywords = ['حلب', 'اعزاز', 'الشعار', 'خان السبل', 'عفرين', 'منبج', 'الجنوبي', 'الباب', 'جرابلس'].map(normalizeAr);
     const tartusKeywords = ['طرطوس', 'الرمال', 'بانياس', 'صرصوس'].map(normalizeAr);
     const raqqaKeywords = ['الرقة', 'الرقه', 'الطبفه', 'الطبقه'].map(normalizeAr);
-    const homsKeywords = ['حمص', 'تدمر'].map(normalizeAr);
-    const hamaKeywords = ['حماه', 'حماة', 'مصياف'].map(normalizeAr);
+    const homsKeywords = ['حمص', 'تدمر', 'الرصيف', 'اللؤلؤه', 'السلام', 'رامي عبد الكريم'].map(normalizeAr);
+    const hamaKeywords = ['حماه', 'حماة', 'مصياف', 'الوزير', 'الانشاءات', 'النشائات', 'رنجوس'].map(normalizeAr);
     const daraaKeywords = ['درعا'].map(normalizeAr);
     const deirEzorKeywords = ['دير الزور', 'ديرالزور'].map(normalizeAr);
-    const damascusKeywords = ['دمشق', 'دمش', 'دمشف', 'المجتهد', 'زين الشام', 'الزبداني', 'الحسين', 'حسين'].map(normalizeAr);
+    const damascusKeywords = ['دمشق', 'دمش', 'دمشف', 'المجتهد', 'زين الشام', 'الزبداني', 'الحسين', 'حسين', 'التركاوي', 'التكروري', 'ببيلا', 'بوابه الشام', 'القدم'].map(normalizeAr);
 
     for (const table of tables) {
       let rows = [];
