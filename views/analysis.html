@@ -574,10 +574,9 @@
                         legend: { position: 'bottom', rtl: true, labels: { font: { size: 12 } } },
                         datalabels: {
                             color: '#fff',
-                            backgroundColor: 'rgba(0,0,0,0.6)',
-                            borderRadius: 4,
-                            padding: { top: 4, bottom: 4, left: 6, right: 6 },
-                            font: { weight: 'bold', size: 12, family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
+                            textStrokeColor: 'rgba(0, 0, 0, 0.8)',
+                            textStrokeWidth: 3,
+                            font: { weight: 'bold', size: 14, family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
                             formatter: (value, context) => {
                                 const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                                 if (total === 0 || value === 0) return '';
@@ -612,40 +611,40 @@
                         borderRadius: 6
                     }]
                 },
-                options: {
-                    indexAxis: axis,
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end',
-                            align: axis === 'x' ? 'top' : 'right',
-                            color: '#fff',
-                            backgroundColor: 'rgba(0,0,0,0.6)',
-                            borderRadius: 4,
-                            padding: { top: 4, bottom: 4, left: 6, right: 6 },
-                            font: { weight: 'bold', size: 11, family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
-                            formatter: (value, context) => {
-                                const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                if (total === 0 || value === 0) return '';
-                                const percentage = ((value * 100) / total).toFixed(1) + '%';
-                                return value + ' (' + percentage + ')';
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: { stepSize: axis === 'y' ? 1 : undefined },
-                            grace: axis === 'y' ? '15%' : undefined
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { font: { size: 11 }, stepSize: axis === 'x' ? 1 : undefined },
-                            grace: axis === 'x' ? '15%' : undefined
-                        }
-                    }
-                }
+                // options: {
+                //     indexAxis: axis,
+                //     responsive: true,
+                //     plugins: {
+                //         legend: { display: false },
+                //         datalabels: {
+                //             anchor: axis === 'y' ? 'end' : 'center',
+                //             align: axis === 'y' ? 'right' : 'center',
+                //             rotation: axis === 'y' ? 0 : -90,
+                //             color: '#fff',
+                //             textStrokeColor: 'rgba(0, 0, 0, 0.8)',
+                //             textStrokeWidth: 3,
+                //             font: { weight: 'bold', size: 13, family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
+                //             formatter: (value, context) => {
+                //                 const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                //                 if (total === 0 || value === 0) return '';
+                //                 const percentage = ((value * 100) / total).toFixed(1) + '%';
+                //                 return value + ' (' + percentage + ')';
+                //             }
+                //         }
+                //     },
+                //     scales: {
+                //         x: {
+                //             beginAtZero: true,
+                //             ticks: { stepSize: axis === 'y' ? 1 : undefined },
+                //             grace: axis === 'y' ? '15%' : undefined
+                //         },
+                //         y: {
+                //             beginAtZero: true,
+                //             ticks: { font: { size: 11 }, stepSize: axis === 'x' ? 1 : undefined },
+                //             grace: axis === 'x' ? '15%' : undefined
+                //         }
+                //     }
+                // }
             });
         }
 
@@ -667,8 +666,13 @@
                     plugins: {
                         legend: { position: 'bottom' },
                         datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            rotation: 0,
                             color: '#fff',
-                            font: { weight: 'bold', size: 12, family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
+                            textStrokeColor: 'rgba(0, 0, 0, 0.8)',
+                            textStrokeWidth: 3,
+                            font: { weight: 'bold', size: 14, family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" },
                             formatter: (value, context) => {
                                 if (value === 0) return '';
                                 const dataIndex = context.dataIndex;
