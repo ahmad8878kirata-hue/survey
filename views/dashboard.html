@@ -828,10 +828,6 @@
                 filterDeselectAll: "Deselect All",
                 btnAnalysis: "Data Analysis",
                 btnCleanData: "Clean Branch Names",
-                btnEditBranch: "Edit",
-                promptEditBranch: "Enter new branch name:",
-                editSuccess: "Branch name updated successfully.",
-                editFail: "Failed to update branch name."
             },
             ar: {
                 pageTitle: "لوحة تحكم استبيانات شركة طيبة قسم المتابعة والرقابة",
@@ -871,10 +867,6 @@
                 filterDeselectAll: "إلغاء تحديد الكل",
                 btnAnalysis: "تحليل البيانات",
                 btnCleanData: "تنظيف أسماء الفروع",
-                btnEditBranch: "تعديل",
-                promptEditBranch: "أدخل اسم الفرع الجديد:",
-                editSuccess: "تم تحديث اسم الفرع بنجاح.",
-                editFail: "فشل تحديث اسم الفرع."
             }
         };
 
@@ -1168,25 +1160,6 @@
                     } else {
                         td.textContent = val || '—';
                     }
-
-                    // Add edit button next to the branch name
-                    if (k === 'اسم الفرع' || k.includes('فرع') || k.includes('محط')) {
-                        const editBtn = document.createElement('button');
-                        editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
-                        editBtn.style.background = 'none';
-                        editBtn.style.border = 'none';
-                        editBtn.style.color = 'var(--main-green)';
-                        editBtn.style.cursor = 'pointer';
-                        editBtn.style.marginLeft = '8px';
-                        editBtn.style.marginRight = '8px';
-                        editBtn.title = TRANSLATIONS[currentLang].btnEditBranch;
-                        editBtn.onclick = (e) => {
-                            e.stopPropagation();
-                            editFieldValue(row.id, val, k);
-                        };
-                        td.appendChild(editBtn);
-                    }
-
                     tr.appendChild(td);
                 });
 
@@ -1374,39 +1347,6 @@
                 currentSort.asc = true;
             }
             renderTable();
-        }
-
-        async function editFieldValue(id, currentName, fieldKey) {
-            const t = TRANSLATIONS[currentLang];
-            const newName = prompt(t.promptEditBranch, currentName);
-            if (newName === null || newName.trim() === '' || newName === currentName) {
-                return; // User cancelled, entered empty string, or no change
-            }
-
-            const typeParam = currentTab === 'workers' ? 'worker' : 'manager';
-            try {
-                const res = await fetch(`/api/survey/${typeParam}/${id}/field`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ field: fieldKey, newValue: newName.trim() })
-                });
-
-                const json = await res.json();
-                if (res.ok && json.status === 'success') {
-                    // Update the local data to reflect the change immediately
-                    const rowIndex = allData[currentTab].findIndex(item => item.id === id);
-                    if (rowIndex !== -1) {
-                        allData[currentTab][rowIndex][fieldKey] = newName.trim();
-                    }
-                    renderTable();
-                    alert(t.editSuccess);
-                } else {
-                    alert(t.editFail + ' ' + (json.message || ''));
-                }
-            } catch (err) {
-                console.error(err);
-                alert(t.editFail);
-            }
         }
 
         async function startFilter(e, key) {

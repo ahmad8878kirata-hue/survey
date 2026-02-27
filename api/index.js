@@ -375,31 +375,6 @@ app.delete('/api/survey/:type/:id', async (req, res) => {
   }
 });
 
-app.post('/api/survey/:type/:id/field', async (req, res) => {
-  const { type, id } = req.params;
-  const { field, newValue } = req.body;
-
-  if (type !== 'manager' && type !== 'worker') {
-    return res.status(400).json({ status: 'error', message: 'Invalid type' });
-  }
-
-  if (!field || typeof field !== 'string') {
-    return res.status(400).json({ status: 'error', message: 'Missing field name' });
-  }
-
-  try {
-    const updated = await db.updateField(type, id, field, newValue);
-    if (!updated) {
-      return res.status(404).json({ status: 'error', message: 'Not found or unchanged' });
-    }
-    console.log(`Updated field ${field} for ${type} survey ID ${id} to ${newValue}`);
-    res.json({ status: 'success' });
-  } catch (err) {
-    console.error('Error updating field:', err);
-    res.status(500).json({ status: 'error', message: 'Failed to update field' });
-  }
-});
-
 // Get current lock status for surveys (public read so forms can know they are closed)
 app.get('/api/survey-locks', async (_req, res) => {
   try {

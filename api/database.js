@@ -391,44 +391,6 @@ const dbOperations = {
     }
   },
 
-  // Update a specific field for a survey
-  async updateField(type, id, fieldKey, newValue) {
-    const table = type === 'worker' ? 'workers' : 'managers';
-
-    // First, fetch the existing record to get its data
-    let existingDataStr;
-    if (IS_MYSQL) {
-      const pool = await initMySQL();
-      const [rows] = await pool.query(`SELECT data FROM ${table} WHERE id = ?`, [id]);
-      if (rows.length === 0) return false;
-      existingDataStr = typeof rows[0].data === 'string' ? rows[0].data : JSON.stringify(rows[0].data);
-    } else {
-      const db = getSQLite();
-      const row = db.prepare(`SELECT data FROM ${table} WHERE id = ?`).get(id);
-      if (!row) return false;
-      existingDataStr = typeof row.data === 'string' ? row.data : JSON.stringify(row.data);
-    }
-
-    try {
-      const data = JSON.parse(existingDataStr);
-      data[fieldKey] = newValue;
-      const updatedDataStr = JSON.stringify(data);
-
-      if (IS_MYSQL) {
-        const pool = await initMySQL();
-        const [result] = await pool.query(`UPDATE ${table} SET data = ? WHERE id = ?`, [updatedDataStr, id]);
-        return result.affectedRows > 0;
-      } else {
-        const db = getSQLite();
-        const result = db.prepare(`UPDATE ${table} SET data = ? WHERE id = ?`).run(updatedDataStr, id);
-        return result.changes > 0;
-      }
-    } catch (e) {
-      console.error("Error updating field:", e);
-      return false;
-    }
-  },
-
   // Get lock status for surveys
   async getSurveyLockStatus() {
     if (IS_MYSQL) {
