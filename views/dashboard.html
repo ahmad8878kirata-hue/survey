@@ -675,6 +675,8 @@
                 <button class="tab-btn active" onclick="switchTab('workers')" data-i18n="tabWorkers">Workers
                     Survey</button>
                 <button class="tab-btn" onclick="switchTab('managers')" data-i18n="tabManagers">Managers Survey</button>
+                <button class="tab-btn" onclick="switchTab('supervisors')" data-i18n="tabSupervisors">Supervisors
+                    Survey</button>
             </div>
 
             <div class="controls">
@@ -706,6 +708,10 @@
                 <button id="lockManagerBtn" class="action-btn" style="background-color: #ef4444;"
                     onclick="toggleLock('manager')">
                     <i class="fa-solid fa-lock"></i> <span id="lockManagerText">Lock Manager Survey</span>
+                </button>
+                <button id="lockSupervisorBtn" class="action-btn" style="background-color: #2c3e50;"
+                    onclick="toggleLock('supervisor')">
+                    <i class="fa-solid fa-lock"></i> <span id="lockSupervisorText">Lock Supervisor Survey</span>
                 </button>
                 <button class="action-btn" style="background-color: #ec4899;" onclick="cleanData()">
                     <i class="fa-solid fa-broom"></i> <span data-i18n="btnCleanData">Clean Branch Names</span>
@@ -773,14 +779,16 @@
     </div>
 
     <script>
-        let allData = { workers: [], managers: [] };
+        let allData = { workers: [], managers: [], supervisors: [] };
         let paginationInfo = {
             page: 1,
             limit: 50,
             totalManagers: 0,
             totalWorkers: 0,
+            totalSupervisors: 0,
             totalPagesManagers: 1,
-            totalPagesWorkers: 1
+            totalPagesWorkers: 1,
+            totalPagesSupervisors: 1
         };
         let currentTab = 'workers';
         let currentSort = { col: null, asc: true };
@@ -795,6 +803,7 @@
                 headerTitle: "Tayeba Company Survey Dashboard - Follow-up and Control Department",
                 tabWorkers: "Workers Survey",
                 tabManagers: "Managers Survey",
+                tabSupervisors: "Supervisors Survey",
                 searchPlaceholder: "Search all fields...",
                 btnExport: "Export to Excel",
                 btnRefresh: "Refresh",
@@ -823,6 +832,14 @@
                 unlockWorker: "Unlock Employee Survey",
                 lockManager: "Lock Manager Survey",
                 unlockManager: "Unlock Manager Survey",
+                lockSupervisor: "Lock Supervisor Survey",
+                unlockSupervisor: "Unlock Supervisor Survey",
+                lockWorkerText: "Lock Employee Survey",
+                unlockWorkerText: "Unlock Employee Survey",
+                lockManagerText: "Lock Manager Survey",
+                lockSupervisorText: "Lock Supervisor Survey",
+                unlockManagerText: "Unlock Manager Survey",
+                unlockSupervisorText: "Unlock Supervisor Survey",
                 btnCopyDetails: "Copy Details",
                 copyDetailsSuccess: "Record details copied to clipboard!",
                 filterDeselectAll: "Deselect All",
@@ -834,7 +851,8 @@
                 headerTitle: "لوحة تحكم استبيانات شركة طيبة قسم المتابعة والرقابة",
                 tabWorkers: "استبيان العمال",
                 tabManagers: "استبيان المدراء",
-                searchPlaceholder: "بحث في جميع الحقول...",
+                tabSupervisors: "استبيان المشرفين",
+                searchPlaceholder: "البحث في جميع الحقول...",
                 btnExport: "تصدير إلى Excel",
                 btnRefresh: "تحديث",
                 noData: "لا توجد بيانات متاحة حالياً.",
@@ -862,6 +880,14 @@
                 unlockWorker: "فتح استبيان العمال",
                 lockManager: "قفل استبيان المدراء",
                 unlockManager: "فتح استبيان المدراء",
+                lockSupervisor: "قفل استبيان المشرفين",
+                unlockSupervisor: "فتح استبيان المشرفين",
+                lockWorkerText: "قفل استبيان العمال",
+                unlockWorkerText: "فتح استبيان العمال",
+                lockManagerText: "قفل استبيان المدراء",
+                lockSupervisorText: "قفل استبيان المشرفين",
+                unlockManagerText: "فتح استبيان المدراء",
+                unlockSupervisorText: "فتح استبيان المشرفين",
                 btnCopyDetails: "نسخ التفاصيل",
                 copyDetailsSuccess: "تم نسخ تفاصيل السجل إلى الحافظة!",
                 filterDeselectAll: "إلغاء تحديد الكل",
@@ -873,6 +899,7 @@
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'ar' : 'en';
             applyLanguage();
+            fetchLockStatus(); // Ensure lock buttons update their text correctly
             renderTable();
         }
 
@@ -935,7 +962,8 @@
                 const result = await response.json();
                 allData = {
                     workers: result.workers || [],
-                    managers: result.managers || []
+                    managers: result.managers || [],
+                    supervisors: result.supervisors || []
                 };
                 if (result.pagination) {
                     paginationInfo = result.pagination;
@@ -968,7 +996,10 @@
         function updatePaginationUI() {
             if (!paginationInfo) return;
             const page = paginationInfo.page || 1;
-            const total = currentTab === 'workers' ? (paginationInfo.totalPagesWorkers || 1) : (paginationInfo.totalPagesManagers || 1);
+            let total = 0;
+            if (currentTab === 'workers') total = paginationInfo.totalPagesWorkers || 1;
+            else if (currentTab === 'managers') total = paginationInfo.totalPagesManagers || 1;
+            else if (currentTab === 'supervisors') total = paginationInfo.totalPagesSupervisors || 1;
 
             document.getElementById('currentPageNum').textContent = page;
             document.getElementById('totalPagesNum').textContent = total || 1;
@@ -977,14 +1008,22 @@
             document.getElementById('nextBtn').disabled = (page >= total || total === 0);
 
             // Show/hide controls if no data
-            const hasData = (currentTab === 'workers' ? paginationInfo.totalWorkers : paginationInfo.totalManagers) > 0;
+            let currentTotal = 0;
+            if (currentTab === 'workers') currentTotal = paginationInfo.totalWorkers || 0;
+            else if (currentTab === 'managers') currentTotal = paginationInfo.totalManagers || 0;
+            else if (currentTab === 'supervisors') currentTotal = paginationInfo.totalSupervisors || 0;
+
+            const hasData = currentTotal > 0;
             document.getElementById('paginationControls').style.display = hasData ? 'flex' : 'none';
         }
 
         async function changePage(delta) {
             if (!paginationInfo) return;
             const newPage = (paginationInfo.page || 1) + delta;
-            const total = currentTab === 'workers' ? (paginationInfo.totalPagesWorkers || 1) : (paginationInfo.totalPagesManagers || 1);
+            let total = 1;
+            if (currentTab === 'workers') total = paginationInfo.totalPagesWorkers || 1;
+            else if (currentTab === 'managers') total = paginationInfo.totalPagesManagers || 1;
+            else if (currentTab === 'supervisors') total = paginationInfo.totalPagesSupervisors || 1;
 
             if (newPage >= 1 && newPage <= total) {
                 paginationInfo.page = newPage;
@@ -1084,7 +1123,9 @@
                 });
             }
 
-            if (filteredData.length === 0 && (allData.workers.length === 0 && allData.managers.length === 0)) {
+            const totalAll = (allData.workers.length || 0) + (allData.managers.length || 0) + (allData.supervisors ? allData.supervisors.length : 0);
+
+            if (filteredData.length === 0 && totalAll === 0) {
                 table.style.display = 'none';
                 emptyState.style.display = 'block';
             } else {
@@ -1286,12 +1327,24 @@
                 managerBtn.querySelector('i').className = 'fa-solid fa-lock';
                 managerBtn.style.backgroundColor = '#ef4444';
             }
+
+            const supervisorBtn = document.getElementById('lockSupervisorBtn');
+            const supervisorText = document.getElementById('lockSupervisorText');
+            if (locks.supervisor) {
+                supervisorText.textContent = t.unlockSupervisor;
+                supervisorBtn.querySelector('i').className = 'fa-solid fa-lock-open';
+                supervisorBtn.style.backgroundColor = '#10b981';
+            } else {
+                supervisorText.textContent = t.lockSupervisor;
+                supervisorBtn.querySelector('i').className = 'fa-solid fa-lock';
+                supervisorBtn.style.backgroundColor = '#2c3e50';
+            }
         }
 
         async function toggleLock(type) {
             const currentText = document.getElementById(`lock${type.charAt(0).toUpperCase() + type.slice(1)}Text`).textContent;
             const t = TRANSLATIONS[currentLang];
-            const isLocking = currentText === t.lockWorker || currentText === t.lockManager;
+            const isLocking = currentText === t.lockWorker || currentText === t.lockManager || currentText === t.lockSupervisor;
 
             try {
                 const res = await fetch('/api/survey-locks', {
@@ -1319,7 +1372,9 @@
         async function deleteRecord(id) {
             const t = TRANSLATIONS[currentLang];
             if (!confirm(t.confirmDelete)) return;
-            const typeParam = currentTab === 'workers' ? 'worker' : 'manager';
+            let typeParam = 'worker';
+            if (currentTab === 'managers') typeParam = 'manager';
+            else if (currentTab === 'supervisors') typeParam = 'supervisor';
             try {
                 const res = await fetch(`/api/survey/${typeParam}/${id}`, { method: 'DELETE' });
                 if (res.status === 404) {

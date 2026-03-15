@@ -274,6 +274,7 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('worker')">تحليل بيانات الموظفين</button>
             <button class="tab-btn" onclick="switchTab('manager')">تحليل بيانات المدراء</button>
+            <button class="tab-btn" onclick="switchTab('supervisor')">تحليل بيانات المشرفين</button>
         </div>
 
         <div class="filter-bar"
@@ -349,6 +350,26 @@
                 <canvas id="managerBranchesChart" class="large-chart"></canvas>
             </div>
         </div>
+
+        <!-- Supervisor Analysis -->
+        <div id="supervisorSection" class="analysis-section">
+            <div class="stats-grid">
+                <div class="stat-card" style="background: #2c3e50;">
+                    <span class="value" id="totalSupervisors">0</span>
+                    <span class="label">إجمالي استبيانات المشرفين</span>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3><i class="fa-solid fa-chart-line"></i> الجدول الزمني لجمع استبيانات المشرفين</h3>
+                <canvas id="supervisorTimelineChart" style="max-height: 250px;"></canvas>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3><i class="fa-solid fa-city"></i> توزيع المشرفين حسب الفروع (أعلى 10 فروع)</h3>
+                <canvas id="supervisorBranchesChart" class="large-chart"></canvas>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -406,9 +427,12 @@
             if (type === 'worker') {
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
                 document.getElementById('workerSection').classList.add('active');
-            } else {
+            } else if (type === 'manager') {
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
                 document.getElementById('managerSection').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+                document.getElementById('supervisorSection').classList.add('active');
             }
         }
 
@@ -416,10 +440,12 @@
             // Stats
             document.getElementById('totalWorkers').textContent = data.worker.total;
             document.getElementById('totalManagers').textContent = data.manager.total;
+            document.getElementById('totalSupervisors').textContent = data.supervisor?.total || 0;
 
             // Individual Timelines
             renderTimeline('workerTimelineChart', 'استبيانات العمال', data.worker?.timeline || {}, '#22c55e');
             renderTimeline('managerTimelineChart', 'استبيانات المدراء', data.manager?.timeline || {}, '#8b5cf6');
+            renderTimeline('supervisorTimelineChart', 'استبيانات المشرفين', data.supervisor?.timeline || {}, '#2c3e50');
 
             // 1. Satisfaction Pie Chart (Workers)
             const satisfactionColors = {
@@ -473,6 +499,12 @@
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 10);
             renderBar('managerBranchesChart', Object.fromEntries(managerBranches), '#8b5cf6', 'x');
+
+            // 6. Supervisor Branches Bar (Top 10)
+            const supervisorBranches = Object.entries(data.supervisor?.branches || {})
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            renderBar('supervisorBranchesChart', Object.fromEntries(supervisorBranches), '#2c3e50', 'x');
         }
 
         function renderTimeline(id, label, timelineData, color) {

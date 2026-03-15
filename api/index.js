@@ -82,6 +82,7 @@ app.get('/ping', (req, res) => {
 // Explicitly serve Arabic files to avoid encoding issues on Vercel
 app.get(['/استبيان عمال.html', '/استبيان%20عمال.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان عمال.html')));
 app.get(['/استبيان مدراء.html', '/استبيان%20مدراء.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان مدراء.html')));
+app.get(['/استبيان مشرفين.html', '/استبيان%20مشرفين.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان مشرفين.html')));
 
 // Specific routes for protected views
 app.get('/index.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'index.html')));
@@ -254,11 +255,13 @@ app.get('/api/surveys', async (req, res) => {
 
   try {
     // Run all database queries in parallel for maximum speed
-    const [managers, workers, totalManagers, totalWorkers] = await Promise.all([
+    const [managers, workers, supervisors, totalManagers, totalWorkers, totalSupervisors] = await Promise.all([
       db.getAllManagers(limit, offset, search, filters),
       db.getAllWorkers(limit, offset, search, filters),
+      db.getAllSupervisors(limit, offset, search, filters),
       db.getManagersCount(search, filters),
-      db.getWorkersCount(search, filters)
+      db.getWorkersCount(search, filters),
+      db.getSupervisorsCount(search, filters)
     ]);
 
     const duration = Date.now() - startTime;
@@ -267,13 +270,16 @@ app.get('/api/surveys', async (req, res) => {
     res.json({
       managers,
       workers,
+      supervisors,
       pagination: {
         page,
-        limit: limit === 'all' ? Math.max(totalManagers, totalWorkers) : limit,
+        limit: limit === 'all' ? Math.max(totalManagers, totalWorkers, totalSupervisors) : limit,
         totalManagers,
         totalWorkers,
+        totalSupervisors,
         totalPagesManagers: limit === 'all' ? 1 : Math.ceil(totalManagers / (limit || 50)),
-        totalPagesWorkers: limit === 'all' ? 1 : Math.ceil(totalWorkers / (limit || 50))
+        totalPagesWorkers: limit === 'all' ? 1 : Math.ceil(totalWorkers / (limit || 50)),
+        totalPagesSupervisors: limit === 'all' ? 1 : Math.ceil(totalSupervisors / (limit || 50))
       }
     });
   } catch (err) {
@@ -340,6 +346,8 @@ app.post('/api/save-survey', async (req, res) => {
       await db.addManager(entry);
     } else if (type === 'worker') {
       await db.addWorker(entry);
+    } else if (type === 'supervisor') {
+      await db.addSupervisor(entry);
     } else {
       return res.status(400).json({ status: 'error', message: 'Invalid survey type' });
     }
@@ -360,6 +368,8 @@ app.delete('/api/survey/:type/:id', async (req, res) => {
       deleted = await db.deleteManager(id);
     } else if (type === 'worker') {
       deleted = await db.deleteWorker(id);
+    } else if (type === 'supervisor') {
+      deleted = await db.deleteSupervisor(id);
     } else {
       return res.status(400).json({ status: 'error', message: 'Invalid type' });
     }
@@ -390,7 +400,7 @@ app.get('/api/survey-locks', async (_req, res) => {
 app.post('/api/survey-locks', async (req, res) => {
   const { type, locked } = req.body || {};
 
-  if (type !== 'worker' && type !== 'manager') {
+  if (type !== 'worker' && type !== 'manager' && type !== 'supervisor') {
     return res.status(400).json({ status: 'error', message: 'Invalid survey type' });
   }
 

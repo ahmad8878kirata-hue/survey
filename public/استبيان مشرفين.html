@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>استبيان تقييم مدير الفرع من قبل المشرف</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --main-green: #219150;
+            --main-green-dark: #17693a;
+            --main-green-light: #e6f7ed;
+            --accent-green: #43a047;
+            --border-green: #b2dfdb;
+            --text-dark: #1b3a2b;
+            --gray-bg: #f4f6fa;
+            --white: #fff;
+            --shadow: 0 0 24px 2px #b2dfdb;
+            --mframe-thick: 9px;
+            --mframe-color: #219150;
+            --mframe-double: #e8f3e4;
+        }
+
+        body {
+            font-family: 'Cairo', Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--main-green-light) 0%, var(--gray-bg) 100%);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .decorative-frame {
+            background: var(--mframe-double);
+            padding: 12px;
+            border-radius: 20px;
+            border: var(--mframe-thick) double var(--mframe-color);
+            box-shadow: 0 0 32px 2px #c6efc9a0;
+            margin: 30px auto;
+            width: 850px;
+            max-width: 96vw;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .container {
+            width: 794px;
+            min-height: auto;
+            margin: 0px auto;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            border-radius: 14px;
+            padding: 24px;
+            border: 2px solid var(--main-green);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .header-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-logo-row img {
+            height: 64px;
+            width: auto;
+            max-width: 240px;
+            border-radius: 12px;
+            border: 2px solid var(--main-green);
+            background: #ffffff;
+            box-shadow: 0 6px 18px rgba(33, 145, 80, 0.18);
+            object-fit: contain;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 4px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--main-green), var(--main-green-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .instructions {
+            background: var(--main-green-light);
+            border-right: 4px solid var(--main-green);
+            padding: 10px 14px;
+            margin-bottom: 18px;
+            font-size: 1em;
+            color: var(--main-green-dark);
+            font-weight: 500;
+            border-radius: 6px 0 0 6px;
+        }
+
+        .basic-info {
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .info-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-group label {
+            min-width: 140px;
+            font-weight: 600;
+            color: var(--main-green-dark);
+        }
+
+        .input-line {
+            flex: 1;
+            border: 1.5px solid var(--border-green);
+            padding: 8px 12px;
+            background: #f7fcfa;
+            border-radius: 6px;
+            font-family: 'Cairo', sans-serif;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .input-line:focus {
+            border-color: var(--main-green-dark);
+            background: #fff;
+        }
+
+        .question-card {
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-green);
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover {
+            box-shadow: 0 4px 12px rgba(33, 145, 80, 0.1);
+            border-color: var(--main-green);
+        }
+
+        .question-card label {
+            display: block;
+            font-weight: 600;
+            color: var(--main-green-dark);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .question-card textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-family: 'Cairo', sans-serif;
+            resize: vertical;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .question-card textarea:focus {
+            border-color: var(--main-green);
+        }
+
+        .submit-btn {
+            background: var(--main-green);
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .submit-btn:hover {
+            background: var(--main-green-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 145, 80, 0.3);
+        }
+
+        #resultsOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .results-card {
+            background: white;
+            width: 600px;
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 15px;
+            padding: 30px;
+            overflow-y: auto;
+            border: 3px solid var(--main-green);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s infinite linear;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .decorative-frame {
+                margin: 10px auto;
+                padding: 5px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .info-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .info-group label {
+                min-width: 100%;
+            }
+
+            .input-line {
+                width: 100%;
+            }
+        }
+
+        /* Survey Locked State */
+        #lockOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 5000;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            backdrop-filter: blur(2px);
+        }
+
+        .lock-message {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            border: 4px solid var(--main-green);
+            max-width: 500px;
+            width: 90%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="lockOverlay">
+        <div class="lock-message">
+            <i class="fa-solid fa-lock" style="font-size: 4em; color: var(--main-green); margin-bottom: 20px;"></i>
+            <h2>عذراً، الاستبيان مغلق</h2>
+            <p>لقد تم إغلاق باب المشاركة في هذا الاستبيان حالياً. نشكركم على اهتمامكم.</p>
+        </div>
+    </div>
+
+    <div class="decorative-frame">
+        <div class="container">
+            <div class="header-logo-row">
+                <img src="logo.png" alt="شعار">
+                <h1>استبيان تقييم أداء مدير الفرع</h1>
+            </div>
+
+            <div class="instructions">
+                يرجى الإجابة على الأسئلة التالية بكل موضوعية، الهدف من هذا الاستبيان هو تحسين جودة العمل وتطوير الأداء.
+            </div>
+
+            <form id="supervisorSurveyForm">
+                <div class="basic-info">
+                    <div class="info-group">
+                        <label>اسم المشرف:</label>
+                        <input type="text" name="اسم المشرف" class="input-line" required>
+                    </div>
+                    <div class="info-group">
+                        <label>اسم مدير الفرع:</label>
+                        <input type="text" name="اسم مدير الفرع" class="input-line" required>
+                    </div>
+                    <div class="info-group">
+                        <label>اسم الفرع:</label>
+                        <select name="اسم الفرع" class="input-line" required>
+                            <option value="" disabled selected>اختر الفرع...</option>
+                            <option value="دمشق">دمشق</option>
+                            <option value="ريف دمشق">ريف دمشق</option>
+                            <option value="حلب">حلب</option>
+                            <option value="حمص">حمص</option>
+                            <option value="حماة">حماة</option>
+                            <option value="اللاذقية">اللاذقية</option>
+                            <option value="طرطوس">طرطوس</option>
+                            <option value="إدلب">إدلب</option>
+                            <option value="درعا">درعا</option>
+                            <option value="السويداء">السويداء</option>
+                            <option value="القنيطرة">القنيطرة</option>
+                            <option value="دير الزور">دير الزور</option>
+                            <option value="الحسكة">الحسكة</option>
+                            <option value="الرقة">الرقة</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <label>1. كيف تقيم سرعة وفعالية استجابة مدير الفرع للمشاكل والأعطال التي تحدث في المحطات؟</label>
+                    <textarea name="1. سرعة وفعالية الاستجابة" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>2. هل يمنحك مدير الفرع صلاحية كافية لحل المشاكل في المحطات دون الحاجة للرجوع إليه في كل صغيرة
+                        وكبيرة؟</label>
+                    <textarea name="2. منح الصلاحيات" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>3. كيف تجد تجاوب مدير الفرع مع طلبات الصيانة (توفر الموارد - استجابة ورش الصيانة)؟</label>
+                    <textarea name="3. التجاوب مع طلبات الصيانة" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>4. هل يقوم مدير الفرع بجولات تفقدية دورية على المحطات للاطلاع على الواقع الميداني؟</label>
+                    <textarea name="4. الجولات التفقدية" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>5. كيف يتعامل مدير الفرع مع الشكاوى المقدمة ضدك من مدراء المحطات أو العاملين؟ وهل تشعر بأنه
+                        عادل في قراراته؟</label>
+                    <textarea name="5. التعامل مع الشكاوى والعدل" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>6. هل يأخذ مدير الفرع بآرائك ومقترحاتك لتطوير العمل وحل المشاكل بشكل جدي؟</label>
+                    <textarea name="6. الاهتمام بالمقترحات" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>7. كيف تقيم مستوى التعاون والتنسيق بين مدير الفرع والأقسام الأخرى (مالية - محاسبة - شؤون
+                        إدارية) من حيث حل مشاكل المحطات؟</label>
+                    <textarea name="7. التعاون والتنسيق بين الأقسام" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>8. هل يثني مدير الفرع على العمل المميز أو يكافئ عند الإنجاز، أم يقتصر تعامله على المحاسبة عند
+                        الخطأ فقط؟</label>
+                    <textarea name="8. الثناء والمكافأة" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>9. ما هي أبرز نقطة إيجابية في عمل مدير الفرع؟</label>
+                    <textarea name="9. أبرز نقطة إيجابية" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>10. ما هو الشيء الأهم الذي تطلب من مدير الفرع تطويره في نفسه أو في أسلوب عمله ليسهل عليك
+                        مهامك ويحسن أداء المحطات؟</label>
+                    <textarea name="10. التطوير المطلوب" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>11. بعد أن تقوم بتعميم التعليمات الصادرة عن مدير الفرع على المحطات، كيف تلاحظ التزام مدير
+                        الفرع نفسه بتلك التعليمات؟ وهل يتابع معك مدى تنفيذها من قبل الكوادر؟</label>
+                    <textarea name="11. الالتزام بالتعليمات والمتابعة" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>12. بناءً على متابعتك لكاميرات المراقبة وعمليات الجرد الدورية، كيف تصف تعاون مدير الفرع عندما
+                        تخبره بوجود ملاحظات على انضباط الموظفين أو وجود عجز/زيادة في الجرد؟</label>
+                    <textarea name="12. التعاون في الملاحظات والجرد" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>13. هل يطلعك مدير الفرع على أية معلومات جديدة أو قرارات أو شكاوى واردة من العملاء قد تؤثر على
+                        عملك الميداني أو على أداء المحطات بشكل مباشر؟</label>
+                    <textarea name="13. إطلاع المشرف على المستجدات" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>14. خلال زياراتك أو تواصلك الهاتفي، هل تشعر بأن مدير الفرع يتقبل ملاحظاتك الفنية والإدارية
+                        حول المحطات بصدر رحب ويأخذها على محمل الجد، أم تجد صعوبة في إيصال صوتك له؟</label>
+                    <textarea name="14. تقبل الملاحظات" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>15. من وجهة نظرك الميدانية التي تتنقل بها بين عدة محطات، كيف تقيم مستوى أداء هذا الفرع مقارنة
+                        بفروع أخرى؟ وما هي أكبر عقبة تواجهك في التعامل مع إدارة هذا الفرع؟</label>
+                    <textarea name="15. التقييم العام والعقبات" required></textarea>
+                </div>
+
+                <div class="question-card">
+                    <label>ملاحظات إضافية:</label>
+                    <textarea name="ملاحظات إضافية"></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    إرسال الاستبيان
+                    <i class="fa-solid fa-paper-plane" style="margin-right:10px;"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="resultsOverlay">
+        <div class="results-card">
+            <h2 style="color: var(--main-green); text-align: center;">شكراً لك!</h2>
+            <p style="text-align: center;">تم استلام إجاباتك بنجاح.</p>
+        </div>
+    </div>
+
+    <script>
+        // Check if survey is locked
+        async function checkLock() {
+            try {
+                const res = await fetch('/api/survey-locks');
+                const locks = await res.json();
+                if (locks.supervisor) {
+                    document.getElementById('lockOverlay').style.display = 'flex';
+                }
+            } catch (e) {
+                console.error('Error checking locks:', e);
+            }
+        }
+        checkLock();
+
+        const form = document.getElementById('supervisorSurveyForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'جاري الإرسال... <span class="loading-spinner"></span>';
+
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            // Add subject for email notifications if the server uses it
+            data['_subject'] = `تقييم مدير فرع من المشرف: ${data['اسم مدير الفرع']} - ${data['اسم الفرع']}`;
+
+            try {
+                const response = await fetch('/api/save-survey', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'supervisor',
+                        data: data
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('resultsOverlay').style.display = 'flex';
+                } else {
+                    alert('خطأ في الإرسال، يرجى المحاولة لاحقاً');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'إرسال الاستبيان <i class="fa-solid fa-paper-plane" style="margin-right:10px;"></i>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الاتصال بالخادم');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'إرسال الاستبيان <i class="fa-solid fa-paper-plane" style="margin-right:10px;"></i>';
+            }
+        });
+    </script>
+</body>
+
+</html>

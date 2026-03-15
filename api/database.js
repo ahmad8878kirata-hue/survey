@@ -60,8 +60,16 @@ function initSQLite() {
     )
   `);
   db.exec(`
+    CREATE TABLE IF NOT EXISTS supervisors (
+      id VARCHAR(255) PRIMARY KEY,
+      receivedAt DATETIME NOT NULL,
+      data JSON NOT NULL
+    )
+  `);
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_managers_receivedAt ON managers(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_workers_receivedAt ON workers(receivedAt);
+    CREATE INDEX IF NOT EXISTS idx_supervisors_receivedAt ON supervisors(receivedAt);
   `);
   console.log('SQLite database initialized at:', DB_PATH);
   return db;
@@ -245,6 +253,60 @@ const dbOperations = {
     }
   },
 
+  // Get total supervisor count
+  async getSupervisorsCount(search = '', filters = {}) {
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query(`SELECT COUNT(*) as count FROM supervisors ${whereFragment}`, params);
+      return rows[0].count;
+    } else {
+      const db = getSQLite();
+      const result = db.prepare(`SELECT COUNT(*) as count FROM supervisors ${whereFragment}`).get(...params);
+      return result ? result.count : 0;
+    }
+  },
+
+  // Get all supervisors with pagination
+  async getAllSupervisors(limit = 50, offset = 0, search = '', filters = {}) {
+    console.log(`[DB DEBUG] getAllSupervisors: limit=${limit}, offset=${offset}, search=${search}, filters=${JSON.stringify(filters)}, IS_MYSQL=${IS_MYSQL}`);
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      let query = `SELECT id, receivedAt, data FROM supervisors ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const [rows] = await pool.query(query, queryParams);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      }));
+    } else {
+      const db = getSQLite();
+      let query = `SELECT * FROM supervisors ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const rows = db.prepare(query).all(...queryParams);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      }));
+    }
+  },
+
   // Get total manager count
   async getManagersCount(search = '', filters = {}) {
     const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
@@ -294,6 +356,27 @@ const dbOperations = {
     return newId;
   },
 
+  // Add a supervisor survey
+  async addSupervisor(entry) {
+    const { id, receivedAt, ...data } = entry;
+    const newId = id || (Date.now().toString() + Math.random().toString(36).slice(2));
+    const finalReceivedAt = receivedAt || new Date().toISOString();
+    const finalData = JSON.stringify(data);
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      await pool.query(
+        'INSERT INTO supervisors (id, receivedAt, data) VALUES (?, ?, ?)',
+        [newId, finalReceivedAt.replace('T', ' ').replace('Z', ''), finalData]
+      );
+    } else {
+      const db = getSQLite();
+      const insert = db.prepare('INSERT INTO supervisors (id, receivedAt, data) VALUES (?, ?, ?)');
+      insert.run(newId, finalReceivedAt, finalData);
+    }
+    return newId;
+  },
+
   // Add a worker survey
   async addWorker(entry) {
     const { id, receivedAt, ...data } = entry;
@@ -324,6 +407,20 @@ const dbOperations = {
     } else {
       const db = getSQLite();
       const deleteStmt = db.prepare('DELETE FROM managers WHERE id = ?');
+      const result = deleteStmt.run(id);
+      return result.changes > 0;
+    }
+  },
+
+  // Delete a supervisor survey
+  async deleteSupervisor(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [result] = await pool.query('DELETE FROM supervisors WHERE id = ?', [id]);
+      return result.affectedRows > 0;
+    } else {
+      const db = getSQLite();
+      const deleteStmt = db.prepare('DELETE FROM supervisors WHERE id = ?');
       const result = deleteStmt.run(id);
       return result.changes > 0;
     }
@@ -367,6 +464,30 @@ const dbOperations = {
     }
   },
 
+  // Get a supervisor by ID
+  async getSupervisorById(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query('SELECT * FROM supervisors WHERE id = ?', [id]);
+      if (rows.length === 0) return null;
+      const row = rows[0];
+      return {
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      };
+    } else {
+      const db = getSQLite();
+      const row = db.prepare('SELECT * FROM supervisors WHERE id = ?').get(id);
+      if (!row) return null;
+      return {
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      };
+    }
+  },
+
   // Get a worker by ID
   async getWorkerById(id) {
     if (IS_MYSQL) {
@@ -395,35 +516,45 @@ const dbOperations = {
   async getSurveyLockStatus() {
     if (IS_MYSQL) {
       const pool = await initMySQL();
-      const [rows] = await pool.query('SELECT `key`, `value` FROM settings WHERE `key` IN (?, ?)', [
+      const [rows] = await pool.query('SELECT `key`, `value` FROM settings WHERE `key` IN (?, ?, ?)', [
         'lock_worker',
-        'lock_manager'
+        'lock_manager',
+        'lock_supervisor'
       ]);
       let worker = false;
       let manager = false;
+      let supervisor = false;
       for (const row of rows) {
         if (row.key === 'lock_worker') worker = row.value === '1';
         if (row.key === 'lock_manager') manager = row.value === '1';
+        if (row.key === 'lock_supervisor') supervisor = row.value === '1';
       }
-      return { worker, manager };
+      return { worker, manager, supervisor };
     } else {
       const db = getSQLite();
       const rows = db
-        .prepare('SELECT key, value FROM settings WHERE key IN (?, ?)')
-        .all('lock_worker', 'lock_manager');
+        .prepare('SELECT key, value FROM settings WHERE key IN (?, ?, ?)')
+        .all('lock_worker', 'lock_manager', 'lock_supervisor');
       let worker = false;
       let manager = false;
+      let supervisor = false;
       for (const row of rows) {
         if (row.key === 'lock_worker') worker = row.value === '1';
         if (row.key === 'lock_manager') manager = row.value === '1';
+        if (row.key === 'lock_supervisor') supervisor = row.value === '1';
       }
-      return { worker, manager };
+      return { worker, manager, supervisor };
     }
   },
 
   // Set lock status for a specific survey type
   async setSurveyLock(type, locked) {
-    const key = type === 'worker' ? 'lock_worker' : 'lock_manager';
+    const keyMap = {
+      'worker': 'lock_worker',
+      'manager': 'lock_manager',
+      'supervisor': 'lock_supervisor'
+    };
+    const key = keyMap[type] || 'lock_unknown';
     const value = locked ? '1' : '0';
 
     if (IS_MYSQL) {
@@ -443,7 +574,12 @@ const dbOperations = {
 
   // Get unique values for a specific column/field
   async getUniqueValues(type, field, filters = {}) {
-    const table = type === 'worker' ? 'workers' : 'managers';
+    const tableMap = {
+      'worker': 'workers',
+      'manager': 'managers',
+      'supervisor': 'supervisors'
+    };
+    const table = tableMap[type] || 'workers';
     const { whereFragment, params } = buildWhereClause('', filters, IS_MYSQL);
 
     if (IS_MYSQL) {
@@ -478,6 +614,7 @@ const dbOperations = {
     }
     const workers = await this.getAllWorkers('all', 0, '', filters);
     const managers = await this.getAllManagers('all', 0, '', filters);
+    const supervisors = await this.getAllSupervisors('all', 0, '', filters);
 
     const aggregate = (data, field) => {
       const counts = {};
@@ -540,12 +677,17 @@ const dbOperations = {
         branches: aggregate(managers, 'اسم الفرع'),
         durations: aggregate(managers, 'مدة العمل في منصب مدير محطة'),
         timeline: getTimeline(managers)
+      },
+      supervisor: {
+        total: supervisors.length || 0,
+        branches: aggregate(supervisors, 'اسم الفرع'),
+        timeline: getTimeline(supervisors)
       }
     };
   },
 
   async cleanBranchNames() {
-    const tables = ['workers', 'managers'];
+    const tables = ['workers', 'managers', 'supervisors'];
     let updatedCount = 0;
 
     // Helper to normalize Arabic characters for better matching
