@@ -38,17 +38,18 @@
             border-radius: 20px;
             border: var(--mframe-thick) double var(--mframe-color);
             box-shadow: 0 0 32px 2px #c6efc9a0;
-            margin: 30px auto;
-            width: 850px;
-            max-width: 96vw;
+            margin: 20px auto;
+            width: 95%;
+            max-width: 850px;
             box-sizing: border-box;
             position: relative;
         }
 
         .container {
-            width: 794px;
+            width: 100%;
+            max-width: 794px;
             min-height: auto;
-            margin: 0px auto;
+            margin: 0 auto;
             background-color: var(--white);
             box-shadow: var(--shadow);
             border-radius: 14px;
@@ -241,26 +242,94 @@
 
         /* Mobile adjustments */
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                padding-bottom: env(safe-area-inset-bottom, 10px);
+            }
+
             .decorative-frame {
-                margin: 10px auto;
+                margin: 0 auto;
                 padding: 5px;
+                width: 100%;
+                border-width: 6px;
+                border-radius: 15px;
             }
 
             .container {
                 padding: 15px;
+                border-radius: 10px;
+            }
+
+            .header-logo-row img {
+                height: 44px;
+                max-width: 160px;
+            }
+
+            h1 {
+                font-size: 1.1em;
+                padding: 0 5px;
+            }
+
+            .instructions {
+                font-size: 0.95em;
+                padding: 10px;
             }
 
             .info-group {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 5px;
             }
 
             .info-group label {
                 min-width: 100%;
+                font-size: 0.95em;
             }
 
             .input-line {
                 width: 100%;
+                padding: 10px;
+                font-size: 16px;
+                /* Prevents zoom on iOS */
+            }
+
+            .question-card {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+
+            .question-card label {
+                font-size: 0.95em;
+            }
+
+            .question-card textarea {
+                font-size: 16px;
+                /* Prevents zoom on iOS */
+            }
+
+            .submit-btn {
+                padding: 12px;
+                font-size: 1.1em;
+            }
+
+            .results-card {
+                width: 92%;
+                padding: 20px 15px;
+                margin: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .decorative-frame {
+                border-width: 4px;
+            }
+
+            h1 {
+                font-size: 1em;
+            }
+
+            .header-logo-row img {
+                height: 38px;
             }
         }
 
