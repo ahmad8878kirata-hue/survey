@@ -1052,23 +1052,65 @@
             fetchData();
         }
 
+        const KEY_MAPS = {
+            // Supervisor key mappings (Old -> New)
+            "9. أبرز نقطة إيجابية": "1. أبرز النقاط الإيجابية",
+            "1. سرعة وفعالية الاستجابة": "2. سرعة وفعالية الاستجابة",
+            "2. منح الصلاحيات": "3. منح الصلاحيات",
+            "3. هل يمنحك مدير الفرع صلاحية كافيه المرتبطه بدورك لحل المشكلات في المحطات دون الحاجه للرجوع اليه في كل صغير وكبيره (مثال ان وجد)؟": "3. هل يمنحك مدير الفرع صلاحية كافية المرتبطة بدورك لحل المشكلات في المحطات دون الحاجة للرجوع إليه في كل صغيرة وكبيرة (مثال إن وجد)؟",
+            "3. التجاوب مع طلبات الصيانة": "4. التجاوب مع طلبات الصيانة",
+            "4. الجولات التفقدية": "5. الجولات التفقدية",
+            "5. التعامل مع الشكاوى والعدل": "6. التعامل مع الشكاوى والعدل",
+            "6. الاهتمام بالمقترحات": "7. الاهتمام بالمقترحات",
+            "7. التعاون والتنسيق بين الأقسام": "8. التعاون والتنسيق بين الأقسام",
+            "8. الثناء والمكافأة": "9. الثناء والمكافأة",
+            "9. هل يثني مدير الفرع على العمل المميز او يكافئ عند الانجاز ام يقتصر تعامله على المحاسبة عند الخطا فقط وهل تحاسب على اخطائك من قبل مدير الفرع؟": "9. الثناء والمكافأة",
+            "10. التطوير المطلوب": "12. التطوير المطلوب",
+            "12. التعاون في الملاحظات والجرد": "13. التعاون في الملاحظات والجرد",
+            "13. إطلاع المشرف على المستجدات": "14. إطلاع المشرف على المستجدات",
+            "14. تقبل الملاحظات": "15. تقبل الملاحظات",
+            "15. التقييم العام والعقبات": "16. التقييم العام والعقبات",
+            "16. هل يتم إعطاء المشرف الكيان الذي يستحقه أمام مدراء المحطات؟": "17. هل يعطيك مدير الفرع الكيان الذي تستحقه أمام مدراء المحطات؟"
+        };
+
+        function normalizeKey(k) {
+            if (!k) return k;
+            const trimmed = k.trim();
+            return KEY_MAPS[trimmed] || trimmed;
+        }
+
         function getAllKeys(dataArray) {
             const keys = new Set();
             keys.add('receivedAt');
             dataArray.forEach(item => {
                 Object.keys(item).forEach(k => {
-                    if (k !== 'id' && k !== 'receivedAt' && !k.startsWith('_')) {
-                        keys.add(k);
+                    const nk = normalizeKey(k);
+                    if (nk !== 'id' && nk !== 'receivedAt' && !nk.startsWith('_')) {
+                        keys.add(nk);
                     }
                 });
             });
+            // Optional: Sort keys to keep a consistent order
             return Array.from(keys);
         }
 
         function getDisplayValue(row, key) {
-            let val = row[key] || '';
+            // Check for the key directly, or try to find it via inverse mapping if it's a normalized key
+            let val = row[key];
+            
+            if (val === undefined) {
+                // If the row doesn't have the 'new' key, check if it has any of the 'old' keys that map to it
+                for (const oldKey in KEY_MAPS) {
+                    if (KEY_MAPS[oldKey] === key && row[oldKey] !== undefined) {
+                        val = row[oldKey];
+                        break;
+                    }
+                }
+            }
+
+            if (val === undefined || val === null) val = '';
+
             if (key === 'receivedAt' && val) {
-                // Ensure valid date
                 const date = new Date(val);
                 if (!isNaN(date.getTime())) {
                     val = date.toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
