@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 });
 
 // Authentication Middleware
-const PROTECTED_PAGES = ['/', '/index.html', '/dashboard.html', '/analysis'];
+const PROTECTED_PAGES = ['/', '/index.html', '/dashboard.html', '/reports_dashboard.html', '/analysis'];
 const authMiddleware = (req, res, next) => {
   const cleanPath = req.path === '/' ? '/index.html' : req.path;
 
@@ -83,10 +83,12 @@ app.get('/ping', (req, res) => {
 app.get(['/استبيان عمال.html', '/استبيان%20عمال.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان عمال.html')));
 app.get(['/استبيان مدراء.html', '/استبيان%20مدراء.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان مدراء.html')));
 app.get(['/استبيان مشرفين.html', '/استبيان%20مشرفين.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان مشرفين.html')));
+app.get(['/تقرير يومي.html', '/تقرير%20يومي.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'تقرير يومي.html')));
 
 // Specific routes for protected views
 app.get('/index.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'index.html')));
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'dashboard.html')));
+app.get('/reports_dashboard.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'reports_dashboard.html')));
 app.get('/analysis', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'analysis.html')));
 
 app.post('/api/login', (req, res) => {
@@ -292,6 +294,45 @@ app.get('/api/surveys', async (req, res) => {
   }
 });
 
+app.get('/api/daily_reports', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limitQuery = req.query.limit;
+  const limit = limitQuery === 'all' ? 'all' : (parseInt(limitQuery) || 50);
+  const offset = limit === 'all' ? 0 : (page - 1) * limit;
+  const search = req.query.search || '';
+  let filters = {};
+
+  try {
+    if (req.query.filters) {
+      filters = JSON.parse(req.query.filters);
+    }
+  } catch (e) {
+    console.error("Error parsing filters:", e);
+  }
+
+  console.log(`[API] Fetch daily reports: page=${page}, limit=${limit}, search=${search}, filters=${JSON.stringify(filters)}`);
+
+  try {
+    const [reports, totalReports] = await Promise.all([
+      db.getAllDailyReports(limit, offset, search, filters),
+      db.getDailyReportsCount(search, filters)
+    ]);
+
+    res.json({
+      reports,
+      pagination: {
+        page,
+        limit: limit === 'all' ? totalReports : limit,
+        totalReports,
+        totalPagesReports: limit === 'all' ? 1 : Math.ceil(totalReports / (limit || 50))
+      }
+    });
+  } catch (err) {
+    console.error(`[API ERROR] ${err.message}`);
+    res.status(500).json({ status: 'error', message: 'Internal server error while fetching daily reports' });
+  }
+});
+
 app.get('/api/surveys/unique-values', async (req, res) => {
   const { type, field } = req.query;
   let filters = {};
@@ -348,6 +389,8 @@ app.post('/api/save-survey', async (req, res) => {
       await db.addWorker(entry);
     } else if (type === 'supervisor') {
       await db.addSupervisor(entry);
+    } else if (type === 'daily_report') {
+      await db.addDailyReport(entry);
     } else {
       return res.status(400).json({ status: 'error', message: 'Invalid survey type' });
     }
@@ -370,6 +413,8 @@ app.delete('/api/survey/:type/:id', async (req, res) => {
       deleted = await db.deleteWorker(id);
     } else if (type === 'supervisor') {
       deleted = await db.deleteSupervisor(id);
+    } else if (type === 'daily_report') {
+      deleted = await db.deleteDailyReport(id);
     } else {
       return res.status(400).json({ status: 'error', message: 'Invalid type' });
     }

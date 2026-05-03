@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>إضافة تقرير يومي - قسم الرقابة والمتابعة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --main-green: #219150;
+            --main-green-dark: #17693a;
+            --main-green-light: #e6f7ed;
+            --accent-green: #43a047;
+            --border-green: #b2dfdb;
+            --text-dark: #1b3a2b;
+            --gray-bg: #f4f6fa;
+            --white: #fff;
+            --shadow: 0 0 24px 2px #b2dfdb;
+            --mframe-thick: 9px;
+            --mframe-color: #219150;
+            --mframe-double: #e8f3e4;
+        }
+
+        body {
+            font-family: 'Cairo', Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--main-green-light) 0%, var(--gray-bg) 100%);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .decorative-frame {
+            background: var(--mframe-double);
+            padding: 12px;
+            border-radius: 20px;
+            border: var(--mframe-thick) double var(--mframe-color);
+            box-shadow: 0 0 32px 2px #c6efc9a0;
+            margin: 30px auto;
+            width: 850px;
+            max-width: 96vw;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .container {
+            width: 100%;
+            min-height: auto;
+            margin: 0;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            border-radius: 14px;
+            padding: 24px;
+            border: 2px solid var(--main-green);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .header-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-logo-row img {
+            height: 64px;
+            width: auto;
+            max-width: 240px;
+            border-radius: 12px;
+            border: 2px solid var(--main-green);
+            background: #ffffff;
+            box-shadow: 0 6px 18px rgba(33, 145, 80, 0.18);
+            object-fit: contain;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.4em;
+            margin-bottom: 4px;
+            font-weight: 700;
+            color: var(--main-green-dark);
+        }
+
+        .section-title {
+            background: var(--main-green-light);
+            color: var(--main-green-dark);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 700;
+            margin: 20px 0 15px;
+            border-right: 4px solid var(--main-green);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--main-green-dark);
+        }
+
+        .input-line, .form-select, .form-textarea {
+            width: 100%;
+            border: 1.5px solid var(--border-green);
+            padding: 10px;
+            background: #f7fcfa;
+            border-radius: 6px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1em;
+            outline: none;
+            color: var(--text-dark);
+            box-sizing: border-box;
+            transition: border 0.2s;
+        }
+
+        .input-line:focus, .form-select:focus, .form-textarea:focus {
+            background: #ffffff;
+            border: 1.5px solid var(--main-green-dark);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .station-card {
+            background: #fff;
+            border: 1.5px solid var(--border-green);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .station-card h3 {
+            margin-top: 0;
+            color: var(--main-green-dark);
+            border-bottom: 1px solid var(--border-green);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .remove-station {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            background: #ffebee;
+            color: #c62828;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Cairo';
+            font-weight: 600;
+        }
+
+        .remove-station:hover {
+            background: #ef9a9a;
+        }
+
+        .btn {
+            background: var(--main-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: var(--main-green-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--main-green);
+            border: 2px solid var(--main-green);
+        }
+
+        .btn-outline:hover {
+            background: var(--main-green-light);
+            color: var(--main-green-dark);
+        }
+
+        .btn-submit {
+            width: 100%;
+            margin-top: 20px;
+            font-size: 1.2em;
+            padding: 15px;
+        }
+
+        /* Radio Options */
+        .radio-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-weight: 400 !important;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .notification {
+            display: none;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .notification.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            display: block;
+        }
+        .notification.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="decorative-frame">
+        <div class="container">
+            <div class="header-logo-row">
+                <img src="logo.png" alt="شعار" onerror="this.style.display='none'">
+                <h1><i class="fa-solid fa-clipboard-list"></i> إضافة تقرير جولة يومية - الرقابة والمتابعة</h1>
+            </div>
+
+            <div id="notificationArea" class="notification"></div>
+
+            <form id="dailyReportForm">
+                <div class="section-title"><i class="fa-solid fa-info-circle"></i> معلومات الجولة الأساسية</div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>تاريخ الجولة</label>
+                        <input type="date" name="تاريخ الجولة" class="input-line" required id="tourDate">
+                    </div>
+                    <div class="form-group">
+                        <label>اسم الفرع</label>
+                        <select name="اسم الفرع" class="form-select" required>
+                            <option value="" disabled selected>اختر الفرع...</option>
+                            <option value="دمشق">دمشق</option>
+                            <option value="ريف دمشق">ريف دمشق</option>
+                            <option value="حلب">حلب</option>
+                            <option value="حمص">حمص</option>
+                            <option value="حماة">حماة</option>
+                            <option value="اللاذقية">اللاذقية</option>
+                            <option value="طرطوس">طرطوس</option>
+                            <option value="إدلب">إدلب</option>
+                            <option value="درعا">درعا</option>
+                            <option value="دير الزور">دير الزور</option>
+                            <option value="الرقة">الرقة</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>وقت بداية الجولة</label>
+                        <input type="time" name="وقت بداية الجولة" class="input-line" required>
+                    </div>
+                    <div class="form-group">
+                        <label>وقت نهاية الجولة</label>
+                        <input type="time" name="وقت نهاية الجولة" class="input-line" required>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>التقييم اليومي للجولة</label>
+                        <select name="التقييم اليومي" class="form-select" required>
+                            <option value="" disabled selected>اختر التقييم...</option>
+                            <option value="ممتاز">ممتاز</option>
+                            <option value="جيد جداً">جيد جداً</option>
+                            <option value="جيد">جيد</option>
+                            <option value="مقبول">مقبول</option>
+                            <option value="ضعيف">ضعيف</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <!-- Empty slot or another field if needed -->
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <i class="fa-solid fa-gas-pump"></i> المحطات
+                    <button type="button" class="btn btn-outline" style="float: left; padding: 5px 15px; font-size: 0.9em; margin-top: -5px;" onclick="addStation()">
+                        <i class="fa-solid fa-plus"></i> إضافة محطة
+                    </button>
+                    <div style="clear: both;"></div>
+                </div>
+
+                <div id="stationsContainer">
+                    <!-- Stations will be added here -->
+                </div>
+
+                <div class="section-title"><i class="fa-solid fa-comment-dots"></i> الملاحظات الختامية</div>
+                <div class="form-group">
+                    <textarea name="ملاحظات" class="form-textarea" rows="4" placeholder="اكتب أي ملاحظات إضافية حول الجولة..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-submit" id="submitBtn">
+                    <i class="fa-solid fa-paper-plane"></i> حفظ وإرسال التقرير
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Set today's date
+        document.getElementById('tourDate').valueAsDate = new Date();
+
+        let stationCount = 0;
+
+        function createRadioGroup(name, labelText, options) {
+            let html = `<div class="form-group">
+                <label>${labelText}</label>
+                <div class="radio-options">`;
+            
+            options.forEach(opt => {
+                html += `<label class="radio-label">
+                    <input type="radio" name="${name}" value="${opt}" required> ${opt}
+                </label>`;
+            });
+            
+            html += `</div></div>`;
+            return html;
+        }
+
+        function addStation() {
+            stationCount++;
+            const sId = `station_${stationCount}`;
+            
+            const stationHtml = `
+                <div class="station-card" id="${sId}">
+                    <button type="button" class="remove-station" onclick="document.getElementById('${sId}').remove()"><i class="fa-solid fa-trash"></i> حذف</button>
+                    <h3>محطة رقم ${stationCount}</h3>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>اسم المحطة</label>
+                            <input type="text" name="${sId}_name" class="input-line" required>
+                        </div>
+                        <div class="form-group">
+                            <label>موقع المحطة</label>
+                            <input type="text" name="${sId}_location" class="input-line" placeholder="مثال: المنطقة، الحي..." required>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        ${createRadioGroup(`${sId}_sales_quality`, 'جودة مبيعات', ['ممتازة', 'جيدة', 'مقبولة', 'سيئة'])}
+                        ${createRadioGroup(`${sId}_cashier`, 'الصندوق', ['مطابق', 'يوجد عجز', 'يوجد زيادة'])}
+                    </div>
+                    
+                    <div class="grid-2">
+                        ${createRadioGroup(`${sId}_cleanliness`, 'نظافة المحطة', ['ممتازة', 'جيدة', 'سيئة'])}
+                        ${createRadioGroup(`${sId}_extinguishers`, 'الطفايات', ['جاهزة', 'بحاجة صيانة', 'غير متوفرة'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioGroup(`${sId}_absent`, 'هل يوجد غياب موظفين؟', ['نعم', 'لا'])}
+                        ${createRadioGroup(`${sId}_energy`, 'منظومة الطاقة', ['تعمل بكفاءة', 'يوجد أعطال'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioGroup(`${sId}_inventory`, 'هل تم مطابقة المخزون؟', ['نعم', 'لا'])}
+                        ${createRadioGroup(`${sId}_surveillance`, 'منظومة المراقبة', ['تعمل', 'لا تعمل', 'لا يوجد'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioGroup(`${sId}_attendance`, 'حضور وانصراف الموظفين', ['منتظم', 'غير منتظم'])}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ملاحظات خاصة بهذه المحطة</label>
+                        <textarea name="${sId}_station_notes" class="form-textarea" rows="2" placeholder="اكتب أي ملاحظات تخص هذه المحطة..."></textarea>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('stationsContainer').insertAdjacentHTML('beforeend', stationHtml);
+        }
+
+        // Add one station by default
+        addStation();
+
+        document.getElementById('dailyReportForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const notification = document.getElementById('notificationArea');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...';
+            notification.className = 'notification';
+            
+            const formData = new FormData(this);
+            const dataObj = {
+                'المحطات': []
+            };
+
+            // Extract main data and stations
+            let stationDataMap = {};
+
+            for (let [key, value] of formData.entries()) {
+                if (key.startsWith('station_')) {
+                    const parts = key.split('_');
+                    const sId = parts[0] + '_' + parts[1];
+                    const field = parts.slice(2).join('_');
+                    
+                    if (!stationDataMap[sId]) {
+                        stationDataMap[sId] = {};
+                    }
+                    
+                    // Map English keys to Arabic keys for storage
+                    const fieldMap = {
+                        'name': 'اسم المحطة',
+                        'location': 'موقع المحطة',
+                        'sales_quality': 'جودة مبيعات',
+                        'cashier': 'الصندوق',
+                        'cleanliness': 'نظافة المحطة',
+                        'extinguishers': 'الطفايات',
+                        'absent': 'هل يوجد غياب موظفين',
+                        'energy': 'منظومة الطاقة',
+                        'inventory': 'هل تم مطابقة المخزون',
+                        'surveillance': 'منظومة المراقبة',
+                        'attendance': 'حضور وانصراف الموظفين',
+                        'station_notes': 'ملاحظات المحطة'
+                    };
+                    
+                    stationDataMap[sId][fieldMap[field] || field] = value;
+                } else {
+                    dataObj[key] = value;
+                }
+            }
+
+            // Convert map to array
+            for (let key in stationDataMap) {
+                dataObj['المحطات'].push(stationDataMap[key]);
+            }
+
+            try {
+                const response = await fetch('/api/save-survey', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'daily_report',
+                        data: dataObj
+                    })
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    notification.textContent = 'تم إرسال التقرير بنجاح!';
+                    notification.classList.add('success');
+                    this.reset();
+                    document.getElementById('stationsContainer').innerHTML = '';
+                    addStation(); // add empty station
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    notification.textContent = 'حدث خطأ أثناء إرسال التقرير: ' + (result.message || 'خطأ مجهول');
+                    notification.classList.add('error');
+                }
+            } catch (error) {
+                notification.textContent = 'حدث خطأ في الاتصال بالخادم.';
+                notification.classList.add('error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> حفظ وإرسال التقرير';
+            }
+        });
+    </script>
+</body>
+</html>

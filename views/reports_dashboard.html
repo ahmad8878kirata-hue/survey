@@ -671,13 +671,7 @@
 
     <div class="container">
         <div class="dashboard-card">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('workers')" data-i18n="tabWorkers">Workers
-                    Survey</button>
-                <button class="tab-btn" onclick="switchTab('managers')" data-i18n="tabManagers">Managers Survey</button>
-                <button class="tab-btn" onclick="switchTab('supervisors')" data-i18n="tabSupervisors">Supervisors
-                    Survey</button>
-            </div>
+            <!-- No Tabs for this Dashboard -->
 
             <div class="controls">
                 <div class="search-box">
@@ -691,31 +685,13 @@
                 <button class="action-btn" style="background-color: #6366f1;" onclick="downloadBackup()">
                     <i class="fa-solid fa-database"></i> <span data-i18n="btnBackup">Backup Database</span>
                 </button>
-                <button class="action-btn" style="background-color: #8b5cf6;"
-                    onclick="window.location.href='/analysis'">
-                    <i class="fa-solid fa-chart-line"></i> <span data-i18n="btnAnalysis">Data Analysis</span>
-                </button>
                 <button class="action-btn secondary" onclick="fetchData()">
                     <i class="fa-solid fa-sync"></i> <span data-i18n="btnRefresh">Refresh</span>
                 </button>
             </div>
 
             <div class="controls" style="margin-top: -10px; margin-bottom: 25px;">
-                <button id="lockWorkerBtn" class="action-btn" style="background-color: #f59e0b;"
-                    onclick="toggleLock('worker')">
-                    <i class="fa-solid fa-lock"></i> <span id="lockWorkerText">Lock Employee Survey</span>
-                </button>
-                <button id="lockManagerBtn" class="action-btn" style="background-color: #ef4444;"
-                    onclick="toggleLock('manager')">
-                    <i class="fa-solid fa-lock"></i> <span id="lockManagerText">Lock Manager Survey</span>
-                </button>
-                <button id="lockSupervisorBtn" class="action-btn" style="background-color: #2c3e50;"
-                    onclick="toggleLock('supervisor')">
-                    <i class="fa-solid fa-lock"></i> <span id="lockSupervisorText">Lock Supervisor Survey</span>
-                </button>
-                <button class="action-btn" style="background-color: #ec4899;" onclick="cleanData()">
-                    <i class="fa-solid fa-broom"></i> <span data-i18n="btnCleanData">Clean Branch Names</span>
-                </button>
+                <!-- No lock buttons for daily reports -->
             </div>
 
             <div class="table-wrapper">
@@ -779,18 +755,14 @@
     </div>
 
     <script>
-        let allData = { workers: [], managers: [], supervisors: [] };
+        let allData = { daily_reports: [] };
         let paginationInfo = {
             page: 1,
             limit: 50,
-            totalManagers: 0,
-            totalWorkers: 0,
-            totalSupervisors: 0,
-            totalPagesManagers: 1,
-            totalPagesWorkers: 1,
-            totalPagesSupervisors: 1
+            totalReports: 0,
+            totalPagesReports: 1
         };
-        let currentTab = 'workers';
+        let currentTab = 'daily_reports';
         let currentSort = { col: null, asc: true };
         let activeFilters = {};
         let globalSearchTerm = "";
@@ -799,17 +771,14 @@
 
         const TRANSLATIONS = {
             en: {
-                pageTitle: "Tayeba Company Survey Dashboard - Follow-up and Control Department",
-                headerTitle: "Tayeba Company Survey Dashboard - Follow-up and Control Department",
-                tabWorkers: "Workers Survey",
-                tabManagers: "Managers Survey",
-                tabSupervisors: "Supervisors Survey",
+                pageTitle: "Daily Reports Dashboard - Follow-up and Control Department",
+                headerTitle: "Daily Reports Dashboard - Follow-up and Control Department",
                 searchPlaceholder: "Search all fields...",
                 btnExport: "Export to Excel",
                 btnRefresh: "Refresh",
                 noData: "No data available currently.",
                 modalTitle: "Details",
-                fullViewTitle: "Record Details",
+                fullViewTitle: "Report Details",
                 filterValues: "Filter Values",
                 filterClear: "Clear",
                 filterApply: "Apply",
@@ -821,85 +790,55 @@
                 btnDelete: "Delete",
                 confirmDelete: "Are you sure you want to delete this record? This cannot be undone.",
                 deleteSuccess: "Record deleted successfully.",
-                deleteFail: "Failed to delete record. Ensure server is running.",
+                deleteFail: "Failed to delete record.",
                 btnLogout: "Logout",
                 btnPrev: "Previous",
                 btnNext: "Next",
                 pageLabel: "Page",
                 loading: "Loading data...",
                 btnBackup: "Backup Database",
-                lockWorker: "Lock Employee Survey",
-                unlockWorker: "Unlock Employee Survey",
-                lockManager: "Lock Manager Survey",
-                unlockManager: "Unlock Manager Survey",
-                lockSupervisor: "Lock Supervisor Survey",
-                unlockSupervisor: "Unlock Supervisor Survey",
-                lockWorkerText: "Lock Employee Survey",
-                unlockWorkerText: "Unlock Employee Survey",
-                lockManagerText: "Lock Manager Survey",
-                lockSupervisorText: "Lock Supervisor Survey",
-                unlockManagerText: "Unlock Manager Survey",
-                unlockSupervisorText: "Unlock Supervisor Survey",
                 btnCopyDetails: "Copy Details",
                 copyDetailsSuccess: "Record details copied to clipboard!",
                 filterDeselectAll: "Deselect All",
-                btnAnalysis: "Data Analysis",
-                btnCleanData: "Clean Branch Names",
+                colStations: "Visited Stations",
             },
             ar: {
-                pageTitle: "لوحة تحكم استبيانات شركة طيبة قسم المتابعة والرقابة",
-                headerTitle: "لوحة تحكم استبيانات شركة طيبة قسم المتابعة والرقابة",
-                tabWorkers: "استبيان العمال",
-                tabManagers: "استبيان المدراء",
-                tabSupervisors: "استبيان المشرفين",
+                pageTitle: "لوحة تحكم التقارير اليومية - قسم المتابعة والرقابة",
+                headerTitle: "لوحة تحكم التقارير اليومية - قسم المتابعة والرقابة",
                 searchPlaceholder: "البحث في جميع الحقول...",
                 btnExport: "تصدير إلى Excel",
                 btnRefresh: "تحديث",
-                noData: "لا توجد بيانات متاحة حالياً.",
+                noData: "لا توجد تقارير متاحة حالياً.",
                 modalTitle: "التفاصيل",
-                fullViewTitle: "تفاصيل السجل",
+                fullViewTitle: "تفاصيل التقرير",
                 filterValues: "تصفية القيم",
                 filterClear: "مسح",
                 filterApply: "تطبيق",
-                colTime: "وقت الاستلام",
+                colTime: "وقت الجولة",
                 colActions: "إجراءات",
                 langBtn: "English",
                 lastUpdate: "آخر تحديث: ",
-                btnView: "عرض",
+                btnView: "عرض التقرير الكامل",
                 btnDelete: "حذف",
-                confirmDelete: "هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.",
-                deleteSuccess: "تم حذف السجل بنجاح.",
-                deleteFail: "فشل حذف السجل. تأكد من تشغيل السيرفر.",
+                confirmDelete: "هل أنت متأكد من حذف هذا التقرير؟ لا يمكن التراجع عن هذا الإجراء.",
+                deleteSuccess: "تم حذف التقرير بنجاح.",
+                deleteFail: "فشل الحذف.",
                 btnLogout: "تسجيل الخروج",
                 btnPrev: "السابق",
                 btnNext: "التالي",
                 pageLabel: "صفحة",
                 loading: "جاري تحميل البيانات...",
                 btnBackup: "النسخة الاحتياطية",
-                lockWorker: "قفل استبيان العمال",
-                unlockWorker: "فتح استبيان العمال",
-                lockManager: "قفل استبيان المدراء",
-                unlockManager: "فتح استبيان المدراء",
-                lockSupervisor: "قفل استبيان المشرفين",
-                unlockSupervisor: "فتح استبيان المشرفين",
-                lockWorkerText: "قفل استبيان العمال",
-                unlockWorkerText: "فتح استبيان العمال",
-                lockManagerText: "قفل استبيان المدراء",
-                lockSupervisorText: "قفل استبيان المشرفين",
-                unlockManagerText: "فتح استبيان المدراء",
-                unlockSupervisorText: "فتح استبيان المشرفين",
                 btnCopyDetails: "نسخ التفاصيل",
-                copyDetailsSuccess: "تم نسخ تفاصيل السجل إلى الحافظة!",
+                copyDetailsSuccess: "تم نسخ التفاصيل إلى الحافظة!",
                 filterDeselectAll: "إلغاء تحديد الكل",
-                btnAnalysis: "تحليل البيانات",
-                btnCleanData: "تنظيف أسماء الفروع",
+                colStations: "المحطات التي تمت زيارتها",
             }
         };
 
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'ar' : 'en';
             applyLanguage();
-            fetchLockStatus(); // Ensure lock buttons update their text correctly
             renderTable();
         }
 
@@ -948,7 +887,7 @@
                     filters: JSON.stringify(serializedFilters)
                 });
 
-                const response = await fetch(`/api/surveys?${queryParams.toString()}`);
+                const response = await fetch(`/api/daily_reports?${queryParams.toString()}`);
 
                 if (response.status === 401) {
                     throw new Error("Unauthorized: Please log in again.");
@@ -961,9 +900,7 @@
 
                 const result = await response.json();
                 allData = {
-                    workers: result.workers || [],
-                    managers: result.managers || [],
-                    supervisors: result.supervisors || []
+                    daily_reports: result.reports || []
                 };
                 if (result.pagination) {
                     paginationInfo = result.pagination;
@@ -996,11 +933,7 @@
         function updatePaginationUI() {
             if (!paginationInfo) return;
             const page = paginationInfo.page || 1;
-            let total = 0;
-            if (currentTab === 'workers') total = paginationInfo.totalPagesWorkers || 1;
-            else if (currentTab === 'managers') total = paginationInfo.totalPagesManagers || 1;
-            else if (currentTab === 'supervisors') total = paginationInfo.totalPagesSupervisors || 1;
-            else if (currentTab === 'daily_reports') total = paginationInfo.totalPagesReports || 1;
+            const total = paginationInfo.totalPagesReports || 1;
 
             document.getElementById('currentPageNum').textContent = page;
             document.getElementById('totalPagesNum').textContent = total || 1;
@@ -1008,12 +941,7 @@
             document.getElementById('prevBtn').disabled = (page <= 1);
             document.getElementById('nextBtn').disabled = (page >= total || total === 0);
 
-            // Show/hide controls if no data
-            let currentTotal = 0;
-            if (currentTab === 'workers') currentTotal = paginationInfo.totalWorkers || 0;
-            else if (currentTab === 'managers') currentTotal = paginationInfo.totalManagers || 0;
-            else if (currentTab === 'supervisors') currentTotal = paginationInfo.totalSupervisors || 0;
-
+            const currentTotal = paginationInfo.totalReports || 0;
             const hasData = currentTotal > 0;
             document.getElementById('paginationControls').style.display = hasData ? 'flex' : 'none';
         }
@@ -1021,10 +949,7 @@
         async function changePage(delta) {
             if (!paginationInfo) return;
             const newPage = (paginationInfo.page || 1) + delta;
-            let total = 1;
-            if (currentTab === 'workers') total = paginationInfo.totalPagesWorkers || 1;
-            else if (currentTab === 'managers') total = paginationInfo.totalPagesManagers || 1;
-            else if (currentTab === 'supervisors') total = paginationInfo.totalPagesSupervisors || 1;
+            const total = paginationInfo.totalPagesReports || 1;
 
             if (newPage >= 1 && newPage <= total) {
                 paginationInfo.page = newPage;
@@ -1053,26 +978,7 @@
             fetchData();
         }
 
-        const KEY_MAPS = {
-            // Supervisor key mappings (Old -> New)
-            "9. أبرز نقطة إيجابية": "1. أبرز النقاط الإيجابية",
-            "1. سرعة وفعالية الاستجابة": "2. سرعة وفعالية الاستجابة",
-            "2. منح الصلاحيات": "3. منح الصلاحيات",
-            "3. هل يمنحك مدير الفرع صلاحية كافيه المرتبطه بدورك لحل المشكلات في المحطات دون الحاجه للرجوع اليه في كل صغير وكبيره (مثال ان وجد)؟": "3. هل يمنحك مدير الفرع صلاحية كافية المرتبطة بدورك لحل المشكلات في المحطات دون الحاجة للرجوع إليه في كل صغيرة وكبيرة (مثال إن وجد)؟",
-            "3. التجاوب مع طلبات الصيانة": "4. التجاوب مع طلبات الصيانة",
-            "4. الجولات التفقدية": "5. الجولات التفقدية",
-            "5. التعامل مع الشكاوى والعدل": "6. التعامل مع الشكاوى والعدل",
-            "6. الاهتمام بالمقترحات": "7. الاهتمام بالمقترحات",
-            "7. التعاون والتنسيق بين الأقسام": "8. التعاون والتنسيق بين الأقسام",
-            "8. الثناء والمكافأة": "9. الثناء والمكافأة",
-            "9. هل يثني مدير الفرع على العمل المميز او يكافئ عند الانجاز ام يقتصر تعامله على المحاسبة عند الخطا فقط وهل تحاسب على اخطائك من قبل مدير الفرع؟": "9. الثناء والمكافأة",
-            "10. التطوير المطلوب": "12. التطوير المطلوب",
-            "12. التعاون في الملاحظات والجرد": "13. التعاون في الملاحظات والجرد",
-            "13. إطلاع المشرف على المستجدات": "14. إطلاع المشرف على المستجدات",
-            "14. تقبل الملاحظات": "15. تقبل الملاحظات",
-            "15. التقييم العام والعقبات": "16. التقييم العام والعقبات",
-            "16. هل يتم إعطاء المشرف الكيان الذي يستحقه أمام مدراء المحطات؟": "17. هل يعطيك مدير الفرع الكيان الذي تستحقه أمام مدراء المحطات؟"
-        };
+        const KEY_MAPS = {};
 
         function normalizeKey(k) {
             if (!k) return k;
@@ -1117,7 +1023,12 @@
                     val = date.toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US');
                 }
             }
-            if (Array.isArray(val)) return val.join(', ');
+            if (Array.isArray(val)) {
+                if (key === 'stations' || key === 'المحطات') {
+                    return val.map(s => s['اسم المحطة'] || '---').join(' ، ');
+                }
+                return val.map(item => typeof item === 'object' ? JSON.stringify(item) : item).join(', ');
+            }
             return String(val);
         }
 
@@ -1166,7 +1077,7 @@
                 });
             }
 
-            const totalAll = (allData.workers.length || 0) + (allData.managers.length || 0) + (allData.supervisors ? allData.supervisors.length : 0);
+            const totalAll = (allData.daily_reports || []).length;
 
             if (filteredData.length === 0 && totalAll === 0) {
                 table.style.display = 'none';
@@ -1196,6 +1107,7 @@
                 const th = document.createElement('th');
                 let label = k;
                 if (k === 'receivedAt') label = TRANSLATIONS[currentLang].colTime;
+                if (k === 'stations' || k === 'المحطات') label = TRANSLATIONS[currentLang].colStations;
 
                 const isFiltered = activeFilters[k] && activeFilters[k].size > 0;
                 const isSorted = currentSort.col === k;
@@ -1277,6 +1189,108 @@
                 return 0;
             });
             keys.forEach(k => {
+                if ((k === 'stations' || k === 'المحطات') && Array.isArray(row[k])) {
+                    const stationsDiv = document.createElement('div');
+                    stationsDiv.style.marginTop = '25px';
+                    
+                    const h4 = document.createElement('h3');
+                    h4.style.color = 'var(--main-green)';
+                    h4.style.borderBottom = '3px solid var(--main-green)';
+                    h4.style.paddingBottom = '8px';
+                    h4.style.marginBottom = '20px';
+                    h4.style.fontSize = '1.3em';
+                    h4.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> ${currentLang === 'ar' ? 'تفاصيل المحطات التي تمت زيارتها' : 'Visited Stations Details'}`;
+                    stationsDiv.appendChild(h4);
+
+                    row[k].forEach((station, index) => {
+                        const card = document.createElement('div');
+                        card.style.background = '#ffffff';
+                        card.style.border = '1px solid #e2e8f0';
+                        card.style.borderRadius = '12px';
+                        card.style.padding = '20px';
+                        card.style.marginBottom = '20px';
+                        card.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
+                        card.style.position = 'relative';
+                        card.style.overflow = 'hidden';
+
+                        // Accent strip
+                        const strip = document.createElement('div');
+                        strip.style.position = 'absolute';
+                        strip.style.top = '0';
+                        strip.style.left = currentLang === 'ar' ? 'auto' : '0';
+                        strip.style.right = currentLang === 'ar' ? '0' : 'auto';
+                        strip.style.width = '6px';
+                        strip.style.height = '100%';
+                        strip.style.backgroundColor = 'var(--main-green)';
+                        card.appendChild(strip);
+
+                        const cardTitle = document.createElement('div');
+                        cardTitle.style.fontWeight = '700';
+                        cardTitle.style.marginBottom = '15px';
+                        cardTitle.style.color = 'var(--main-green-dark)';
+                        cardTitle.style.fontSize = '1.2em';
+                        cardTitle.style.display = 'flex';
+                        cardTitle.style.alignItems = 'center';
+                        cardTitle.style.gap = '10px';
+                        cardTitle.innerHTML = `<span style="background:var(--main-green); color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8em;">${index + 1}</span> ${station['اسم المحطة'] || '---'}`;
+                        card.appendChild(cardTitle);
+
+                        const grid = document.createElement('div');
+                        grid.style.display = 'grid';
+                        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+                        grid.style.gap = '15px';
+
+                        Object.entries(station).forEach(([sk, sv]) => {
+                            if (sk === 'اسم المحطة' || sk === 'ملاحظات المحطة') return;
+                            const item = document.createElement('div');
+                            item.style.padding = '10px';
+                            item.style.background = '#f8fafc';
+                            item.style.borderRadius = '6px';
+                            item.style.display = 'flex';
+                            item.style.flexDirection = 'column';
+                            item.style.gap = '4px';
+
+                            const label = document.createElement('span');
+                            label.style.color = '#64748b';
+                            label.style.fontSize = '0.85em';
+                            label.style.fontWeight = '600';
+                            label.textContent = sk;
+
+                            const value = document.createElement('span');
+                            value.style.color = '#1e293b';
+                            value.style.fontWeight = '500';
+                            value.textContent = sv || '---';
+
+                            item.appendChild(label);
+                            item.appendChild(value);
+                            grid.appendChild(item);
+                        });
+
+                        card.appendChild(grid);
+
+                        // Special rendering for notes if they exist
+                        if (station['ملاحظات المحطة']) {
+                            const notesDiv = document.createElement('div');
+                            notesDiv.style.marginTop = '15px';
+                            notesDiv.style.padding = '12px';
+                            notesDiv.style.background = '#fffbeb';
+                            notesDiv.style.border = '1px solid #fde68a';
+                            notesDiv.style.borderRadius = '8px';
+                            notesDiv.innerHTML = `
+                                <div style="color:#92400e; font-weight:700; font-size:0.9em; margin-bottom:5px;">
+                                    <i class="fa-solid fa-comment-dots"></i> ${currentLang === 'ar' ? 'ملاحظات المحطة' : 'Station Notes'}
+                                </div>
+                                <div style="color:#78350f; line-height:1.5;">${station['ملاحظات المحطة']}</div>
+                            `;
+                            card.appendChild(notesDiv);
+                        }
+
+                        stationsDiv.appendChild(card);
+                    });
+                    container.appendChild(stationsDiv);
+                    return;
+                }
+
                 let label = k;
                 if (k === 'receivedAt') label = TRANSLATIONS[currentLang].colTime;
 
@@ -1415,9 +1429,7 @@
         async function deleteRecord(id) {
             const t = TRANSLATIONS[currentLang];
             if (!confirm(t.confirmDelete)) return;
-            let typeParam = 'worker';
-            if (currentTab === 'managers') typeParam = 'manager';
-            else if (currentTab === 'supervisors') typeParam = 'supervisor';
+            let typeParam = 'daily_report';
             try {
                 const res = await fetch(`/api/survey/${typeParam}/${id}`, { method: 'DELETE' });
                 if (res.status === 404) {
@@ -1473,8 +1485,10 @@
                     if (set.size > 0) serializedFilters[k] = Array.from(set);
                 }
 
+                let typeParam = 'daily_report';
+
                 const queryParams = new URLSearchParams({
-                    type: currentTab === 'workers' ? 'worker' : 'manager',
+                    type: typeParam,
                     field: key,
                     filters: JSON.stringify(serializedFilters)
                 });
@@ -1637,11 +1651,11 @@
                     filters: JSON.stringify(serializedFilters)
                 });
 
-                const response = await fetch(`/api/surveys?${queryParams.toString()}`);
+                const response = await fetch(`/api/daily_reports?${queryParams.toString()}`);
                 if (!response.ok) throw new Error("Failed to fetch data for export");
 
                 const result = await response.json();
-                const exportData = result[currentTab] || [];
+                const exportData = result.reports || [];
 
                 if (exportData.length === 0) {
                     alert(currentLang === 'ar' ? "لا توجد بيانات للتصدير." : "No data to export with current filters.");
@@ -1667,10 +1681,19 @@
                 });
                 const wsData = [headerLabels, ...rows];
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+                // Set column widths
+                const wscols = keys.map(k => {
+                    if (k === 'receivedAt') return { wch: 25 };
+                    if (k === 'stations' || k === 'المحطات') return { wch: 50 };
+                    return { wch: 20 };
+                });
+                ws['!cols'] = wscols;
+
                 const wb = XLSX.utils.book_new();
-                const tabName = currentTab === 'workers' ? 'Workers' : 'Managers';
+                const tabName = 'Daily Reports';
                 XLSX.utils.book_append_sheet(wb, ws, tabName);
-                const fileName = `survey-${currentTab}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+                const fileName = `Daily-Reports-${new Date().toISOString().slice(0, 10)}.xlsx`;
                 XLSX.writeFile(wb, fileName);
             } catch (err) {
                 console.error("Export Error:", err);

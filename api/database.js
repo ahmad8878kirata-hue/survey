@@ -67,9 +67,17 @@ function initSQLite() {
     )
   `);
   db.exec(`
+    CREATE TABLE IF NOT EXISTS daily_reports (
+      id VARCHAR(255) PRIMARY KEY,
+      receivedAt DATETIME NOT NULL,
+      data JSON NOT NULL
+    )
+  `);
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_managers_receivedAt ON managers(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_workers_receivedAt ON workers(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_supervisors_receivedAt ON supervisors(receivedAt);
+    CREATE INDEX IF NOT EXISTS idx_daily_reports_receivedAt ON daily_reports(receivedAt);
   `);
   console.log('SQLite database initialized at:', DB_PATH);
   return db;
@@ -114,6 +122,14 @@ async function initMySQL() {
         CREATE TABLE IF NOT EXISTS settings (
           \`key\` VARCHAR(255) PRIMARY KEY,
           \`value\` VARCHAR(255) NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS daily_reports (
+          id VARCHAR(255) PRIMARY KEY,
+          receivedAt DATETIME NOT NULL,
+          data JSON NOT NULL,
+          INDEX idx_daily_reports_receivedAt (receivedAt)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
       `);
       console.log('MySQL connection pool initialized and tables verified.');
@@ -440,6 +456,95 @@ const dbOperations = {
     }
   },
 
+  // Get total daily reports count
+  async getDailyReportsCount(search = '', filters = {}) {
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query(`SELECT COUNT(*) as count FROM daily_reports ${whereFragment}`, params);
+      return rows[0].count;
+    } else {
+      const db = getSQLite();
+      const result = db.prepare(`SELECT COUNT(*) as count FROM daily_reports ${whereFragment}`).get(...params);
+      return result ? result.count : 0;
+    }
+  },
+
+  // Get all daily reports with pagination
+  async getAllDailyReports(limit = 50, offset = 0, search = '', filters = {}) {
+    console.log(`[DB DEBUG] getAllDailyReports: limit=${limit}, offset=${offset}, search=${search}, filters=${JSON.stringify(filters)}, IS_MYSQL=${IS_MYSQL}`);
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      let query = `SELECT id, receivedAt, data FROM daily_reports ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const [rows] = await pool.query(query, queryParams);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      }));
+    } else {
+      const db = getSQLite();
+      let query = `SELECT * FROM daily_reports ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const rows = db.prepare(query).all(...queryParams);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      }));
+    }
+  },
+
+  // Add a daily report
+  async addDailyReport(entry) {
+    const { id, receivedAt, ...data } = entry;
+    const newId = id || (Date.now().toString() + Math.random().toString(36).slice(2));
+    const finalReceivedAt = receivedAt || new Date().toISOString();
+    const finalData = JSON.stringify(data);
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      await pool.query(
+        'INSERT INTO daily_reports (id, receivedAt, data) VALUES (?, ?, ?)',
+        [newId, finalReceivedAt.replace('T', ' ').replace('Z', ''), finalData]
+      );
+    } else {
+      const db = getSQLite();
+      const insert = db.prepare('INSERT INTO daily_reports (id, receivedAt, data) VALUES (?, ?, ?)');
+      insert.run(newId, finalReceivedAt, finalData);
+    }
+    return newId;
+  },
+
+  // Delete a daily report
+  async deleteDailyReport(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [result] = await pool.query('DELETE FROM daily_reports WHERE id = ?', [id]);
+      return result.affectedRows > 0;
+    } else {
+      const db = getSQLite();
+      const deleteStmt = db.prepare('DELETE FROM daily_reports WHERE id = ?');
+      const result = deleteStmt.run(id);
+      return result.changes > 0;
+    }
+  },
+
   // Get a manager by ID
   async getManagerById(id) {
     if (IS_MYSQL) {
@@ -577,7 +682,8 @@ const dbOperations = {
     const tableMap = {
       'worker': 'workers',
       'manager': 'managers',
-      'supervisor': 'supervisors'
+      'supervisor': 'supervisors',
+      'daily_report': 'daily_reports'
     };
     const table = tableMap[type] || 'workers';
     const { whereFragment, params } = buildWhereClause('', filters, IS_MYSQL);
