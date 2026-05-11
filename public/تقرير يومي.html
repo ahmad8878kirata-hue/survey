@@ -110,7 +110,9 @@
             color: var(--main-green-dark);
         }
 
-        .input-line, .form-select, .form-textarea {
+        .input-line,
+        .form-select,
+        .form-textarea {
             width: 100%;
             border: 1.5px solid var(--border-green);
             padding: 10px;
@@ -124,7 +126,9 @@
             transition: border 0.2s;
         }
 
-        .input-line:focus, .form-select:focus, .form-textarea:focus {
+        .input-line:focus,
+        .form-select:focus,
+        .form-textarea:focus {
             background: #ffffff;
             border: 1.5px solid var(--main-green-dark);
         }
@@ -141,7 +145,7 @@
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             position: relative;
         }
 
@@ -227,7 +231,7 @@
                 grid-template-columns: 1fr;
             }
         }
-        
+
         .notification {
             display: none;
             padding: 15px;
@@ -236,12 +240,14 @@
             text-align: center;
             font-weight: bold;
         }
+
         .notification.success {
             background: #e8f5e9;
             color: #2e7d32;
             border: 1px solid #c8e6c9;
             display: block;
         }
+
         .notification.error {
             background: #ffebee;
             color: #c62828;
@@ -263,7 +269,7 @@
 
             <form id="dailyReportForm">
                 <div class="section-title"><i class="fa-solid fa-info-circle"></i> معلومات الجولة الأساسية</div>
-                
+
                 <div class="grid-2">
                     <div class="form-group">
                         <label>تاريخ الجولة</label>
@@ -318,7 +324,9 @@
 
                 <div class="section-title">
                     <i class="fa-solid fa-gas-pump"></i> المحطات
-                    <button type="button" class="btn btn-outline" style="float: left; padding: 5px 15px; font-size: 0.9em; margin-top: -5px;" onclick="addStation()">
+                    <button type="button" class="btn btn-outline"
+                        style="float: left; padding: 5px 15px; font-size: 0.9em; margin-top: -5px;"
+                        onclick="addStation()">
                         <i class="fa-solid fa-plus"></i> إضافة محطة
                     </button>
                     <div style="clear: both;"></div>
@@ -330,7 +338,18 @@
 
                 <div class="section-title"><i class="fa-solid fa-comment-dots"></i> الملاحظات الختامية</div>
                 <div class="form-group">
-                    <textarea name="ملاحظات" class="form-textarea" rows="4" placeholder="اكتب أي ملاحظات إضافية حول الجولة..."></textarea>
+                    <textarea name="ملاحظات" class="form-textarea" rows="4"
+                        placeholder="اكتب أي ملاحظات إضافية حول الجولة..."></textarea>
+                </div>
+
+                <div
+                    style="background: #fff4f4; border: 2px solid #ffcdd2; padding: 15px; border-radius: 8px; margin-top: 20px; color: #c62828;">
+                    <p style="margin: 0; font-weight: 700; font-size: 1.1em;"><i
+                            class="fa-solid fa-triangle-exclamation"></i> تنبيه هام:</p>
+                    <ul style="margin: 10px 0 0; padding-right: 25px;">
+                        <li>إذا لم يُقدم تقرير يومي سيتم رفع إجازة.</li>
+                        <li>عدم إرسال التقرير اليومي يعني غياب للغرفة نفسها.</li>
+                    </ul>
                 </div>
 
                 <button type="submit" class="btn btn-submit" id="submitBtn">
@@ -346,29 +365,38 @@
 
         let stationCount = 0;
 
-        function createRadioGroup(name, labelText, options) {
-            let html = `<div class="form-group">
-                <label>${labelText}</label>
-                <div class="radio-options">`;
-            
+        function createRadioWithNote(name, labelText, options, placeholder = "اكتب ملاحظاتك هنا...") {
+            let html = `<div class="form-group" style="margin-bottom: 20px; border-bottom: 1px dashed #eee; padding-bottom: 15px;">
+                <label style="font-weight: 700; display: block; margin-bottom: 10px;">${labelText}</label>
+                <div class="radio-options" style="margin-bottom: 10px;">`;
+
             options.forEach(opt => {
-                html += `<label class="radio-label">
+                html += `<label class="radio-label" style="margin-left: 15px;">
                     <input type="radio" name="${name}" value="${opt}" required> ${opt}
                 </label>`;
             });
-            
-            html += `</div></div>`;
+
+            html += `</div>
+                <input type="text" name="${name}_note" class="input-line" placeholder="${placeholder}" style="height: 35px; font-size: 0.9em; margin-top: 5px;">
+            </div>`;
             return html;
+        }
+
+        function createSimpleGroup(name, labelText, contentHtml) {
+            return `<div class="form-group" style="margin-bottom: 20px; border-bottom: 1px dashed #eee; padding-bottom: 15px;">
+                <label style="font-weight: 700; display: block; margin-bottom: 10px;">${labelText}</label>
+                ${contentHtml}
+            </div>`;
         }
 
         function addStation() {
             stationCount++;
             const sId = `station_${stationCount}`;
-            
+
             const stationHtml = `
                 <div class="station-card" id="${sId}">
                     <button type="button" class="remove-station" onclick="document.getElementById('${sId}').remove()"><i class="fa-solid fa-trash"></i> حذف</button>
-                    <h3>محطة رقم ${stationCount}</h3>
+                    <h3 style="background: var(--main-green-light); padding: 10px; border-radius: 6px;"><i class="fa-solid fa-gas-pump"></i> محطة رقم ${stationCount}</h3>
                     
                     <div class="grid-2">
                         <div class="form-group">
@@ -381,52 +409,75 @@
                         </div>
                     </div>
                     
+                    <div class="section-title" style="font-size: 1em; margin-top: 10px; background-color: #fff9c4;"><i class="fa-solid fa-money-bill-wave"></i> البنود المالية والمخزون </div>
                     <div class="grid-2">
-                        ${createRadioGroup(`${sId}_sales_quality`, 'جودة مبيعات', ['ممتازة', 'جيدة', 'مقبولة', 'سيئة'])}
-                        ${createRadioGroup(`${sId}_cashier`, 'الصندوق', ['مطابق', 'يوجد عجز', 'يوجد زيادة'])}
+                        ${createRadioWithNote(`${sId}_cashier`, 'الصندوق', ['مطابق', 'عجز', 'زيادة'])}
+                        ${createRadioWithNote(`${sId}_inventory`, 'هل تم مطابقة المخزون؟', ['نعم', 'لا'])}
+                    </div>
+
+                    <div class="section-title" style="font-size: 1em; margin-top: 10px;"><i class="fa-solid fa-check-double"></i> بنود التقييم العام (مع الملاحظات)</div>
+
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${sId}_cases_followup`, 'متابعة القضايا', ['يوجد قضايا سابقة', 'لا يوجد'])}
+                        ${createRadioWithNote(`${sId}_violations`, 'هل هناك مخالفات في المحطة؟', ['نعم', 'لا'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${sId}_pump_quality`, 'جودة المضخات', ['ممتازة', 'جيدة', 'سيئة'], 'ضغط تشغيل، اهتزاز، تسريب، رشح')}
+                        ${createRadioWithNote(`${sId}_pump_calibration`, 'هل يتم استعبار المضخات؟', ['نعم', 'لا'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${sId}_sales_gasoline`, 'جودة مبيعات البنزين', ['ممتازة', 'جيدة', 'مقبولة', 'سيئة'])}
+                        ${createRadioWithNote(`${sId}_sales_diesel`, 'جودة مبيعات المازوت', ['ممتازة', 'جيدة', 'مقبولة', 'سيئة'])}
                     </div>
                     
                     <div class="grid-2">
-                        ${createRadioGroup(`${sId}_cleanliness`, 'نظافة المحطة', ['ممتازة', 'جيدة', 'سيئة'])}
-                        ${createRadioGroup(`${sId}_extinguishers`, 'الطفايات', ['جاهزة', 'بحاجة صيانة', 'غير متوفرة'])}
+                        ${createRadioWithNote(`${sId}_incidents`, 'الحوادث التي كادت أن تقع', ['حوادث إدارية', 'حوادث مالية', 'لا يوجد'])}
+                        ${createRadioWithNote(`${sId}_out_of_service`, 'هل يوجد معدات خارج الخدمة؟', ['نعم', 'لا'])}
                     </div>
 
                     <div class="grid-2">
-                        ${createRadioGroup(`${sId}_absent`, 'هل يوجد غياب موظفين؟', ['نعم', 'لا'])}
-                        ${createRadioGroup(`${sId}_energy`, 'منظومة الطاقة', ['تعمل بكفاءة', 'يوجد أعطال'])}
+                        ${createRadioWithNote(`${sId}_recurring_faults`, 'هل يوجد أعطال متكررة لنفس المعدة؟', ['نعم', 'لا'])}
+                        ${createRadioWithNote(`${sId}_recurring_faults_general`, 'هل يوجد أعطال متكررة بشكل عام؟', ['نعم', 'لا'])}
                     </div>
 
                     <div class="grid-2">
-                        ${createRadioGroup(`${sId}_inventory`, 'هل تم مطابقة المخزون؟', ['نعم', 'لا'])}
-                        ${createRadioGroup(`${sId}_surveillance`, 'منظومة المراقبة', ['تعمل', 'لا تعمل', 'لا يوجد'])}
+                        ${createRadioWithNote(`${sId}_surveillance`, 'منظومة المراقبة (الكاميرات)', ['تعمل', 'لا تعمل', 'لا يوجد'], 'مثلاً: إذا وجدت كاميرا بها عطل يكتب ذلك هنا')}
+                        ${createRadioWithNote(`${sId}_cleanliness`, 'نظافة المحطة', ['ممتازة', 'جيدة', 'سيئة'])}
                     </div>
 
                     <div class="grid-2">
-                        ${createRadioGroup(`${sId}_attendance`, 'حضور وانصراف الموظفين', ['منتظم', 'غير منتظم'])}
+                        ${createRadioWithNote(`${sId}_extinguishers`, 'الطفايات', ['جاهزة', 'بحاجة صيانة', 'غير متوفرة'])}
+                        ${createRadioWithNote(`${sId}_energy`, 'منظومة الطاقة', ['تعمل بكفاءة', 'يوجد أعطال'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${sId}_attendance`, 'حضور وانصراف الموظفين', ['منتظم', 'غير منتظم'])}
                     </div>
                     
                     <div class="form-group">
-                        <label>ملاحظات خاصة بهذه المحطة</label>
-                        <textarea name="${sId}_station_notes" class="form-textarea" rows="2" placeholder="اكتب أي ملاحظات تخص هذه المحطة..."></textarea>
+                        <label>ملاحظات عامة إضافية للمحطة</label>
+                        <textarea name="${sId}_station_notes" class="form-textarea" rows="2" placeholder="اكتب أي ملاحظات أخرى تخص هذه المحطة..."></textarea>
                     </div>
                 </div>
             `;
-            
+
             document.getElementById('stationsContainer').insertAdjacentHTML('beforeend', stationHtml);
         }
 
         // Add one station by default
         addStation();
 
-        document.getElementById('dailyReportForm').addEventListener('submit', async function(e) {
+        document.getElementById('dailyReportForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             const submitBtn = document.getElementById('submitBtn');
             const notification = document.getElementById('notificationArea');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...';
             notification.className = 'notification';
-            
+
             const formData = new FormData(this);
             const dataObj = {
                 'المحطات': []
@@ -440,27 +491,52 @@
                     const parts = key.split('_');
                     const sId = parts[0] + '_' + parts[1];
                     const field = parts.slice(2).join('_');
-                    
+
                     if (!stationDataMap[sId]) {
                         stationDataMap[sId] = {};
                     }
-                    
+
                     // Map English keys to Arabic keys for storage
                     const fieldMap = {
                         'name': 'اسم المحطة',
                         'location': 'موقع المحطة',
-                        'sales_quality': 'جودة مبيعات',
-                        'cashier': 'الصندوق',
-                        'cleanliness': 'نظافة المحطة',
-                        'extinguishers': 'الطفايات',
-                        'absent': 'هل يوجد غياب موظفين',
-                        'energy': 'منظومة الطاقة',
-                        'inventory': 'هل تم مطابقة المخزون',
+                        'cases_followup': 'متابعة القضايا',
+                        'cases_followup_note': 'ملاحظات متابعة القضايا',
+                        'violations': 'مخالفات في المحطة',
+                        'violations_note': 'ملاحظات المخالفات',
+                        'pump_quality': 'جودة المضخات',
+                        'pump_quality_note': 'ملاحظات جودة المضخات',
+                        'pump_calibration': 'استعبار المضخات',
+                        'pump_calibration_note': 'ملاحظات استعبار المضخات',
+                        'sales_gasoline': 'جودة مبيعات البنزين',
+                        'sales_gasoline_note': 'ملاحظات مبيعات البنزين',
+                        'sales_diesel': 'جودة مبيعات المازوت',
+                        'sales_diesel_note': 'ملاحظات مبيعات المازوت',
+                        'incidents': 'الحوادث',
+                        'incidents_note': 'ملاحظات الحوادث',
+                        'out_of_service': 'معدات خارج الخدمة',
+                        'out_of_service_note': 'ملاحظات معدات خارج الخدمة',
+                        'recurring_faults': 'أعطال متكررة للمعدة',
+                        'recurring_faults_note': 'ملاحظات الأعطال المتكررة للمعدة',
+                        'recurring_faults_general': 'أعطال متكررة عامة',
+                        'recurring_faults_general_note': 'ملاحظات الأعطال المتكررة العامة',
                         'surveillance': 'منظومة المراقبة',
+                        'surveillance_note': 'ملاحظات منظومة المراقبة',
+                        'cashier': 'الصندوق',
+                        'cashier_note': 'ملاحظات الصندوق',
+                        'cleanliness': 'نظافة المحطة',
+                        'cleanliness_note': 'ملاحظات نظافة المحطة',
+                        'extinguishers': 'الطفايات',
+                        'extinguishers_note': 'ملاحظات الطفايات',
+                        'energy': 'منظومة الطاقة',
+                        'energy_note': 'ملاحظات منظومة الطاقة',
+                        'inventory': 'مطابقة المخزون',
+                        'inventory_note': 'ملاحظات مطابقة المخزون',
                         'attendance': 'حضور وانصراف الموظفين',
-                        'station_notes': 'ملاحظات المحطة'
+                        'attendance_note': 'ملاحظات الحضور والانصراف',
+                        'station_notes': 'ملاحظات عامة للمحطة'
                     };
-                    
+
                     stationDataMap[sId][fieldMap[field] || field] = value;
                 } else {
                     dataObj[key] = value;
@@ -504,4 +580,5 @@
         });
     </script>
 </body>
+
 </html>

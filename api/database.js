@@ -74,10 +74,18 @@ function initSQLite() {
     )
   `);
   db.exec(`
+    CREATE TABLE IF NOT EXISTS weekly_reports (
+      id VARCHAR(255) PRIMARY KEY,
+      receivedAt DATETIME NOT NULL,
+      data JSON NOT NULL
+    )
+  `);
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_managers_receivedAt ON managers(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_workers_receivedAt ON workers(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_supervisors_receivedAt ON supervisors(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_daily_reports_receivedAt ON daily_reports(receivedAt);
+    CREATE INDEX IF NOT EXISTS idx_weekly_reports_receivedAt ON weekly_reports(receivedAt);
   `);
   console.log('SQLite database initialized at:', DB_PATH);
   return db;
@@ -132,6 +140,14 @@ async function initMySQL() {
           INDEX idx_daily_reports_receivedAt (receivedAt)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
       `);
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS weekly_reports (
+          id VARCHAR(255) PRIMARY KEY,
+          receivedAt DATETIME NOT NULL,
+          data JSON NOT NULL,
+          INDEX idx_weekly_reports_receivedAt (receivedAt)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
       console.log('MySQL connection pool initialized and tables verified.');
     } finally {
       connection.release();
@@ -167,8 +183,12 @@ function buildWhereClause(search, filters, isMysql) {
     for (const [key, values] of Object.entries(filters)) {
       if (Array.isArray(values) && values.length > 0) {
         if (key === 'receivedAt') {
-          conditions.push(`receivedAt IN (${values.map(() => '?').join(',')})`);
-          params.push(...values);
+          const dateConditions = [];
+          values.forEach(v => {
+            dateConditions.push(`receivedAt LIKE ?`);
+            params.push(`${v}%`);
+          });
+          conditions.push(`(${dateConditions.join(' OR ')})`);
         } else {
           let condition;
           if (isMysql) {
@@ -540,6 +560,85 @@ const dbOperations = {
     } else {
       const db = getSQLite();
       const deleteStmt = db.prepare('DELETE FROM daily_reports WHERE id = ?');
+      const result = deleteStmt.run(id);
+      return result.changes > 0;
+    }
+  },
+
+  // Get total weekly reports count
+  async getWeeklyReportsCount(search = '', filters = {}) {
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query(`SELECT COUNT(*) as count FROM weekly_reports ${whereFragment}`, params);
+      return rows[0].count;
+    } else {
+      const db = getSQLite();
+      const result = db.prepare(`SELECT COUNT(*) as count FROM weekly_reports ${whereFragment}`).get(...params);
+      return result ? result.count : 0;
+    }
+  },
+
+  // Get all weekly reports with pagination
+  async getAllWeeklyReports(limit = 50, offset = 0, search = '', filters = {}) {
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      let query = `SELECT id, receivedAt, data FROM weekly_reports ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+      const [rows] = await pool.query(query, queryParams);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      }));
+    } else {
+      const db = getSQLite();
+      let query = `SELECT * FROM weekly_reports ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+      const rows = db.prepare(query).all(...queryParams);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      }));
+    }
+  },
+
+  // Add a weekly report
+  async addWeeklyReport(entry) {
+    const { id, receivedAt, ...data } = entry;
+    const newId = id || (Date.now().toString() + Math.random().toString(36).slice(2));
+    const finalReceivedAt = receivedAt || new Date().toISOString();
+    const finalData = JSON.stringify(data);
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      await pool.query('INSERT INTO weekly_reports (id, receivedAt, data) VALUES (?, ?, ?)', [newId, finalReceivedAt.replace('T', ' ').replace('Z', ''), finalData]);
+    } else {
+      const db = getSQLite();
+      const insert = db.prepare('INSERT INTO weekly_reports (id, receivedAt, data) VALUES (?, ?, ?)');
+      insert.run(newId, finalReceivedAt, finalData);
+    }
+    return newId;
+  },
+
+  // Delete a weekly report
+  async deleteWeeklyReport(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [result] = await pool.query('DELETE FROM weekly_reports WHERE id = ?', [id]);
+      return result.affectedRows > 0;
+    } else {
+      const db = getSQLite();
+      const deleteStmt = db.prepare('DELETE FROM weekly_reports WHERE id = ?');
       const result = deleteStmt.run(id);
       return result.changes > 0;
     }

@@ -690,8 +690,10 @@
                 </button>
             </div>
 
-            <div class="controls" style="margin-top: -10px; margin-bottom: 25px;">
-                <!-- No lock buttons for daily reports -->
+            <div class="controls" style="margin-top: -10px; margin-bottom: 25px; align-items: center;">
+                <button class="action-btn" style="background-color: #991b1b;" onclick="checkAllGaps()">
+                    <i class="fa-solid fa-calendar-days"></i> <span data-i18n="btnAllGaps">Show All Daily Gaps</span>
+                </button>
             </div>
 
             <div class="table-wrapper">
@@ -735,6 +737,17 @@
             <span class="close-modal" onclick="closeModal('fullViewModal')">&times;</span>
             <h3 style="color:var(--main-green); margin-top:0;" data-i18n="fullViewTitle">Record Details</h3>
             <div id="fullViewContent"></div>
+        </div>
+    </div>
+
+    <!-- Modal: Missing Reports -->
+    <div id="missingReportsModal" class="modal">
+        <div class="modal-content" style="padding: 0; border: none; overflow: hidden; width: 450px;">
+            <div style="background-color: #ef4444; color: white; padding: 20px; position: relative;">
+                <span class="close-modal" onclick="closeModal('missingReportsModal')" style="color: white; top: 15px;">&times;</span>
+                <h3 style="margin: 0; font-size: 1.2em;"><i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="missingReportsTitle">Missing Daily Reports (Absence)</span></h3>
+            </div>
+            <div id="missingReportsContent" style="max-height: 500px; overflow-y: auto; padding: 20px; background-color: #fffafa;"></div>
         </div>
     </div>
 
@@ -801,6 +814,11 @@
                 copyDetailsSuccess: "Record details copied to clipboard!",
                 filterDeselectAll: "Deselect All",
                 colStations: "Visited Stations",
+                btnMissingReports: "Check Missing Reports (One Day)",
+                btnAllGaps: "Show All Daily Gaps",
+                missingReportsTitle: "Missing Daily Reports (Absence)",
+                selectDateFirst: "Please select a date first.",
+                noMissing: "All branches submitted their reports for this day.",
             },
             ar: {
                 pageTitle: "لوحة تحكم التقارير اليومية - قسم المتابعة والرقابة",
@@ -833,6 +851,11 @@
                 copyDetailsSuccess: "تم نسخ التفاصيل إلى الحافظة!",
                 filterDeselectAll: "إلغاء تحديد الكل",
                 colStations: "المحطات التي تمت زيارتها",
+                btnMissingReports: "فحص التقارير المفقودة (ليوم واحد)",
+                btnAllGaps: "عرض كافة فجوات التقارير اليومية",
+                missingReportsTitle: "التقارير اليومية المفقودة (الغياب)",
+                selectDateFirst: "يرجى اختيار التاريخ أولاً.",
+                noMissing: "جميع الأفرع قامت برفع تقاريرها لهذا اليوم.",
             }
         };
 
@@ -1048,6 +1071,112 @@
                 paginationInfo.page = 1;
                 fetchData();
             }, 500);
+        }
+
+
+        const ALL_BRANCHES = ["دمشق", "ريف دمشق", "حلب", "حمص", "حماة", "اللاذقية", "طرطوس", "إدلب", "درعا", "دير الزور", "الرقة"];
+
+        async function checkAllGaps() {
+            showLoading(true, currentLang === 'ar' ? 'جاري تحليل الفجوات في التقارير...' : 'Analyzing report gaps...');
+            try {
+                const response = await fetch(`/api/daily_reports?limit=all`);
+                const result = await response.json();
+                const reports = result.reports || [];
+
+                // Group reports by date
+                const reportsByDate = {};
+                reports.forEach(r => {
+                    if (!r.receivedAt) return;
+                    const date = r.receivedAt.split('T')[0];
+                    if (!reportsByDate[date]) reportsByDate[date] = new Set();
+                    if (r['اسم الفرع']) reportsByDate[date].add(r['اسم الفرع']);
+                });
+
+                // Get range of dates
+                const dates = Object.keys(reportsByDate).sort().reverse();
+                if (dates.length === 0) {
+                    alert(currentLang === 'ar' ? "لا توجد بيانات متاحة." : "No data available.");
+                    return;
+                }
+
+                const contentDiv = document.getElementById('missingReportsContent');
+                contentDiv.innerHTML = '';
+
+                let hasAnyGaps = false;
+
+                dates.forEach(date => {
+                    const submitted = reportsByDate[date];
+                    const missing = ALL_BRANCHES.filter(b => !submitted.has(b));
+
+                    if (missing.length > 0) {
+                        hasAnyGaps = true;
+                        const dateSection = document.createElement('div');
+                        dateSection.style.marginBottom = '20px';
+                        dateSection.style.padding = '10px';
+                        dateSection.style.border = '1px solid #ffcdd2';
+                        dateSection.style.borderRadius = '8px';
+                        dateSection.style.backgroundColor = '#fff';
+
+                        const dateTitle = document.createElement('h4');
+                        dateTitle.style.margin = '0 0 10px 0';
+                        dateTitle.style.color = '#b71c1c';
+                        dateTitle.style.borderBottom = '2px solid #ffcdd2';
+                        dateTitle.style.paddingBottom = '5px';
+                        dateTitle.innerHTML = `<i class="fa-solid fa-calendar-day"></i> ${date}`;
+                        dateSection.appendChild(dateTitle);
+
+                        const list = document.createElement('ul');
+                        list.style.listStyle = 'none';
+                        list.style.padding = '0';
+                        list.style.margin = '0';
+
+                        missing.forEach(b => {
+                            const li = document.createElement('li');
+                            li.style.padding = '8px 12px';
+                            li.style.marginBottom = '5px';
+                            li.style.backgroundColor = '#fff5f5';
+                            li.style.borderRight = '4px solid #ef4444';
+                            li.style.borderRadius = '4px';
+                            li.style.color = '#c62828';
+                            li.style.fontSize = '0.95em';
+                            li.style.display = 'flex';
+                            li.style.justifyContent = 'space-between';
+                            li.style.alignItems = 'center';
+                            
+                            const branchName = document.createElement('span');
+                            branchName.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${b}`;
+                            
+                            const absenceTag = document.createElement('span');
+                            absenceTag.style.backgroundColor = '#ef4444';
+                            absenceTag.style.color = 'white';
+                            absenceTag.style.padding = '2px 8px';
+                            absenceTag.style.borderRadius = '4px';
+                            absenceTag.style.fontSize = '0.8em';
+                            absenceTag.style.fontWeight = 'bold';
+                            absenceTag.textContent = currentLang === 'ar' ? 'غياب' : 'Absence';
+                            
+                            li.appendChild(branchName);
+                            li.appendChild(absenceTag);
+                            list.appendChild(li);
+                        });
+                        dateSection.appendChild(list);
+                        contentDiv.appendChild(dateSection);
+                    }
+                });
+
+                if (!hasAnyGaps) {
+                    contentDiv.innerHTML = `<div style="padding: 20px; text-align: center; color: #2e7d32; font-weight: bold;">
+                        <i class="fa-solid fa-circle-check"></i> ${TRANSLATIONS[currentLang].noMissing}
+                    </div>`;
+                }
+
+                document.getElementById('missingReportsModal').style.display = 'flex';
+            } catch (err) {
+                console.error("Error checking all gaps:", err);
+                alert("Error fetching data.");
+            } finally {
+                showLoading(false);
+            }
         }
 
         function renderTable() {
