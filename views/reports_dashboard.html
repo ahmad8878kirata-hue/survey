@@ -1048,7 +1048,12 @@
             }
             if (Array.isArray(val)) {
                 if (key === 'stations' || key === 'المحطات') {
+                    if (val.length === 0) return '---';
                     return val.map(s => s['اسم المحطة'] || '---').join(' ، ');
+                }
+                if (key === 'القضايا') {
+                    if (val.length === 0) return '---';
+                    return val.map(i => i['موضوع القضية'] || '---').join(' ، ');
                 }
                 return val.map(item => typeof item === 'object' ? JSON.stringify(item) : item).join(', ');
             }
@@ -1417,6 +1422,109 @@
                         stationsDiv.appendChild(card);
                     });
                     container.appendChild(stationsDiv);
+                    return;
+                }
+
+                if (k === 'القضايا' && Array.isArray(row[k])) {
+                    if (row[k].length === 0) return;
+                    
+                    const issuesDiv = document.createElement('div');
+                    issuesDiv.style.marginTop = '25px';
+                    
+                    const h4 = document.createElement('h3');
+                    h4.style.color = '#dc2626';
+                    h4.style.borderBottom = '3px solid #dc2626';
+                    h4.style.paddingBottom = '8px';
+                    h4.style.marginBottom = '20px';
+                    h4.style.fontSize = '1.3em';
+                    h4.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${currentLang === 'ar' ? 'تفاصيل القضايا المرفوعة' : 'Reported Issues Details'}`;
+                    issuesDiv.appendChild(h4);
+
+                    row[k].forEach((issue, index) => {
+                        const card = document.createElement('div');
+                        card.style.background = '#fef2f2';
+                        card.style.border = '1px solid #fecaca';
+                        card.style.borderRadius = '12px';
+                        card.style.padding = '20px';
+                        card.style.marginBottom = '20px';
+                        card.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
+                        card.style.position = 'relative';
+                        card.style.overflow = 'hidden';
+
+                        const strip = document.createElement('div');
+                        strip.style.position = 'absolute';
+                        strip.style.top = '0';
+                        strip.style.left = currentLang === 'ar' ? 'auto' : '0';
+                        strip.style.right = currentLang === 'ar' ? '0' : 'auto';
+                        strip.style.width = '6px';
+                        strip.style.height = '100%';
+                        strip.style.backgroundColor = '#dc2626';
+                        card.appendChild(strip);
+
+                        const cardTitle = document.createElement('div');
+                        cardTitle.style.fontWeight = '700';
+                        cardTitle.style.marginBottom = '15px';
+                        cardTitle.style.color = '#991b1b';
+                        cardTitle.style.fontSize = '1.2em';
+                        cardTitle.style.display = 'flex';
+                        cardTitle.style.alignItems = 'center';
+                        cardTitle.style.gap = '10px';
+                        cardTitle.innerHTML = `<span style="background:#dc2626; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8em;">${index + 1}</span> ${issue['موضوع القضية'] || '---'}`;
+                        card.appendChild(cardTitle);
+
+                        const grid = document.createElement('div');
+                        grid.style.display = 'grid';
+                        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+                        grid.style.gap = '15px';
+
+                        Object.entries(issue).forEach(([ik, iv]) => {
+                            if (ik === 'موضوع القضية' || ik === 'تفاصيل القضية') return;
+                            const item = document.createElement('div');
+                            item.style.padding = '10px';
+                            item.style.background = '#ffffff';
+                            item.style.borderRadius = '6px';
+                            item.style.border = '1px solid #fee2e2';
+                            item.style.display = 'flex';
+                            item.style.flexDirection = 'column';
+                            item.style.gap = '4px';
+
+                            const label = document.createElement('span');
+                            label.style.color = '#7f1d1d';
+                            label.style.fontSize = '0.85em';
+                            label.style.fontWeight = '600';
+                            label.textContent = ik;
+
+                            const value = document.createElement('span');
+                            value.style.color = '#450a0a';
+                            value.style.fontWeight = '500';
+                            value.textContent = iv || '---';
+
+                            item.appendChild(label);
+                            item.appendChild(value);
+                            grid.appendChild(item);
+                        });
+
+                        card.appendChild(grid);
+
+                        if (issue['تفاصيل القضية']) {
+                            const detailsDiv = document.createElement('div');
+                            detailsDiv.style.marginTop = '15px';
+                            detailsDiv.style.padding = '12px';
+                            detailsDiv.style.background = '#ffffff';
+                            detailsDiv.style.border = '1px solid #fecaca';
+                            detailsDiv.style.borderRadius = '8px';
+                            detailsDiv.innerHTML = `
+                                <div style="color:#b91c1c; font-weight:700; font-size:0.9em; margin-bottom:5px;">
+                                    <i class="fa-solid fa-circle-info"></i> ${currentLang === 'ar' ? 'التفاصيل' : 'Details'}
+                                </div>
+                                <div style="color:#7f1d1d; line-height:1.5; white-space: pre-wrap;">${issue['تفاصيل القضية']}</div>
+                            `;
+                            card.appendChild(detailsDiv);
+                        }
+
+                        issuesDiv.appendChild(card);
+                    });
+                    container.appendChild(issuesDiv);
                     return;
                 }
 

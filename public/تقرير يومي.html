@@ -323,11 +323,17 @@
                 </div>
 
                 <div class="section-title">
-                    <i class="fa-solid fa-gas-pump"></i> المحطات
+                    <i class="fa-solid fa-list"></i> المحطات والقضايا
                     <button type="button" class="btn btn-outline"
-                        style="float: left; padding: 5px 15px; font-size: 0.9em; margin-top: -5px;"
+                        style="float: left; padding: 5px 15px; font-size: 0.9em; margin-top: -5px; margin-right: 10px;"
                         onclick="addStation()">
                         <i class="fa-solid fa-plus"></i> إضافة محطة
+                    </button>
+                    <button type="button" class="btn btn-outline"
+                        style="float: left; padding: 5px 15px; font-size: 0.9em; margin-top: -5px; color: #c62828; border-color: #c62828;"
+                        onmouseover="this.style.backgroundColor='#ffebee'" onmouseout="this.style.backgroundColor='transparent'"
+                        onclick="addIssue()">
+                        <i class="fa-solid fa-triangle-exclamation"></i> إضافة قضية
                     </button>
                     <div style="clear: both;"></div>
                 </div>
@@ -352,9 +358,14 @@
                     </ul>
                 </div>
 
-                <button type="submit" class="btn btn-submit" id="submitBtn">
-                    <i class="fa-solid fa-paper-plane"></i> حفظ وإرسال التقرير
-                </button>
+                <div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
+                    <button type="button" class="btn" style="background-color: #f59e0b; flex: 1; min-width: 200px; padding: 15px; font-size: 1.2em;" onclick="saveDraft()">
+                        <i class="fa-solid fa-floppy-disk"></i> حفظ كمسودة مؤقتة
+                    </button>
+                    <button type="submit" class="btn btn-submit" id="submitBtn" style="flex: 2; margin-top: 0; min-width: 250px;">
+                        <i class="fa-solid fa-paper-plane"></i> إرسال التقرير النهائي
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -364,6 +375,7 @@
         document.getElementById('tourDate').valueAsDate = new Date();
 
         let stationCount = 0;
+        let issueCount = 0;
 
         function createRadioWithNote(name, labelText, options, placeholder = "اكتب ملاحظاتك هنا...") {
             let html = `<div class="form-group" style="margin-bottom: 20px; border-bottom: 1px dashed #eee; padding-bottom: 15px;">
@@ -466,8 +478,130 @@
             document.getElementById('stationsContainer').insertAdjacentHTML('beforeend', stationHtml);
         }
 
-        // Add one station by default
-        addStation();
+        function addIssue() {
+            issueCount++;
+            const iId = `issue_${issueCount}`;
+
+            const issueHtml = `
+                <div class="station-card" id="${iId}" style="border-color: #ef5350; background: #fffafa;">
+                    <button type="button" class="remove-station" onclick="document.getElementById('${iId}').remove()"><i class="fa-solid fa-trash"></i> حذف</button>
+                    <h3 style="background: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; border-bottom: 1px solid #ffcdd2; margin-bottom: 15px; margin-top: 0;"><i class="fa-solid fa-triangle-exclamation"></i> قضية رقم ${issueCount}</h3>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label style="color: #c62828;">موضوع القضية</label>
+                            <input type="text" name="${iId}_subject" class="input-line" style="border-color: #ef9a9a;" required>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: #c62828;">تاريخ وقوع القضية (إن وجد)</label>
+                            <input type="date" name="${iId}_date" class="input-line" style="border-color: #ef9a9a;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="color: #c62828;">الجهة المعنية / المحطة المرتبطة</label>
+                        <input type="text" name="${iId}_entity" class="input-line" style="border-color: #ef9a9a;" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: #c62828;">تفاصيل القضية</label>
+                        <textarea name="${iId}_details" class="form-textarea" rows="4" style="border-color: #ef9a9a;" placeholder="اكتب تفاصيل القضية هنا..." required></textarea>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label style="color: #c62828;">الإجراء المتخذ</label>
+                            <input type="text" name="${iId}_action" class="input-line" style="border-color: #ef9a9a;">
+                        </div>
+                        <div class="form-group">
+                            <label style="color: #c62828;">حالة القضية</label>
+                            <select name="${iId}_status" class="form-select" style="border-color: #ef9a9a;" required>
+                                <option value="" disabled selected>اختر الحالة...</option>
+                                <option value="قيد المتابعة">قيد المتابعة</option>
+                                <option value="مغلقة">مغلقة</option>
+                                <option value="محالة للجهات المختصة">محالة للجهات المختصة</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('stationsContainer').insertAdjacentHTML('beforeend', issueHtml);
+        }
+
+        function saveDraft() {
+            const formData = new FormData(document.getElementById('dailyReportForm'));
+            const dataObj = {};
+            for (let [key, value] of formData.entries()) {
+                dataObj[key] = value;
+            }
+            
+            const draft = {
+                stationCount: stationCount,
+                issueCount: issueCount,
+                containerHtml: document.getElementById('stationsContainer').innerHTML,
+                formData: dataObj
+            };
+            localStorage.setItem('dailyReportDraft', JSON.stringify(draft));
+            
+            const notification = document.getElementById('notificationArea');
+            notification.textContent = 'تم حفظ البيانات كمسودة بنجاح! يمكنك إغلاق المتصفح والعودة لاحقاً لإكمال التقرير.';
+            notification.className = 'notification success';
+            notification.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function restoreDraft() {
+            const draftStr = localStorage.getItem('dailyReportDraft');
+            if (draftStr) {
+                try {
+                    const draft = JSON.parse(draftStr);
+                    stationCount = draft.stationCount || 0;
+                    issueCount = draft.issueCount || 0;
+                    document.getElementById('stationsContainer').innerHTML = draft.containerHtml || '';
+                    
+                    if (stationCount === 0 && issueCount === 0) {
+                        addStation();
+                    }
+
+                    const form = document.getElementById('dailyReportForm');
+                    for (let key in draft.formData) {
+                        const inputs = form.querySelectorAll(`[name="${key}"]`);
+                        if (inputs.length > 0) {
+                            if (inputs[0].type === 'radio' || inputs[0].type === 'checkbox') {
+                                inputs.forEach(input => {
+                                    if (input.value === draft.formData[key]) {
+                                        input.checked = true;
+                                    }
+                                });
+                            } else {
+                                inputs[0].value = draft.formData[key];
+                            }
+                        }
+                    }
+                    
+                    const notification = document.getElementById('notificationArea');
+                    notification.textContent = 'تم استعادة معلومات المحطات المحفوظة مسبقاً.';
+                    notification.className = 'notification success';
+                    notification.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                    }, 5000);
+                } catch (e) {
+                    console.error("Error restoring draft", e);
+                    document.getElementById('stationsContainer').innerHTML = '';
+                    stationCount = 0;
+                    issueCount = 0;
+                    addStation();
+                }
+            } else {
+                addStation();
+            }
+        }
+
+        // Restore draft on page load
+        restoreDraft();
 
         document.getElementById('dailyReportForm').addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -480,11 +614,13 @@
 
             const formData = new FormData(this);
             const dataObj = {
-                'المحطات': []
+                'المحطات': [],
+                'القضايا': []
             };
 
             // Extract main data and stations
             let stationDataMap = {};
+            let issueDataMap = {};
 
             for (let [key, value] of formData.entries()) {
                 if (key.startsWith('station_')) {
@@ -538,6 +674,25 @@
                     };
 
                     stationDataMap[sId][fieldMap[field] || field] = value;
+                } else if (key.startsWith('issue_')) {
+                    const parts = key.split('_');
+                    const iId = parts[0] + '_' + parts[1];
+                    const field = parts.slice(2).join('_');
+
+                    if (!issueDataMap[iId]) {
+                        issueDataMap[iId] = {};
+                    }
+
+                    const issueFieldMap = {
+                        'subject': 'موضوع القضية',
+                        'date': 'تاريخ القضية',
+                        'entity': 'الجهة المعنية',
+                        'details': 'تفاصيل القضية',
+                        'action': 'الإجراء المتخذ',
+                        'status': 'حالة القضية'
+                    };
+
+                    issueDataMap[iId][issueFieldMap[field] || field] = value;
                 } else {
                     dataObj[key] = value;
                 }
@@ -546,6 +701,9 @@
             // Convert map to array
             for (let key in stationDataMap) {
                 dataObj['المحطات'].push(stationDataMap[key]);
+            }
+            for (let key in issueDataMap) {
+                dataObj['القضايا'].push(issueDataMap[key]);
             }
 
             try {
@@ -562,8 +720,14 @@
                 if (result.status === 'success') {
                     notification.textContent = 'تم إرسال التقرير بنجاح!';
                     notification.classList.add('success');
+                    
+                    // Clear draft on successful submit
+                    localStorage.removeItem('dailyReportDraft');
+                    
                     this.reset();
                     document.getElementById('stationsContainer').innerHTML = '';
+                    stationCount = 0;
+                    issueCount = 0;
                     addStation(); // add empty station
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
@@ -575,7 +739,7 @@
                 notification.classList.add('error');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> حفظ وإرسال التقرير';
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> إرسال التقرير النهائي';
             }
         });
     </script>
