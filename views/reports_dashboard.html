@@ -685,6 +685,10 @@
                 <button class="action-btn" style="background-color: #6366f1;" onclick="downloadBackup()">
                     <i class="fa-solid fa-database"></i> <span data-i18n="btnBackup">Backup Database</span>
                 </button>
+                <input type="file" id="importDbInput" accept=".db" style="display: none;" onchange="importDatabase(event)">
+                <button class="action-btn" style="background-color: #219150;" onclick="document.getElementById('importDbInput').click()">
+                    <i class="fa-solid fa-file-import"></i> <span data-i18n="btnImportDb">Import Database</span>
+                </button>
                 <button class="action-btn secondary" onclick="fetchData()">
                     <i class="fa-solid fa-sync"></i> <span data-i18n="btnRefresh">Refresh</span>
                 </button>
@@ -810,6 +814,7 @@
                 pageLabel: "Page",
                 loading: "Loading data...",
                 btnBackup: "Backup Database",
+                btnImportDb: "Import Database",
                 btnCopyDetails: "Copy Details",
                 copyDetailsSuccess: "Record details copied to clipboard!",
                 filterDeselectAll: "Deselect All",
@@ -847,6 +852,7 @@
                 pageLabel: "صفحة",
                 loading: "جاري تحميل البيانات...",
                 btnBackup: "النسخة الاحتياطية",
+                btnImportDb: "استيراد قاعدة البيانات",
                 btnCopyDetails: "نسخ التفاصيل",
                 copyDetailsSuccess: "تم نسخ التفاصيل إلى الحافظة!",
                 filterDeselectAll: "إلغاء تحديد الكل",
@@ -1054,6 +1060,10 @@
                 if (key === 'القضايا') {
                     if (val.length === 0) return '---';
                     return val.map(i => i['موضوع القضية'] || '---').join(' ، ');
+                }
+                if (key === 'معامل الغاز') {
+                    if (val.length === 0) return '---';
+                    return val.map((g, idx) => `معمل غاز ${idx + 1}`).join(' ، ');
                 }
                 return val.map(item => typeof item === 'object' ? JSON.stringify(item) : item).join(', ');
             }
@@ -1528,6 +1538,109 @@
                     return;
                 }
 
+                if (k === 'معامل الغاز' && Array.isArray(row[k])) {
+                    if (row[k].length === 0) return;
+                    
+                    const gasDiv = document.createElement('div');
+                    gasDiv.style.marginTop = '25px';
+                    
+                    const h4 = document.createElement('h3');
+                    h4.style.color = '#1976d2';
+                    h4.style.borderBottom = '3px solid #1976d2';
+                    h4.style.paddingBottom = '8px';
+                    h4.style.marginBottom = '20px';
+                    h4.style.fontSize = '1.3em';
+                    h4.innerHTML = `<i class="fa-solid fa-industry"></i> ${currentLang === 'ar' ? 'تفاصيل معامل الغاز' : 'Gas Plants Details'}`;
+                    gasDiv.appendChild(h4);
+
+                    row[k].forEach((plant, index) => {
+                        const card = document.createElement('div');
+                        card.style.background = '#f8fbff';
+                        card.style.border = '1px solid #bbdefb';
+                        card.style.borderRadius = '12px';
+                        card.style.padding = '20px';
+                        card.style.marginBottom = '20px';
+                        card.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
+                        card.style.position = 'relative';
+                        card.style.overflow = 'hidden';
+
+                        const strip = document.createElement('div');
+                        strip.style.position = 'absolute';
+                        strip.style.top = '0';
+                        strip.style.left = currentLang === 'ar' ? 'auto' : '0';
+                        strip.style.right = currentLang === 'ar' ? '0' : 'auto';
+                        strip.style.width = '6px';
+                        strip.style.height = '100%';
+                        strip.style.backgroundColor = '#1976d2';
+                        card.appendChild(strip);
+
+                        const cardTitle = document.createElement('div');
+                        cardTitle.style.fontWeight = '700';
+                        cardTitle.style.marginBottom = '15px';
+                        cardTitle.style.color = '#0d47a1';
+                        cardTitle.style.fontSize = '1.2em';
+                        cardTitle.style.display = 'flex';
+                        cardTitle.style.alignItems = 'center';
+                        cardTitle.style.gap = '10px';
+                        cardTitle.innerHTML = `<span style="background:#1976d2; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8em;">${index + 1}</span> معمل غاز`;
+                        card.appendChild(cardTitle);
+
+                        const grid = document.createElement('div');
+                        grid.style.display = 'grid';
+                        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+                        grid.style.gap = '15px';
+
+                        Object.entries(plant).forEach(([gk, gv]) => {
+                            if (gk === 'ملاحظات عامة وتوصيات') return;
+                            const item = document.createElement('div');
+                            item.style.padding = '10px';
+                            item.style.background = '#ffffff';
+                            item.style.borderRadius = '6px';
+                            item.style.border = '1px solid #e3f2fd';
+                            item.style.display = 'flex';
+                            item.style.flexDirection = 'column';
+                            item.style.gap = '4px';
+
+                            const label = document.createElement('span');
+                            label.style.color = '#1565c0';
+                            label.style.fontSize = '0.85em';
+                            label.style.fontWeight = '600';
+                            label.textContent = gk;
+
+                            const value = document.createElement('span');
+                            value.style.color = '#0d47a1';
+                            value.style.fontWeight = '500';
+                            value.textContent = gv || '---';
+
+                            item.appendChild(label);
+                            item.appendChild(value);
+                            grid.appendChild(item);
+                        });
+
+                        card.appendChild(grid);
+
+                        if (plant['ملاحظات عامة وتوصيات']) {
+                            const detailsDiv = document.createElement('div');
+                            detailsDiv.style.marginTop = '15px';
+                            detailsDiv.style.padding = '12px';
+                            detailsDiv.style.background = '#ffffff';
+                            detailsDiv.style.border = '1px solid #bbdefb';
+                            detailsDiv.style.borderRadius = '8px';
+                            detailsDiv.innerHTML = `
+                                <div style="color:#1565c0; font-weight:700; font-size:0.9em; margin-bottom:5px;">
+                                    <i class="fa-solid fa-circle-info"></i> ${currentLang === 'ar' ? 'ملاحظات وتوصيات عامة' : 'General Notes & Recommendations'}
+                                </div>
+                                <div style="color:#0d47a1; line-height:1.5; white-space: pre-wrap;">${plant['ملاحظات عامة وتوصيات']}</div>
+                            `;
+                            card.appendChild(detailsDiv);
+                        }
+
+                        gasDiv.appendChild(card);
+                    });
+                    container.appendChild(gasDiv);
+                    return;
+                }
+
                 let label = k;
                 if (k === 'receivedAt') label = TRANSLATIONS[currentLang].colTime;
 
@@ -1947,6 +2060,51 @@
                 popover.style.display = 'none';
                 openFilterCol = null;
             }
+        }
+
+        function downloadBackup() {
+            window.location.href = '/api/backup';
+        }
+
+        function importDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const confirmMsg = currentLang === 'ar' 
+                ? 'هل أنت متأكد أنك تريد استيراد قاعدة البيانات؟ سيتم استبدال البيانات الحالية ولن تتمكن من التراجع.' 
+                : 'Are you sure you want to import this database? This will overwrite existing data and cannot be undone.';
+                
+            if (!confirm(confirmMsg)) {
+                event.target.value = '';
+                return;
+            }
+
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            fetch('/api/restore', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/octet-stream'
+                },
+                body: file
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(currentLang === 'ar' ? 'تم استيراد قاعدة البيانات بنجاح.' : 'Database imported successfully.');
+                    fetchData();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert(currentLang === 'ar' ? 'حدث خطأ أثناء الاستيراد.' : 'An error occurred during import.');
+            })
+            .finally(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                event.target.value = '';
+            });
         }
 
         applyLanguage();

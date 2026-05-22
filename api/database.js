@@ -1017,6 +1017,19 @@ const dbOperations = {
     }
     console.log(`[CLEAN] Finished. Total updated: ${updatedCount}`);
     return updatedCount;
+  },
+
+  // Restore database safely
+  async restoreDatabase(buffer) {
+    if (IS_MYSQL) {
+      throw new Error('Restore is only supported for SQLite mode.');
+    }
+    if (sqliteDb) {
+      sqliteDb.close();
+      sqliteDb = null;
+    }
+    fs.writeFileSync(DB_PATH, buffer);
+    sqliteDb = initSQLite();
   }
 };
 

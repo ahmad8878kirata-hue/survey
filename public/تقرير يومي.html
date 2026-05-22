@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>إضافة تقرير يومي - قسم الرقابة والمتابعة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --main-green: #219150;
@@ -261,8 +261,15 @@
     <div class="decorative-frame">
         <div class="container">
             <div class="header-logo-row">
-                <img src="logo.png" alt="شعار" onerror="this.style.display='none'">
-                <h1><i class="fa-solid fa-clipboard-list"></i> إضافة تقرير جولة يومية - الرقابة والمتابعة</h1>
+                <div style="font-family: 'Aref Ruqaa', serif; font-size: 2.1em; font-weight: 700; color: var(--main-green-dark); text-shadow: 1px 1px 3px rgba(0,0,0,0.15); margin-bottom: 5px; display: flex; justify-content: center; align-items: baseline; gap: 8px;">
+                    <span>شَرِكَةُ</span>
+                    <span>طَيْبَةَ</span>
+                    <span style="position: relative; top: 6px;">لِلْمَحْرُوقَاتِ</span>
+                </div>
+                <h1>
+                    <i class="fa-solid fa-clipboard-list"></i> تقرير يومي
+                    <span style="display: block; font-family: 'Aref Ruqaa', serif; font-size: 1.1em; color: var(--main-green); margin-top: 5px;">الرَّقَابَةِ وَالْمُتَابَعَةِ</span>
+                </h1>
             </div>
 
             <div id="notificationArea" class="notification"></div>
@@ -322,20 +329,28 @@
                     </div>
                 </div>
 
-                <div class="section-title">
-                    <i class="fa-solid fa-list"></i> المحطات والقضايا
-                    <button type="button" class="btn btn-outline"
-                        style="float: left; padding: 5px 15px; font-size: 0.9em; margin-top: -5px; margin-right: 10px;"
-                        onclick="addStation()">
-                        <i class="fa-solid fa-plus"></i> إضافة محطة
-                    </button>
-                    <button type="button" class="btn btn-outline"
-                        style="float: left; padding: 5px 15px; font-size: 0.9em; margin-top: -5px; color: #c62828; border-color: #c62828;"
-                        onmouseover="this.style.backgroundColor='#ffebee'" onmouseout="this.style.backgroundColor='transparent'"
-                        onclick="addIssue()">
-                        <i class="fa-solid fa-triangle-exclamation"></i> إضافة قضية
-                    </button>
-                    <div style="clear: both;"></div>
+                <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px;">
+                    <div style="font-size: 1.1em;"><i class="fa-solid fa-list"></i> المحطات والقضايا ومعمل الغاز</div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button type="button" class="btn"
+                            style="padding: 8px 16px; font-size: 0.9em; background-color: var(--white); color: var(--main-green); border: 2px solid var(--main-green); box-shadow: 0 2px 8px rgba(33, 145, 80, 0.15); border-radius: 8px; font-weight: 700; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='var(--main-green)'; this.style.color='var(--white)';"
+                            onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='var(--main-green)';" onclick="addStation()">
+                            <i class="fa-solid fa-plus"></i> إضافة محطة
+                        </button>
+                        <button type="button" class="btn"
+                            style="padding: 8px 16px; font-size: 0.9em; background-color: var(--white); color: #1976d2; border: 2px solid #1976d2; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15); border-radius: 8px; font-weight: 700; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='#1976d2'; this.style.color='var(--white)';"
+                            onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='#1976d2';" onclick="addGasPlant()">
+                            <i class="fa-solid fa-industry"></i> إضافة معمل الغاز
+                        </button>
+                        <button type="button" class="btn"
+                            style="padding: 8px 16px; font-size: 0.9em; background-color: var(--white); color: #c62828; border: 2px solid #c62828; box-shadow: 0 2px 8px rgba(198, 40, 40, 0.15); border-radius: 8px; font-weight: 700; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='#c62828'; this.style.color='var(--white)';"
+                            onmouseout="this.style.backgroundColor='var(--white)'; this.style.color='#c62828';" onclick="addIssue()">
+                            <i class="fa-solid fa-triangle-exclamation"></i> إضافة قضية
+                        </button>
+                    </div>
                 </div>
 
                 <div id="stationsContainer">
@@ -359,10 +374,13 @@
                 </div>
 
                 <div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
-                    <button type="button" class="btn" style="background-color: #f59e0b; flex: 1; min-width: 200px; padding: 15px; font-size: 1.2em;" onclick="saveDraft()">
+                    <button type="button" class="btn"
+                        style="background-color: #f59e0b; flex: 1; min-width: 200px; padding: 15px; font-size: 1.2em;"
+                        onclick="saveDraft()">
                         <i class="fa-solid fa-floppy-disk"></i> حفظ كمسودة مؤقتة
                     </button>
-                    <button type="submit" class="btn btn-submit" id="submitBtn" style="flex: 2; margin-top: 0; min-width: 250px;">
+                    <button type="submit" class="btn btn-submit" id="submitBtn"
+                        style="flex: 2; margin-top: 0; min-width: 250px;">
                         <i class="fa-solid fa-paper-plane"></i> إرسال التقرير النهائي
                     </button>
                 </div>
@@ -376,6 +394,7 @@
 
         let stationCount = 0;
         let issueCount = 0;
+        let gasPlantCount = 0;
 
         function createRadioWithNote(name, labelText, options, placeholder = "اكتب ملاحظاتك هنا...") {
             let html = `<div class="form-group" style="margin-bottom: 20px; border-bottom: 1px dashed #eee; padding-bottom: 15px;">
@@ -529,21 +548,81 @@
             document.getElementById('stationsContainer').insertAdjacentHTML('beforeend', issueHtml);
         }
 
+        function addGasPlant() {
+            gasPlantCount++;
+            const gId = `gasplant_${gasPlantCount}`;
+
+            const gasPlantHtml = `
+                <div class="station-card" id="${gId}" style="border-color: #1976d2; background: #f8fbff;">
+                    <button type="button" class="remove-station" onclick="document.getElementById('${gId}').remove()"><i class="fa-solid fa-trash"></i> حذف</button>
+                    <h3 style="background: #e3f2fd; color: #1976d2; padding: 10px; border-radius: 6px; border-bottom: 1px solid #bbdefb; margin-bottom: 15px; margin-top: 0;"><i class="fa-solid fa-industry"></i> معمل الغاز رقم ${gasPlantCount}</h3>
+
+                    <div class="section-title" style="font-size: 1em; margin-top: 10px;"><i class="fa-solid fa-shield-halved"></i> التفتيش والأمن</div>
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${gId}_inspection`, 'تفتيش السيارات والأشخاص', ['نعم', 'لا'])}
+                        ${createRadioWithNote(`${gId}_fingerprint`, 'جهاز البصمة يعمل', ['نعم', 'لا'])}
+                    </div>
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${gId}_cameras`, 'كاميرات المراقبة تعمل', ['نعم', 'لا'])}
+                        <div class="form-group">
+                            <label style="color: #1976d2;">عدد السيارات المفتشة والمواد المضبوطة</label>
+                            <input type="text" name="${gId}_inspected_cars" class="input-line" style="border-color: #90caf9;" placeholder="العدد والمواد...">
+                        </div>
+                    </div>
+
+                    <div class="section-title" style="font-size: 1em; margin-top: 10px;"><i class="fa-solid fa-users"></i> الإدارة والمستودع</div>
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${gId}_management`, 'تواجد الإدارة (المدير، الإنتاج)', ['نعم', 'لا'])}
+                        ${createRadioWithNote(`${gId}_expenses`, 'مطابقة المصاريف', ['نعم', 'لا'])}
+                    </div>
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${gId}_inventory`, 'جرد المستودع أسبوعياً', ['نعم', 'لا'])}
+                    </div>
+
+                    <div class="section-title" style="font-size: 1em; margin-top: 10px;"><i class="fa-solid fa-wrench"></i> الصيانة والمعدات</div>
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${gId}_compressors`, 'ضواغط الغاز تعمل', ['نعم', 'لا'])}
+                        ${createRadioWithNote(`${gId}_discharge`, 'جهاز تفريغ الغاز يعمل', ['نعم', 'لا'])}
+                    </div>
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${gId}_telescopes`, 'التلسكوبات تعمل', ['نعم', 'لا'])}
+                    </div>
+
+                    <div class="section-title" style="font-size: 1em; margin-top: 10px;"><i class="fa-solid fa-gears"></i> عملية المعمل والسلامة</div>
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${gId}_process`, 'مراحل العملية سليمة', ['نعم', 'لا'], 'استلام، تفريغ، تعبئة، وزن، ختام، تحميل')}
+                        ${createRadioWithNote(`${gId}_extinguishers`, 'طفايات الحريق جاهزة', ['نعم', 'لا'])}
+                    </div>
+                    <div class="grid-2">
+                        ${createRadioWithNote(`${gId}_cleanliness`, 'نظافة المعمل وإزالة الأعشاب', ['نعم', 'لا'])}
+                    </div>
+
+                    <div class="form-group">
+                        <label style="color: #1976d2;">ملاحظات عامة حول المعمل والتوصيات</label>
+                        <textarea name="${gId}_general_notes" class="form-textarea" rows="3" style="border-color: #90caf9;" placeholder="اكتب التوصيات والمشاكل المكتشفة هنا..."></textarea>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('stationsContainer').insertAdjacentHTML('beforeend', gasPlantHtml);
+        }
+
         function saveDraft() {
             const formData = new FormData(document.getElementById('dailyReportForm'));
             const dataObj = {};
             for (let [key, value] of formData.entries()) {
                 dataObj[key] = value;
             }
-            
+
             const draft = {
                 stationCount: stationCount,
                 issueCount: issueCount,
+                gasPlantCount: gasPlantCount,
                 containerHtml: document.getElementById('stationsContainer').innerHTML,
                 formData: dataObj
             };
             localStorage.setItem('dailyReportDraft', JSON.stringify(draft));
-            
+
             const notification = document.getElementById('notificationArea');
             notification.textContent = 'تم حفظ البيانات كمسودة بنجاح! يمكنك إغلاق المتصفح والعودة لاحقاً لإكمال التقرير.';
             notification.className = 'notification success';
@@ -558,9 +637,10 @@
                     const draft = JSON.parse(draftStr);
                     stationCount = draft.stationCount || 0;
                     issueCount = draft.issueCount || 0;
+                    gasPlantCount = draft.gasPlantCount || 0;
                     document.getElementById('stationsContainer').innerHTML = draft.containerHtml || '';
-                    
-                    if (stationCount === 0 && issueCount === 0) {
+
+                    if (stationCount === 0 && issueCount === 0 && gasPlantCount === 0) {
                         addStation();
                     }
 
@@ -579,12 +659,12 @@
                             }
                         }
                     }
-                    
+
                     const notification = document.getElementById('notificationArea');
                     notification.textContent = 'تم استعادة معلومات المحطات المحفوظة مسبقاً.';
                     notification.className = 'notification success';
                     notification.style.display = 'block';
-                    
+
                     setTimeout(() => {
                         notification.style.display = 'none';
                     }, 5000);
@@ -593,6 +673,7 @@
                     document.getElementById('stationsContainer').innerHTML = '';
                     stationCount = 0;
                     issueCount = 0;
+                    gasPlantCount = 0;
                     addStation();
                 }
             } else {
@@ -615,12 +696,14 @@
             const formData = new FormData(this);
             const dataObj = {
                 'المحطات': [],
-                'القضايا': []
+                'القضايا': [],
+                'معامل الغاز': []
             };
 
             // Extract main data and stations
             let stationDataMap = {};
             let issueDataMap = {};
+            let gasPlantDataMap = {};
 
             for (let [key, value] of formData.entries()) {
                 if (key.startsWith('station_')) {
@@ -693,6 +776,45 @@
                     };
 
                     issueDataMap[iId][issueFieldMap[field] || field] = value;
+                } else if (key.startsWith('gasplant_')) {
+                    const parts = key.split('_');
+                    const gId = parts[0] + '_' + parts[1];
+                    const field = parts.slice(2).join('_');
+
+                    if (!gasPlantDataMap[gId]) {
+                        gasPlantDataMap[gId] = {};
+                    }
+
+                    const gasFieldMap = {
+                        'inspection': 'تفتيش السيارات',
+                        'inspection_note': 'ملاحظات تفتيش السيارات',
+                        'fingerprint': 'جهاز البصمة',
+                        'fingerprint_note': 'ملاحظات جهاز البصمة',
+                        'cameras': 'كاميرات المراقبة',
+                        'cameras_note': 'ملاحظات الكاميرات',
+                        'inspected_cars': 'تفاصيل السيارات المفتشة',
+                        'management': 'تواجد الإدارة',
+                        'management_note': 'ملاحظات تواجد الإدارة',
+                        'expenses': 'مطابقة المصاريف',
+                        'expenses_note': 'ملاحظات المصاريف',
+                        'inventory': 'جرد المستودع',
+                        'inventory_note': 'ملاحظات المستودع',
+                        'compressors': 'ضواغط الغاز',
+                        'compressors_note': 'ملاحظات الضواغط',
+                        'discharge': 'جهاز التفريغ',
+                        'discharge_note': 'ملاحظات جهاز التفريغ',
+                        'telescopes': 'التلسكوبات',
+                        'telescopes_note': 'ملاحظات التلسكوبات',
+                        'process': 'مراحل العملية',
+                        'process_note': 'ملاحظات العملية',
+                        'extinguishers': 'طفايات الحريق',
+                        'extinguishers_note': 'ملاحظات طفايات الحريق',
+                        'cleanliness': 'نظافة المعمل',
+                        'cleanliness_note': 'ملاحظات النظافة',
+                        'general_notes': 'ملاحظات عامة وتوصيات'
+                    };
+
+                    gasPlantDataMap[gId][gasFieldMap[field] || field] = value;
                 } else {
                     dataObj[key] = value;
                 }
@@ -704,6 +826,9 @@
             }
             for (let key in issueDataMap) {
                 dataObj['القضايا'].push(issueDataMap[key]);
+            }
+            for (let key in gasPlantDataMap) {
+                dataObj['معامل الغاز'].push(gasPlantDataMap[key]);
             }
 
             try {
@@ -720,14 +845,15 @@
                 if (result.status === 'success') {
                     notification.textContent = 'تم إرسال التقرير بنجاح!';
                     notification.classList.add('success');
-                    
+
                     // Clear draft on successful submit
                     localStorage.removeItem('dailyReportDraft');
-                    
+
                     this.reset();
                     document.getElementById('stationsContainer').innerHTML = '';
                     stationCount = 0;
                     issueCount = 0;
+                    gasPlantCount = 0;
                     addStation(); // add empty station
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {

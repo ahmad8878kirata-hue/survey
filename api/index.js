@@ -489,6 +489,17 @@ app.get(['/api/backup', '/api/backup/'], (req, res) => {
   });
 });
 
+// Restore backup of the SQLite database file
+app.post('/api/restore', express.raw({ type: '*/*', limit: '50mb' }), async (req, res) => {
+  try {
+    await db.restoreDatabase(req.body);
+    res.json({ status: 'success', message: 'Database restored successfully.' });
+  } catch (err) {
+    console.error('Error restoring database:', err);
+    res.status(500).json({ status: 'error', message: err.message || 'Failed to restore database.' });
+  }
+});
+
 // --- Catch-all for unknown /api routes ---
 app.use('/api', (req, res) => {
   console.log(`[404 NOT FOUND] ${req.method} ${req.originalUrl}`);
