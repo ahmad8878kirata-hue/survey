@@ -694,10 +694,16 @@
                 </button>
             </div>
 
-            <div class="controls" style="margin-top: -10px; margin-bottom: 25px; align-items: center;">
+            <div class="controls" style="margin-top: -10px; margin-bottom: 25px; align-items: center; display: flex; flex-wrap: wrap; gap: 10px;">
                 <button class="action-btn" style="background-color: #991b1b;" onclick="checkAllGaps()">
                     <i class="fa-solid fa-calendar-days"></i> <span data-i18n="btnAllGaps">Show All Daily Gaps</span>
                 </button>
+                <div style="display: flex; align-items: center; gap: 10px; margin-inline-start: auto;">
+                    <input type="month" id="reportMonth" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); font-family: inherit;">
+                    <button class="action-btn" style="background-color: #f59e0b;" onclick="generateMonthlyReport()">
+                        <i class="fa-solid fa-file-word"></i> <span data-i18n="btnMonthlyReport">انشاء التقرير الشهري</span>
+                    </button>
+                </div>
             </div>
 
             <div class="table-wrapper">
@@ -824,6 +830,7 @@
                 missingReportsTitle: "Missing Daily Reports (Absence)",
                 selectDateFirst: "Please select a date first.",
                 noMissing: "All branches submitted their reports for this day.",
+                btnMonthlyReport: "Generate Monthly Report",
             },
             ar: {
                 pageTitle: "لوحة تحكم التقارير اليومية - قسم المتابعة والرقابة",
@@ -862,8 +869,43 @@
                 missingReportsTitle: "التقارير اليومية المفقودة (الغياب)",
                 selectDateFirst: "يرجى اختيار التاريخ أولاً.",
                 noMissing: "جميع الأفرع قامت برفع تقاريرها لهذا اليوم.",
+                btnMonthlyReport: "انشاء التقرير الشهري",
             }
         };
+
+        async function generateMonthlyReport() {
+            const monthInput = document.getElementById('reportMonth').value;
+            if (!monthInput) {
+                alert(currentLang === 'ar' ? 'الرجاء اختيار الشهر أولاً' : 'Please select a month first');
+                return;
+            }
+            
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            try {
+                const response = await fetch(`/api/generate_monthly_report?month=${monthInput}`);
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.message || 'Failed to generate report');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `Monthly_Report_${monthInput}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (err) {
+                console.error(err);
+                alert((currentLang === 'ar' ? 'حدث خطأ أثناء إنشاء التقرير: ' : 'Error generating report: ') + err.message);
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
 
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'ar' : 'en';
@@ -1715,36 +1757,42 @@
 
             const t = TRANSLATIONS[currentLang];
 
-            if (locks.worker) {
-                workerText.textContent = t.unlockWorker;
-                workerBtn.querySelector('i').className = 'fa-solid fa-lock-open';
-                workerBtn.style.backgroundColor = '#10b981';
-            } else {
-                workerText.textContent = t.lockWorker;
-                workerBtn.querySelector('i').className = 'fa-solid fa-lock';
-                workerBtn.style.backgroundColor = '#f59e0b';
+            if (workerBtn && workerText) {
+                if (locks.worker) {
+                    workerText.textContent = t.unlockWorker;
+                    workerBtn.querySelector('i').className = 'fa-solid fa-lock-open';
+                    workerBtn.style.backgroundColor = '#10b981';
+                } else {
+                    workerText.textContent = t.lockWorker;
+                    workerBtn.querySelector('i').className = 'fa-solid fa-lock';
+                    workerBtn.style.backgroundColor = '#f59e0b';
+                }
             }
 
-            if (locks.manager) {
-                managerText.textContent = t.unlockManager;
-                managerBtn.querySelector('i').className = 'fa-solid fa-lock-open';
-                managerBtn.style.backgroundColor = '#10b981';
-            } else {
-                managerText.textContent = t.lockManager;
-                managerBtn.querySelector('i').className = 'fa-solid fa-lock';
-                managerBtn.style.backgroundColor = '#ef4444';
+            if (managerBtn && managerText) {
+                if (locks.manager) {
+                    managerText.textContent = t.unlockManager;
+                    managerBtn.querySelector('i').className = 'fa-solid fa-lock-open';
+                    managerBtn.style.backgroundColor = '#10b981';
+                } else {
+                    managerText.textContent = t.lockManager;
+                    managerBtn.querySelector('i').className = 'fa-solid fa-lock';
+                    managerBtn.style.backgroundColor = '#ef4444';
+                }
             }
 
             const supervisorBtn = document.getElementById('lockSupervisorBtn');
             const supervisorText = document.getElementById('lockSupervisorText');
-            if (locks.supervisor) {
-                supervisorText.textContent = t.unlockSupervisor;
-                supervisorBtn.querySelector('i').className = 'fa-solid fa-lock-open';
-                supervisorBtn.style.backgroundColor = '#10b981';
-            } else {
-                supervisorText.textContent = t.lockSupervisor;
-                supervisorBtn.querySelector('i').className = 'fa-solid fa-lock';
-                supervisorBtn.style.backgroundColor = '#2c3e50';
+            if (supervisorBtn && supervisorText) {
+                if (locks.supervisor) {
+                    supervisorText.textContent = t.unlockSupervisor;
+                    supervisorBtn.querySelector('i').className = 'fa-solid fa-lock-open';
+                    supervisorBtn.style.backgroundColor = '#10b981';
+                } else {
+                    supervisorText.textContent = t.lockSupervisor;
+                    supervisorBtn.querySelector('i').className = 'fa-solid fa-lock';
+                    supervisorBtn.style.backgroundColor = '#2c3e50';
+                }
             }
         }
 

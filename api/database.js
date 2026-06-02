@@ -1019,6 +1019,36 @@ const dbOperations = {
     return updatedCount;
   },
 
+  // Get records for a specific month (YYYY-MM) from a given table
+  async getRecordsByMonth(tableName, month) {
+    const validTables = ['workers', 'managers', 'supervisors', 'daily_reports', 'weekly_reports'];
+    if (!validTables.includes(tableName)) {
+      throw new Error(`Invalid table: ${tableName}`);
+    }
+    const prefix = month;
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query(
+        `SELECT id, receivedAt, data FROM \`${tableName}\` WHERE receivedAt LIKE ? ORDER BY receivedAt ASC`,
+        [`${prefix}%`]
+      );
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      }));
+    } else {
+      const db = getSQLite();
+      const rows = db.prepare(`SELECT * FROM ${tableName} WHERE receivedAt LIKE ? ORDER BY receivedAt ASC`).all(`${prefix}%`);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      }));
+    }
+  },
+
   // Restore database safely
   async restoreDatabase(buffer) {
     if (IS_MYSQL) {
