@@ -420,6 +420,34 @@
             </div>`;
         }
 
+        function createRadioWithHint(name, labelText, hintItems, placeholder = "ملاحظات حول وجود مشاكل...") {
+            let hintHtml = `<ul style="margin:0; padding-right:20px; color:#c62828; font-size:0.9em; text-align: right;">` + 
+                           hintItems.map(h => `<li>${h}</li>`).join('') + 
+                           `</ul>`;
+            let hintId = 'hint_' + name.replace(/[^a-zA-Z0-9]/g, '_') + '_' + Math.floor(Math.random()*1000);
+            
+            let html = `<div class="form-group" style="margin-bottom: 20px; border-bottom: 1px dashed #eee; padding-bottom: 15px;">
+                <div style="display:flex; align-items:center; margin-bottom:10px;">
+                    <label style="font-weight: 700; margin: 0; display:inline-block;">${labelText}</label>
+                    <i class="fa-solid fa-circle-exclamation" style="color: #c62828; margin-right: 8px; cursor: pointer; font-size: 1.1em;" title="اضغط لعرض التلميحات" onclick="document.getElementById('${hintId}').style.display = document.getElementById('${hintId}').style.display === 'none' ? 'block' : 'none'"></i>
+                </div>
+                <div id="${hintId}" style="display: none; background: #ffebee; border: 1px solid #ffcdd2; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                    <strong style="color: #c62828; font-size: 0.9em;"><i class="fa-solid fa-lightbulb"></i> تلميحات ومشاكل شائعة:</strong>
+                    ${hintHtml}
+                </div>
+                <div class="radio-options" style="margin-bottom: 10px;">
+                    <label class="radio-label" style="margin-left: 15px;">
+                        <input type="radio" name="${name}" value="نعم" required> نعم
+                    </label>
+                    <label class="radio-label" style="margin-left: 15px;">
+                        <input type="radio" name="${name}" value="لا" required> لا
+                    </label>
+                </div>
+                <input type="text" name="${name}_note" class="input-line" placeholder="${placeholder}" style="height: 35px; font-size: 0.9em; margin-top: 5px;">
+            </div>`;
+            return html;
+        }
+
         function addStation() {
             stationCount++;
             const sId = `station_${stationCount}`;
@@ -485,6 +513,32 @@
 
                     <div class="grid-2">
                         ${createRadioWithNote(`${sId}_attendance`, 'حضور وانصراف الموظفين', ['منتظم', 'غير منتظم'])}
+                    </div>
+                    
+                    <div class="section-title" style="font-size: 1em; margin-top: 10px; background-color: #e3f2fd; color: #1565c0; border-right-color: #1565c0;"><i class="fa-solid fa-file-lines"></i> المستندات الورقية </div>
+                    
+                    <div class="grid-2">
+                        ${createRadioWithHint(`${sId}_paper_receipts`, 'التحقق من ايصالات القبض', ['عدم وجود تاريخ', 'عدم توقيع موظف المضخة', 'عدم تطابق القيمة مع القيمة الموجودة في دفتر يومية الصندوق'])}
+                        ${createRadioWithHint(`${sId}_paper_payments`, 'التحقق من ايصالات الدفع', ['عدم وجود تاريخ في ايصال الدفع', 'اصدار ايصال دفع لشيء مخالف'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioWithHint(`${sId}_paper_wholesale`, 'التحقق من فواتير مبيع الجملة', ['عدم وجود تاريخ على الفاتورة', 'اختلاف السعر على الفاتورة', 'عدم اكمال جميع بنود الفاتورة', 'عدم وجود توقيع وختم على الفاتورة'])}
+                        ${createRadioWithHint(`${sId}_paper_budget`, 'التحقق من موازنة المحطة هل الموازنة مطابقة', ['هنالك نقص في الموازنة في المحطة', 'هنالك تجاوز في بنود او في اي بند من بنود الموازنة'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioWithHint(`${sId}_paper_budget_invoices`, 'التحقق من فواتير موازنة المحطة', ['فاتورة غير نظامية', 'فاتورة بدون ختم', 'فاتورة بدون تاريخ', 'فاتورة بسعر غير منطقي'])}
+                        ${createRadioWithHint(`${sId}_paper_tank_measurements`, 'التحقق من دفتر قياس الخزانات هل يتم تسجيل قياسات الخزان بشكل يومي صباحا ومساء', ['قياس غير نظامي عند التحقق من خلال الجولة', 'وجود مياه في الخزان', 'عدم تسجيل كافة المعلومات في دفتر القياس'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioWithHint(`${sId}_paper_discharge`, 'التحقق من دفتر التصريف اليومي هل يتم التسجيل كافة عمليات التصريف في دفتر', ['عدم كتابة كافة عمليات التصريف', 'وجود فروق تصريف واضحة'])}
+                        ${createRadioWithHint(`${sId}_paper_material_receipt`, 'التحقق من دفتر استلام المواد', ['عدم التسجيل على الدفتر', 'وجود فرق في التسجيل عند المطابقة مع الايصالات الصادرة من سادكوب'])}
+                    </div>
+
+                    <div class="grid-2">
+                        ${createRadioWithHint(`${sId}_paper_attendance`, 'التحقق من دفتر دوام العاملين', ['غياب بعض العاملين', 'توقيع شخص عن شخص اخر', 'التأكد من ان كل شخص يكتب اسمه ويقوم بالتوقيع وتسجيل كافة المعلومات على الدفتر من ساعة الحضور حتى ساعة المغادرة مع التوقيع'])}
                     </div>
                     
                     <div class="form-group">
@@ -753,7 +807,25 @@
                         'inventory_note': 'ملاحظات مطابقة المخزون',
                         'attendance': 'حضور وانصراف الموظفين',
                         'attendance_note': 'ملاحظات الحضور والانصراف',
-                        'station_notes': 'ملاحظات عامة للمحطة'
+                        'station_notes': 'ملاحظات عامة للمحطة',
+                        'paper_receipts': 'التحقق من ايصالات القبض',
+                        'paper_receipts_note': 'ملاحظات ايصالات القبض',
+                        'paper_payments': 'التحقق من ايصالات الدفع',
+                        'paper_payments_note': 'ملاحظات ايصالات الدفع',
+                        'paper_wholesale': 'التحقق من فواتير مبيع الجملة',
+                        'paper_wholesale_note': 'ملاحظات فواتير مبيع الجملة',
+                        'paper_budget': 'التحقق من موازنة المحطة',
+                        'paper_budget_note': 'ملاحظات موازنة المحطة',
+                        'paper_budget_invoices': 'التحقق من فواتير موازنة المحطة',
+                        'paper_budget_invoices_note': 'ملاحظات فواتير موازنة المحطة',
+                        'paper_tank_measurements': 'التحقق من دفتر قياس الخزانات',
+                        'paper_tank_measurements_note': 'ملاحظات دفتر قياس الخزانات',
+                        'paper_discharge': 'التحقق من دفتر التصريف اليومي',
+                        'paper_discharge_note': 'ملاحظات دفتر التصريف اليومي',
+                        'paper_material_receipt': 'التحقق من دفتر استلام المواد',
+                        'paper_material_receipt_note': 'ملاحظات دفتر استلام المواد',
+                        'paper_attendance': 'التحقق من دفتر دوام العاملين',
+                        'paper_attendance_note': 'ملاحظات دفتر دوام العاملين'
                     };
 
                     stationDataMap[sId][fieldMap[field] || field] = value;
