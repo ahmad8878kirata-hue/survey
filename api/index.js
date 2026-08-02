@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 });
 
 // Authentication Middleware
-const PROTECTED_PAGES = ['/', '/index.html', '/dashboard.html', '/reports_dashboard.html', '/analysis'];
+const PROTECTED_PAGES = ['/', '/index.html', '/dashboard.html', '/reports_dashboard.html', '/shift_dashboard.html', '/analysis'];
 const authMiddleware = (req, res, next) => {
   const cleanPath = req.path === '/' ? '/index.html' : req.path;
 
@@ -91,6 +91,7 @@ app.get(['/تقرير يومي.html', '/تقرير%20يومي.html'], (req, res)
 app.get('/index.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'index.html')));
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'dashboard.html')));
 app.get('/reports_dashboard.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'reports_dashboard.html')));
+app.get('/shift_dashboard.html', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'shift_dashboard.html')));
 app.get('/analysis', (req, res) => res.sendFile(path.join(VIEWS_DIR, 'analysis.html')));
 
 app.post('/api/login', (req, res) => {

@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>لوحة تقارير استبيان أنظمة الدوام</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --main-green: #219150;
+            --main-green-dark: #17693a;
+            --main-green-light: #e6f7ed;
+            --text-dark: #1b3a2b;
+            --white: #fff;
+            --gray-bg: #f4f6fa;
+            --border-color: #ddd;
+            --info-blue: #3b82f6;
+            --danger-red: #ef4444;
+            --amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--gray-bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: var(--main-green);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header .nav-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 7px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9em;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-btn.logout {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 25px auto;
+            padding: 0 20px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eef2f0;
+            border-top: 4px solid var(--main-green);
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.9em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: var(--main-green-dark);
+            line-height: 1.5;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            min-height: 400px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.95em;
+            box-sizing: border-box;
+        }
+
+        .search-box i {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 12px;
+            color: #999;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            background: var(--main-green);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--main-green-dark);
+        }
+
+        .action-btn.secondary {
+            background: #fff;
+            color: var(--main-green);
+            border: 1px solid var(--main-green);
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--main-green-light);
+        }
+
+        .action-btn.amber {
+            background: var(--amber);
+        }
+
+        .action-btn.amber:hover {
+            background: #d97706;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            min-height: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            min-width: 1100px;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: right;
+        }
+
+        th {
+            font-weight: 700;
+            color: var(--main-green-dark);
+            user-select: none;
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        th:hover {
+            background: #f1f5f3;
+        }
+
+        tr:hover {
+            background: #fbfbfb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #777;
+        }
+
+        .row-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9em;
+            margin: 0 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: filter 0.2s;
+        }
+
+        .row-btn:hover {
+            filter: brightness(0.9);
+        }
+
+        .btn-view {
+            background-color: var(--info-blue);
+        }
+
+        .btn-delete {
+            background-color: var(--danger-red);
+        }
+
+        /* Pagination */
+        .pagination-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .pagination-info {
+            font-size: 0.95em;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .pg-btn {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .pg-btn:hover:not(:disabled) {
+            border-color: var(--main-green);
+            color: var(--main-green);
+            background: var(--main-green-light);
+        }
+
+        .pg-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 720px;
+            width: 92%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            cursor: pointer;
+            font-size: 1.4em;
+            color: #666;
+            background: none;
+            border: none;
+        }
+
+        .detail-row {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 12px 0;
+        }
+
+        .detail-key {
+            font-weight: 700;
+            color: var(--main-green-dark);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .detail-val {
+            color: #333;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.75);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            background-image: url('/logo.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            animation: spin 2s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .lock-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 16px;
+            }
+
+            .header h1 {
+                font-size: 1.05em;
+                width: 100%;
+            }
+
+            .header .nav-group {
+                width: 100%;
+            }
+
+            .nav-btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .container {
+                margin: 16px auto;
+                padding: 0 12px;
+            }
+
+            .dashboard-card {
+                padding: 16px;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            table {
+                font-size: 0.8em;
+                min-width: 800px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div style="font-weight: 600; color: var(--main-green);">جاري تحميل البيانات...</div>
+    </div>
+
+    <div class="header">
+        <h1><i class="fa-solid fa-clock"></i> لوحة تقارير استبيان أنظمة الدوام</h1>
+        <div class="nav-group">
+            <a href="/index.html" class="nav-btn"><i class="fa-solid fa-house"></i> البوابة الرئيسية</a>
+            <a href="/dashboard.html" class="nav-btn"><i class="fa-solid fa-chart-line"></i> لوحة تحكم الاستبيانات</a>
+            <a href="/reports_dashboard.html" class="nav-btn"><i class="fa-solid fa-chart-pie"></i> التقارير اليومية</a>
+            <a href="/api/logout" class="nav-btn logout"><i class="fa-solid fa-sign-out-alt"></i> تسجيل الخروج</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="lockBadge" class="lock-badge" style="display:none;">
+            <i class="fa-solid fa-lock"></i> استبيان أنظمة الدوام مغلق حالياً ولا يقبل إجابات جديدة.
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label"><i class="fa-solid fa-file-lines"></i> إجمالي الاستبيانات</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><i class="fa-solid fa-briefcase"></i> النظام الحالي الأكثر شيوعاً</div>
+                <div class="stat-value" id="statCurrent">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><i class="fa-solid fa-hand-pointer"></i> النظام المفضل الأكثر اختياراً</div>
+                <div class="stat-value" id="statPreferred">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><i class="fa-solid fa-comment-dots"></i> السبب الأكثر شيوعاً للاختيار</div>
+                <div class="stat-value" id="statReason">—</div>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="controls">
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="البحث في جميع الحقول..." onkeyup="onSearch()">
+                </div>
+                <button class="action-btn" onclick="exportToExcel()">
+                    <i class="fa-solid fa-file-excel"></i> تصدير إلى Excel
+                </button>
+                <button class="action-btn amber" id="lockBtn" onclick="toggleLock()">
+                    <i class="fa-solid fa-lock"></i> <span id="lockBtnText">قفل الاستبيان</span>
+                </button>
+                <button class="action-btn secondary" onclick="loadData()">
+                    <i class="fa-solid fa-sync"></i> تحديث
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="dataTable">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+                <div id="emptyState" class="empty-state" style="display:none;">
+                    <i class="fa-regular fa-folder-open" style="font-size: 3em; margin-bottom: 10px;"></i>
+                    <p>لا توجد استبيانات متاحة حالياً.</p>
+                </div>
+            </div>
+
+            <div class="pagination-container" id="paginationControls">
+                <button class="pg-btn" id="prevBtn" onclick="changePage(-1)">
+                    <i class="fa-solid fa-chevron-right"></i> السابق
+                </button>
+                <div class="pagination-info" id="pageInfo">صفحة 1 / 1</div>
+                <button class="pg-btn" id="nextBtn" onclick="changePage(1)">
+                    التالي <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: عرض تفاصيل الاستبيان -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal('viewModal')">&times;</button>
+            <h3 style="color:var(--main-green); margin-top:0;">
+                <i class="fa-solid fa-file-lines"></i> تفاصيل الاستبيان
+            </h3>
+            <div id="viewContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const FIELD_ORDER = [
+            ['receivedAt', 'وقت الإرسال'],
+            ['1. الاسم الثلاثي', '1. الاسم الثلاثي'],
+            ['2. اسم المحطة', '2. اسم المحطة'],
+            ['3. الفرع التابع له', '3. الفرع التابع له'],
+            ['4. عدد سنوات الخبرة في الشركة', '4. عدد سنوات الخبرة في الشركة'],
+            ['5. نظام الدوام الحالي', '5. نظام الدوام الحالي'],
+            ['6. نظام الدوام المفضل', '6. نظام الدوام المفضل'],
+            ['7. السبب الرئيسي لاختيار النظام', '7. السبب الرئيسي لاختيار النظام'],
+            ['8. مناسبة النظام المختار لطبيعة المحطة', '8. مناسبة النظام المختار لطبيعة المحطة'],
+            ['9. تحقيق توازن أفضل بين العمل والحياة الشخصية', '9. تحقيق توازن أفضل بين العمل والحياة الشخصية'],
+            ['10. ملاحظات إضافية ومقترحات حول أنظمة الدوام', '10. ملاحظات إضافية ومقترحات حول أنظمة الدوام']
+        ];
+
+        const EXCLUDE_FIELDS = ['id', '_subject', '_form', '_captcha', '_template'];
+
+        let allShift = [];
+        let page = 1;
+        const PAGE_SIZE = 20;
+        let searchTerm = '';
+        let currentSort = { key: null, asc: true };
+
+        const $ = (id) => document.getElementById(id);
+
+        function showLoading(show) {
+            $('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function getDisplayValue(row, key) {
+            let val = row[key];
+            if (val === undefined || val === null) val = '';
+            if (Array.isArray(val)) return val.map(v => (v && typeof v === 'object') ? JSON.stringify(v) : String(v)).join(' ، ');
+            if (typeof val === 'object') return JSON.stringify(val);
+            return String(val);
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return iso;
+            return d.toLocaleString('ar-SY', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function normalizeText(s) {
+            return String(s || '')
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .toLowerCase();
+        }
+
+        function getColumns() {
+            const keys = new Set();
+            FIELD_ORDER.forEach(([k]) => keys.add(k));
+            allShift.forEach(row => {
+                Object.keys(row).forEach(k => {
+                    if (!EXCLUDE_FIELDS.includes(k)) keys.add(k);
+                });
+            });
+            const ordered = FIELD_ORDER.filter(([k]) => keys.has(k)).map(([k]) => k);
+            const rest = Array.from(keys).filter(k => !ordered.includes(k) && !EXCLUDE_FIELDS.includes(k)).sort();
+            return ordered.concat(rest);
+        }
+
+        function getFiltered() {
+            let rows = allShift;
+            if (searchTerm) {
+                const q = normalizeText(searchTerm);
+                rows = rows.filter(row => {
+                    return Object.entries(row).some(([k, v]) => {
+                        if (EXCLUDE_FIELDS.includes(k)) return false;
+                        return normalizeText(getDisplayValue(row, k)).includes(q);
+                    });
+                });
+            }
+            if (currentSort.key) {
+                rows = [...rows].sort((a, b) => {
+                    let va = getDisplayValue(a, currentSort.key);
+                    let vb = getDisplayValue(b, currentSort.key);
+                    if (currentSort.key === 'receivedAt') {
+                        va = new Date(a.receivedAt || 0).getTime();
+                        vb = new Date(b.receivedAt || 0).getTime();
+                    }
+                    if (va < vb) return currentSort.asc ? -1 : 1;
+                    if (va > vb) return currentSort.asc ? 1 : -1;
+                    return 0;
+                });
+            }
+            return rows;
+        }
+
+        function renderTable() {
+            const filtered = getFiltered();
+            const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+            if (page > totalPages) page = totalPages;
+            const start = (page - 1) * PAGE_SIZE;
+            const pageRows = filtered.slice(start, start + PAGE_SIZE);
+
+            const thead = document.querySelector('#dataTable thead');
+            const tbody = document.querySelector('#dataTable tbody');
+            const emptyState = $('emptyState');
+            const table = $('dataTable');
+
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                $('paginationControls').style.display = 'none';
+                return;
+            }
+
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+            $('paginationControls').style.display = 'flex';
+
+            const columns = getColumns();
+
+            const headerRow = document.createElement('tr');
+            columns.forEach(k => {
+                const th = document.createElement('th');
+                const label = k === 'receivedAt' ? 'وقت الإرسال' : k;
+                const arrow = currentSort.key === k ? (currentSort.asc ? ' ↑' : ' ↓') : '';
+                th.textContent = label + arrow;
+                th.onclick = () => {
+                    if (currentSort.key === k) {
+                        currentSort.asc = !currentSort.asc;
+                    } else {
+                        currentSort = { key: k, asc: true };
+                    }
+                    renderTable();
+                };
+                headerRow.appendChild(th);
+            });
+            const thActions = document.createElement('th');
+            thActions.textContent = 'إجراءات';
+            headerRow.appendChild(thActions);
+            thead.appendChild(headerRow);
+
+            pageRows.forEach(row => {
+                const tr = document.createElement('tr');
+                columns.forEach(k => {
+                    const td = document.createElement('td');
+                    const val = k === 'receivedAt' ? formatDate(row.receivedAt) : getDisplayValue(row, k);
+                    if (val.length > 60) {
+                        td.textContent = val.substring(0, 60) + '...';
+                        td.style.cursor = 'pointer';
+                        td.style.color = 'var(--main-green)';
+                        td.title = val;
+                        td.onclick = () => viewRecord(row);
+                    } else {
+                        td.textContent = val || '—';
+                    }
+                    tr.appendChild(td);
+                });
+
+                const tdAction = document.createElement('td');
+                const btnView = document.createElement('button');
+                btnView.className = 'row-btn btn-view';
+                btnView.innerHTML = '<i class="fa-solid fa-eye"></i> عرض';
+                btnView.onclick = () => viewRecord(row);
+
+                const btnDelete = document.createElement('button');
+                btnDelete.className = 'row-btn btn-delete';
+                btnDelete.innerHTML = '<i class="fa-solid fa-trash"></i> حذف';
+                btnDelete.onclick = () => deleteRecord(row.id);
+
+                tdAction.appendChild(btnView);
+                tdAction.appendChild(btnDelete);
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+
+            $('pageInfo').textContent = `صفحة ${page} / ${totalPages}`;
+            $('prevBtn').disabled = page <= 1;
+            $('nextBtn').disabled = page >= totalPages;
+        }
+
+        function onSearch() {
+            searchTerm = $('searchInput').value.trim();
+            page = 1;
+            renderTable();
+        }
+
+        function changePage(delta) {
+            const filtered = getFiltered();
+            const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+            if (page + delta >= 1 && page + delta <= totalPages) {
+                page += delta;
+                renderTable();
+            }
+        }
+
+        function mostFrequent(values) {
+            const counts = {};
+            let best = null, bestCount = 0;
+            values.forEach(v => {
+                const key = String(v).trim();
+                if (!key) return;
+                counts[key] = (counts[key] || 0) + 1;
+                if (counts[key] > bestCount) {
+                    bestCount = counts[key];
+                    best = key;
+                }
+            });
+            return best ? `${best} (${bestCount})` : '—';
+        }
+
+        function renderStats() {
+            $('statTotal').textContent = allShift.length;
+            $('statCurrent').textContent = mostFrequent(allShift.map(r => r['5. نظام الدوام الحالي']));
+            $('statPreferred').textContent = mostFrequent(allShift.map(r => r['6. نظام الدوام المفضل']));
+            $('statReason').textContent = mostFrequent(allShift.map(r => r['7. السبب الرئيسي لاختيار النظام']));
+        }
+
+        function viewRecord(row) {
+            const container = $('viewContent');
+            container.innerHTML = '';
+            const columns = getColumns();
+            const excludedExtra = new Set(EXCLUDE_FIELDS.concat(['id']));
+            columns.forEach(k => {
+                if (excludedExtra.has(k)) return;
+                const div = document.createElement('div');
+                div.className = 'detail-row';
+                const key = document.createElement('span');
+                key.className = 'detail-key';
+                key.textContent = k === 'receivedAt' ? 'وقت الإرسال' : k;
+                const val = document.createElement('span');
+                val.className = 'detail-val';
+                val.textContent = k === 'receivedAt' ? (formatDate(row.receivedAt) || '—') : (getDisplayValue(row, k) || '—');
+                div.appendChild(key);
+                div.appendChild(val);
+                container.appendChild(div);
+            });
+            $('viewModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            $(id).style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        async function deleteRecord(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا الاستبيان؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+            try {
+                const res = await fetch(`/api/survey/shift/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('تم حذف الاستبيان بنجاح.');
+                    await loadData();
+                } else {
+                    alert('فشل حذف الاستبيان.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('حدث خطأ أثناء الحذف.');
+            }
+        }
+
+        async function loadData() {
+            showLoading(true);
+            try {
+                const res = await fetch('/api/surveys?limit=all');
+                if (res.status === 401) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                if (!res.ok) throw new Error('Server error');
+                const data = await res.json();
+                allShift = data.shiftWorkers || [];
+                page = 1;
+                searchTerm = $('searchInput').value.trim();
+                renderStats();
+                renderTable();
+            } catch (err) {
+                console.error('Fetch Error:', err);
+                alert('فشل تحميل البيانات.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function toggleLock() {
+            const isLocked = $('lockBtn').dataset.locked === 'true';
+            try {
+                const res = await fetch('/api/survey-locks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'shift', locked: !isLocked })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    updateLockUI(data.locks && data.locks.shift);
+                } else {
+                    alert('فشل تحديث حالة الاستبيان.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('حدث خطأ أثناء تحديث حالة الاستبيان.');
+            }
+        }
+
+        function updateLockUI(locked) {
+            $('lockBtn').dataset.locked = locked ? 'true' : 'false';
+            $('lockBtnText').textContent = locked ? 'فتح الاستبيان' : 'قفل الاستبيان';
+            $('lockBadge').style.display = locked ? 'inline-flex' : 'none';
+        }
+
+        async function loadLockStatus() {
+            try {
+                const res = await fetch('/api/survey-locks');
+                if (res.ok) {
+                    const locks = await res.json();
+                    updateLockUI(!!locks.shift);
+                }
+            } catch (err) {
+                console.error('Lock check failed:', err);
+            }
+        }
+
+        function exportToExcel() {
+            const rows = getFiltered();
+            if (rows.length === 0) {
+                alert('لا توجد بيانات للتصدير.');
+                return;
+            }
+            const columns = getColumns();
+            const wsData = rows.map(row => {
+                const obj = {};
+                columns.forEach(k => {
+                    obj[k === 'receivedAt' ? 'وقت الإرسال' : k] = k === 'receivedAt'
+                        ? (formatDate(row.receivedAt) || '')
+                        : (getDisplayValue(row, k) || '');
+                });
+                return obj;
+            });
+
+            const ws = XLSX.utils.json_to_sheet(wsData);
+            const colWidths = columns.map(k => ({ wch: Math.max(14, String(k).length + 4) }));
+            ws['!cols'] = colWidths;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'استبيانات الدوام');
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `استبيان_الدوام_${dateStr}.xlsx`);
+        }
+
+        document.querySelectorAll('.modal').forEach(m => {
+            m.addEventListener('click', (e) => {
+                if (e.target === m) closeModal(m.id);
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(m => { m.style.display = 'none'; });
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        loadLockStatus();
+        loadData();
+    </script>
+</body>
+
+</html>
