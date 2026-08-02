@@ -81,11 +81,19 @@ function initSQLite() {
     )
   `);
   db.exec(`
+    CREATE TABLE IF NOT EXISTS shift_workers (
+      id VARCHAR(255) PRIMARY KEY,
+      receivedAt DATETIME NOT NULL,
+      data JSON NOT NULL
+    )
+  `);
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_managers_receivedAt ON managers(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_workers_receivedAt ON workers(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_supervisors_receivedAt ON supervisors(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_daily_reports_receivedAt ON daily_reports(receivedAt);
     CREATE INDEX IF NOT EXISTS idx_weekly_reports_receivedAt ON weekly_reports(receivedAt);
+    CREATE INDEX IF NOT EXISTS idx_shift_workers_receivedAt ON shift_workers(receivedAt);
   `);
   console.log('SQLite database initialized at:', DB_PATH);
   return db;
@@ -146,6 +154,14 @@ async function initMySQL() {
           receivedAt DATETIME NOT NULL,
           data JSON NOT NULL,
           INDEX idx_weekly_reports_receivedAt (receivedAt)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS shift_workers (
+          id VARCHAR(255) PRIMARY KEY,
+          receivedAt DATETIME NOT NULL,
+          data JSON NOT NULL,
+          INDEX idx_shift_workers_receivedAt (receivedAt)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
       `);
       console.log('MySQL connection pool initialized and tables verified.');
@@ -644,6 +660,119 @@ const dbOperations = {
     }
   },
 
+  // Get total shift workers (دوريات الدوام) count
+  async getShiftWorkersCount(search = '', filters = {}) {
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query(`SELECT COUNT(*) as count FROM shift_workers ${whereFragment}`, params);
+      return rows[0].count;
+    } else {
+      const db = getSQLite();
+      const result = db.prepare(`SELECT COUNT(*) as count FROM shift_workers ${whereFragment}`).get(...params);
+      return result ? result.count : 0;
+    }
+  },
+
+  // Get all shift workers with pagination
+  async getAllShiftWorkers(limit = 50, offset = 0, search = '', filters = {}) {
+    console.log(`[DB DEBUG] getAllShiftWorkers: limit=${limit}, offset=${offset}, search=${search}, filters=${JSON.stringify(filters)}, IS_MYSQL=${IS_MYSQL}`);
+    const { whereFragment, params } = buildWhereClause(search, filters, IS_MYSQL);
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      let query = `SELECT id, receivedAt, data FROM shift_workers ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const [rows] = await pool.query(query, queryParams);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      }));
+    } else {
+      const db = getSQLite();
+      let query = `SELECT * FROM shift_workers ${whereFragment} ORDER BY receivedAt DESC`;
+      let queryParams = [...params];
+
+      if (limit !== 'all') {
+        query += ' LIMIT ? OFFSET ?';
+        queryParams.push(Number(limit), Number(offset));
+      }
+
+      const rows = db.prepare(query).all(...queryParams);
+      return rows.map(row => ({
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      }));
+    }
+  },
+
+  // Add a shift worker survey
+  async addShiftWorker(entry) {
+    const { id, receivedAt, ...data } = entry;
+    const newId = id || (Date.now().toString() + Math.random().toString(36).slice(2));
+    const finalReceivedAt = receivedAt || new Date().toISOString();
+    const finalData = JSON.stringify(data);
+
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      await pool.query(
+        'INSERT INTO shift_workers (id, receivedAt, data) VALUES (?, ?, ?)',
+        [newId, finalReceivedAt.replace('T', ' ').replace('Z', ''), finalData]
+      );
+    } else {
+      const db = getSQLite();
+      const insert = db.prepare('INSERT INTO shift_workers (id, receivedAt, data) VALUES (?, ?, ?)');
+      insert.run(newId, finalReceivedAt, finalData);
+    }
+    return newId;
+  },
+
+  // Delete a shift worker survey
+  async deleteShiftWorker(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [result] = await pool.query('DELETE FROM shift_workers WHERE id = ?', [id]);
+      return result.affectedRows > 0;
+    } else {
+      const db = getSQLite();
+      const deleteStmt = db.prepare('DELETE FROM shift_workers WHERE id = ?');
+      const result = deleteStmt.run(id);
+      return result.changes > 0;
+    }
+  },
+
+  // Get a shift worker by ID
+  async getShiftWorkerById(id) {
+    if (IS_MYSQL) {
+      const pool = await initMySQL();
+      const [rows] = await pool.query('SELECT * FROM shift_workers WHERE id = ?', [id]);
+      if (rows.length === 0) return null;
+      const row = rows[0];
+      return {
+        id: row.id,
+        receivedAt: row.receivedAt instanceof Date ? row.receivedAt.toISOString() : row.receivedAt,
+        ...(typeof row.data === 'string' ? JSON.parse(row.data) : row.data)
+      };
+    } else {
+      const db = getSQLite();
+      const row = db.prepare('SELECT * FROM shift_workers WHERE id = ?').get(id);
+      if (!row) return null;
+      return {
+        id: row.id,
+        receivedAt: row.receivedAt,
+        ...JSON.parse(row.data)
+      };
+    }
+  },
+
   // Get a manager by ID
   async getManagerById(id) {
     if (IS_MYSQL) {
@@ -720,34 +849,39 @@ const dbOperations = {
   async getSurveyLockStatus() {
     if (IS_MYSQL) {
       const pool = await initMySQL();
-      const [rows] = await pool.query('SELECT `key`, `value` FROM settings WHERE `key` IN (?, ?, ?)', [
+      const [rows] = await pool.query('SELECT `key`, `value` FROM settings WHERE `key` IN (?, ?, ?, ?)', [
         'lock_worker',
         'lock_manager',
-        'lock_supervisor'
+        'lock_supervisor',
+        'lock_shift'
       ]);
       let worker = false;
       let manager = false;
       let supervisor = false;
+      let shift = false;
       for (const row of rows) {
         if (row.key === 'lock_worker') worker = row.value === '1';
         if (row.key === 'lock_manager') manager = row.value === '1';
         if (row.key === 'lock_supervisor') supervisor = row.value === '1';
+        if (row.key === 'lock_shift') shift = row.value === '1';
       }
-      return { worker, manager, supervisor };
+      return { worker, manager, supervisor, shift };
     } else {
       const db = getSQLite();
       const rows = db
-        .prepare('SELECT key, value FROM settings WHERE key IN (?, ?, ?)')
-        .all('lock_worker', 'lock_manager', 'lock_supervisor');
+        .prepare('SELECT key, value FROM settings WHERE key IN (?, ?, ?, ?)')
+        .all('lock_worker', 'lock_manager', 'lock_supervisor', 'lock_shift');
       let worker = false;
       let manager = false;
       let supervisor = false;
+      let shift = false;
       for (const row of rows) {
         if (row.key === 'lock_worker') worker = row.value === '1';
         if (row.key === 'lock_manager') manager = row.value === '1';
         if (row.key === 'lock_supervisor') supervisor = row.value === '1';
+        if (row.key === 'lock_shift') shift = row.value === '1';
       }
-      return { worker, manager, supervisor };
+      return { worker, manager, supervisor, shift };
     }
   },
 
@@ -756,7 +890,8 @@ const dbOperations = {
     const keyMap = {
       'worker': 'lock_worker',
       'manager': 'lock_manager',
-      'supervisor': 'lock_supervisor'
+      'supervisor': 'lock_supervisor',
+      'shift': 'lock_shift'
     };
     const key = keyMap[type] || 'lock_unknown';
     const value = locked ? '1' : '0';
@@ -782,7 +917,8 @@ const dbOperations = {
       'worker': 'workers',
       'manager': 'managers',
       'supervisor': 'supervisors',
-      'daily_report': 'daily_reports'
+      'daily_report': 'daily_reports',
+      'shift': 'shift_workers'
     };
     const table = tableMap[type] || 'workers';
     const { whereFragment, params } = buildWhereClause('', filters, IS_MYSQL);
@@ -820,6 +956,7 @@ const dbOperations = {
     const workers = await this.getAllWorkers('all', 0, '', filters);
     const managers = await this.getAllManagers('all', 0, '', filters);
     const supervisors = await this.getAllSupervisors('all', 0, '', filters);
+    const shiftWorkers = await this.getAllShiftWorkers('all', 0, '', filters);
 
     const aggregate = (data, field) => {
       const counts = {};
@@ -887,12 +1024,20 @@ const dbOperations = {
         total: supervisors.length || 0,
         branches: aggregate(supervisors, 'اسم الفرع'),
         timeline: getTimeline(supervisors)
+      },
+      shift: {
+        total: shiftWorkers.length || 0,
+        branches: aggregate(shiftWorkers, '3. الفرع التابع له'),
+        currentSystems: aggregate(shiftWorkers, '5. نظام الدوام الحالي'),
+        preferredSystems: aggregate(shiftWorkers, '6. نظام الدوام المفضل'),
+        satisfaction: aggregate(shiftWorkers, '7. السبب الرئيسي لاختيار النظام'),
+        timeline: getTimeline(shiftWorkers)
       }
     };
   },
 
   async cleanBranchNames() {
-    const tables = ['workers', 'managers', 'supervisors'];
+    const tables = ['workers', 'managers', 'supervisors', 'shift_workers'];
     let updatedCount = 0;
 
     // Helper to normalize Arabic characters for better matching
@@ -1021,7 +1166,7 @@ const dbOperations = {
 
   // Get records for a specific month (YYYY-MM) from a given table
   async getRecordsByMonth(tableName, month) {
-    const validTables = ['workers', 'managers', 'supervisors', 'daily_reports', 'weekly_reports'];
+    const validTables = ['workers', 'managers', 'supervisors', 'daily_reports', 'weekly_reports', 'shift_workers'];
     if (!validTables.includes(tableName)) {
       throw new Error(`Invalid table: ${tableName}`);
     }

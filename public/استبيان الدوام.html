@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>استبيان رأي موظفي المضخات في أنظمة الدوام</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --main-green: #219150;
+            --main-green-dark: #17693a;
+            --main-green-light: #e6f7ed;
+            --accent-green: #43a047;
+            --border-green: #b2dfdb;
+            --text-dark: #1b3a2b;
+            --gray-bg: #f4f6fa;
+            --white: #fff;
+            --shadow: 0 0 24px 2px #b2dfdb;
+            --mframe-thick: 9px;
+            --mframe-color: #219150;
+            --mframe-double: #e8f3e4;
+        }
+
+        body {
+            font-family: 'Cairo', Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--main-green-light) 0%, var(--gray-bg) 100%);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        .decorative-frame {
+            background: var(--mframe-double);
+            padding: 12px;
+            border-radius: 20px;
+            border: var(--mframe-thick) double var(--mframe-color);
+            box-shadow: 0 0 32px 2px #c6efc9a0;
+            margin: 30px auto;
+            width: 850px;
+            max-width: 96vw;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .container {
+            width: 794px;
+            min-height: 1123px;
+            margin: 0px auto 0px auto;
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            border-radius: 14px;
+            padding: 24px 24px 24px 24px;
+            border: 2px solid var(--main-green);
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+            box-sizing: border-box;
+        }
+
+        .container:before,
+        .container:after {
+            content: "";
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle, var(--main-green-light) 60%, transparent 100%);
+            z-index: 0;
+        }
+
+        .container:before {
+            top: -30px;
+            left: -30px;
+        }
+
+        .container:after {
+            bottom: -30px;
+            right: -30px;
+        }
+
+        .header-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-logo-row img {
+            height: 64px;
+            width: auto;
+            max-width: 240px;
+            margin: 0;
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 2px solid var(--main-green);
+            background: #ffffff;
+            box-shadow: 0 6px 18px rgba(33, 145, 80, 0.18);
+            object-fit: contain;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.25em;
+            margin-bottom: 4px;
+            display: inline-block;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, var(--main-green), var(--main-green-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.02em;
+            color: var(--main-green-dark);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .instructions {
+            background: var(--main-green-light);
+            border-right: 4px solid var(--main-green);
+            border-radius: 6px 0 0 6px;
+            padding: 10px 14px;
+            margin-bottom: 18px;
+            font-size: 0.97em;
+            color: var(--main-green-dark);
+            font-weight: 500;
+        }
+
+        .instructions ul {
+            margin: 6px 22px 6px 0;
+            padding: 0;
+        }
+
+        .section-title {
+            background: linear-gradient(90deg, var(--main-green), var(--main-green-dark));
+            color: #fff;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.08em;
+            margin: 22px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            font-size: 1em;
+        }
+
+        .basic-info {
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .basic-info .row {
+            margin-bottom: 10px;
+        }
+
+        .basic-info label {
+            display: inline-block;
+            min-width: 180px;
+            font-weight: 600;
+            color: var(--main-green-dark);
+        }
+
+        .basic-info label small {
+            color: #888;
+            font-weight: 400;
+        }
+
+        .radio-group {
+            margin: 7px 0 15px 0;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+        }
+
+        .radio-group input[type="radio"],
+        .checkbox-group input[type="checkbox"] {
+            margin-left: 5px;
+            margin-right: 2px;
+        }
+
+        .checkbox-group {
+            margin: 7px 0 15px 0;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+        }
+
+        .input-line {
+            border: 1.5px solid var(--border-green);
+            min-width: 120px;
+            padding: 6px 10px;
+            vertical-align: middle;
+            background: #f7fcfa;
+            border-radius: 6px;
+            margin-left: 5px;
+            margin-right: 5px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1em;
+            outline: none;
+            color: var(--text-dark);
+            box-sizing: border-box;
+            transition: border 0.2s;
+        }
+
+        .input-line:focus {
+            background: #ffffff;
+            border: 1.5px solid var(--main-green-dark);
+        }
+
+        textarea.input-line {
+            width: 100%;
+            resize: vertical;
+            min-height: 54px;
+        }
+
+        .open-question {
+            margin-top: 14px;
+            margin-bottom: 14px;
+            background: var(--main-green-light);
+            padding: 12px 14px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px #b2dfdb33;
+            border: 1.5px solid var(--border-green);
+        }
+
+        .open-question .q-label {
+            display: block;
+            font-weight: 600;
+            color: var(--main-green-dark);
+            margin-bottom: 6px;
+            font-size: 1em;
+        }
+
+        .open-question textarea {
+            width: 100%;
+            resize: vertical;
+            min-height: 54px;
+            font-family: 'Cairo', Arial, sans-serif;
+            font-size: 1em;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-green);
+            box-sizing: border-box;
+            background: #f7fcfa;
+            transition: border 0.18s;
+            direction: rtl;
+        }
+
+        .open-question textarea:focus {
+            outline: none;
+            border: 1.6px solid var(--main-green-dark);
+        }
+
+        .mechanism-box {
+            background: #f1f8f4;
+            border: 1px dashed var(--main-green);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 0.93em;
+            color: #2d5a40;
+            line-height: 1.7;
+        }
+
+        .mechanism-box b {
+            color: var(--main-green-dark);
+        }
+
+        .extra-note {
+            font-size: 0.85em;
+            color: #888;
+        }
+
+        .system-section {
+            border: 2px solid var(--border-green);
+            border-radius: 10px;
+            padding: 6px 14px 6px 14px;
+            margin: 16px 0;
+            background: #fbfefe;
+        }
+
+        .submit-btn {
+            background: var(--main-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 40px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto 10px auto;
+            box-shadow: 0 4px 12px rgba(33, 145, 80, 0.3);
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .submit-btn:hover {
+            background: var(--main-green-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(33, 145, 80, 0.4);
+        }
+
+        .print-btn {
+            position: fixed;
+            left: 15px;
+            top: 15px;
+            background: var(--main-green);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            padding: 6px 14px;
+            font-size: 0.95em;
+            cursor: pointer;
+            box-shadow: 0 1px 4px #b2dfdb55;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        .print-btn:hover {
+            background: var(--main-green-dark);
+        }
+
+        #resultsOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .results-card {
+            background: white;
+            width: 600px;
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 15px;
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 3px solid var(--main-green);
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--main-green-light);
+            padding-bottom: 15px;
+        }
+
+        .results-header h2 {
+            color: var(--main-green-dark);
+            margin: 0;
+        }
+
+        .result-item {
+            margin-bottom: 12px;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .result-q {
+            font-weight: 700;
+            color: var(--main-green-dark);
+            display: block;
+        }
+
+        .result-a {
+            color: #333;
+            padding-right: 15px;
+            display: block;
+        }
+
+        .results-footer {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-close {
+            background: #eee;
+            color: #555;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+        }
+
+        .btn-copy {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .content-locked {
+            filter: blur(8px) grayscale(50%);
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.6;
+            transition: all 0.5s ease;
+        }
+
+        #lockOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 5000;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            backdrop-filter: blur(2px);
+        }
+
+        .lock-message {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            border: 4px solid var(--main-green);
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.5s ease;
+        }
+
+        .lock-message h2 {
+            color: var(--main-green-dark);
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+
+        .lock-message p {
+            font-size: 1.2em;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: env(safe-area-inset-bottom, 0);
+            }
+
+            .decorative-frame {
+                margin: 16px auto;
+                padding: 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .container {
+                width: 100%;
+                min-height: auto;
+                padding: 16px;
+            }
+
+            .header-logo-row img {
+                height: 48px;
+                max-width: 180px;
+            }
+
+            h1 {
+                font-size: 1.05em;
+                line-height: 1.5;
+                padding: 0 8px;
+            }
+
+            .basic-info label {
+                min-width: 100%;
+                margin-bottom: 4px;
+                display: block;
+            }
+
+            .basic-info input.input-line {
+                width: 100% !important;
+                min-width: 100%;
+                margin: 4px 0 12px 0;
+                box-sizing: border-box;
+            }
+
+            .radio-group,
+            .checkbox-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .open-question {
+                padding: 12px;
+                margin: 14px 0;
+            }
+
+            .submit-btn {
+                padding: 14px 24px;
+                font-size: 1em;
+                margin: 24px auto 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .results-card {
+                width: 95%;
+                padding: 20px 16px;
+                max-height: 90vh;
+                margin: 10px;
+            }
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .decorative-frame {
+                border: var(--mframe-thick) double var(--main-green);
+                box-shadow: none;
+            }
+
+            .container {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                min-height: initial;
+                padding: 10px;
+                background: #fff !important;
+                border: none;
+            }
+
+            .header-logo-row img {
+                height: 40px;
+                max-width: 220px;
+                padding: 2px 6px;
+                box-shadow: none;
+            }
+
+            .print-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="lockOverlay">
+        <div class="lock-message">
+            <i class="fa-solid fa-lock" style="font-size: 4em; color: var(--main-green); margin-bottom: 20px;"></i>
+            <h2>عذراً، الاستبيان مغلق</h2>
+            <p>لقد تم إغلاق باب المشاركة في هذا الاستبيان حالياً. نشكركم على اهتمامكم.</p>
+        </div>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> طباعة
+    </button>
+
+    <form id="surveyForm">
+        <div class="decorative-frame">
+            <div class="container">
+                <div class="header-logo-row">
+                    <img src="logo.png" alt="شعار المحطة">
+                    <h1>
+                        <i class="fa-solid fa-clock icon-title"></i>
+                        استبيان حول أنظمة دوام موظفي المضخات في محطات الوقود
+                    </h1>
+                </div>
+                <div class="subtitle">
+                    استبيان لدراسة أنظمة الدوام الحالية والمقترحة لموظفي المضخات في محطات الوقود، لاختيار النظام الأنسب
+                    لكل محطة.
+                </div>
+
+                <div class="instructions">
+                    <div>
+                        <b>هدف الاستبيان:</b>
+                        <ul>
+                            <li>دراسة أنظمة الدوام الحالية والمقترحة لموظفي المضخات في محطات الوقود.</li>
+                            <li>تحسين بيئة العمل وزيادة كفاءة الأداء.</li>
+                            <li>تحقيق التوازن بين متطلبات العمل واحتياجات الموظفين.</li>
+                            <li>الأخذ بعين الاعتبار طبيعة كل محطة (حجم المبيعات، الموقع الجغرافي، عدد الموظفين).</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <b>تعليمات التعبئة:</b>
+                        <ul>
+                            <li>يرجى تعبئة البيانات المطلوبة في الحقول المخصصة.</li>
+                            <li>اختر نظام الدوام الذي ينطبق عليك حالياً.</li>
+                            <li>اقرأ الشرح التفصيلي لأنظمة الدوام الأربعة بعناية، ثم أجب عن أسئلة الاختيار في نهاية الاستبيان.</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <b>التأكيد على سرية الاستبيان:</b> جميع الإجابات سرية تماماً وتستخدم فقط لتحسين أنظمة الدوام، ولا
+                        يترتب على المشاركة أي أثر على العمل.
+                    </div>
+                </div>
+
+                <!-- ===== القسم الأول: البيانات الأساسية ===== -->
+                <div class="section-title">
+                    <i class="fa-solid fa-id-card"></i>
+                    القسم الأول: البيانات الأساسية للموظف
+                </div>
+                <div class="basic-info">
+                    <div class="row">
+                        <label for="full_name">1. الاسم الثلاثي:</label>
+                        <input type="text" id="full_name" name="1. الاسم الثلاثي" class="input-line"
+                            style="width:220px;" required>
+                    </div>
+                    <div class="row">
+                        <label for="station_name">2. اسم المحطة:</label>
+                        <input type="text" id="station_name" name="2. اسم المحطة" class="input-line" style="width:220px;"
+                            required>
+                    </div>
+                    <div class="row">
+                        <label for="branch_name">3. الفرع التابع له:</label>
+                        <select id="branch_name" name="3. الفرع التابع له" class="input-line" style="width:200px;"
+                            required>
+                            <option value="" disabled selected>اختر المحافظة...</option>
+                            <option value="دمشق">دمشق</option>
+                            <option value="ريف دمشق">ريف دمشق</option>
+                            <option value="حلب">حلب</option>
+                            <option value="حمص">حمص</option>
+                            <option value="حماة">حماة</option>
+                            <option value="اللاذقية">اللاذقية</option>
+                            <option value="طرطوس">طرطوس</option>
+                            <option value="إدلب">إدلب</option>
+                            <option value="درعا">درعا</option>
+                            <option value="السويداء">السويداء</option>
+                            <option value="القنيطرة">القنيطرة</option>
+                            <option value="دير الزور">دير الزور</option>
+                            <option value="الحسكة">الحسكة</option>
+                            <option value="الرقة">الرقة</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <label for="experience">4. عدد سنوات الخبرة في الشركة:</label>
+                        <select id="experience" name="4. عدد سنوات الخبرة في الشركة" class="input-line"
+                            style="width:200px;" required>
+                            <option value="" disabled selected>اختر...</option>
+                            <option value="أقل من سنة">أقل من سنة</option>
+                            <option value="من 1 إلى 3 سنوات">من 1 إلى 3 سنوات</option>
+                            <option value="من 3 إلى 5 سنوات">من 3 إلى 5 سنوات</option>
+                            <option value="أكثر من 5 سنوات">أكثر من 5 سنوات</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ===== القسم الثاني: نظام الدوام الحالي ===== -->
+                <div class="section-title">
+                    <i class="fa-solid fa-briefcase"></i>
+                    القسم الثاني: نظام الدوام الحالي
+                </div>
+                <div class="open-question">
+                    <label class="q-label">5. ما هو نظام الدوام الذي تعمل به حالياً؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="sys_8h" name="5. نظام الدوام الحالي" value="نظام 8 ساعات يومياً (3 نوبات)">
+                        <label for="sys_8h" style="font-weight:400">نظام 8 ساعات يومياً (3 نوبات)</label>
+                        <input type="radio" id="sys_shift" name="5. نظام الدوام الحالي" value="نظام نوبي (5 أيام عمل / 5 أيام راحة)">
+                        <label for="sys_shift" style="font-weight:400">نظام نوبي (5 أيام عمل / 5 أيام راحة)</label>
+                        <input type="radio" id="sys_week" name="5. نظام الدوام الحالي" value="نظام أسبوع عمل / أسبوع راحة">
+                        <label for="sys_week" style="font-weight:400">نظام أسبوع عمل / أسبوع راحة</label>
+                        <input type="radio" id="sys_24" name="5. نظام الدوام الحالي" value="نظام 24 ساعة عمل / 48 ساعة راحة">
+                        <label for="sys_24" style="font-weight:400">نظام 24 ساعة عمل / 48 ساعة راحة</label>
+                        <input type="radio" id="sys_16" name="5. نظام الدوام الحالي" value="نظام 16 ساعة عمل (يوم راحة كل ثلاثة أيام)">
+                        <label for="sys_16" style="font-weight:400">نظام 16 ساعة عمل (يوم راحة كل ثلاثة أيام)</label>
+                        <input type="radio" id="sys_other" name="5. نظام الدوام الحالي" value="نظام آخر">
+                        <label for="sys_other" style="font-weight:400">نظام آخر</label>
+                    </div>
+                    <textarea id="sys_other_text" name="5. نظام الدوام الحالي (أخرى)"
+                        placeholder="إذا اخترت نظاماً آخر، يرجى ذكره هنا" class="input-line" style="display:none;"></textarea>
+                </div>
+
+                <!-- ===== القسم الثالث: شرح تفصيلي لأنظمة الدوام الأربعة (قراءة فقط، بلا أسئلة) ===== -->
+                <div class="section-title">
+                    <i class="fa-solid fa-book-open"></i>
+                    القسم الثالث: شرح تفصيلي لأنظمة الدوام الأربعة المقترحة
+                </div>
+                <div class="instructions">
+                    <b>يرجى القراءة بعناية قبل الإجابة:</b> فيما يلي شرح تفصيلي للأنظمة الأربعة المقترحة لأنظمة الدوام
+                    في محطات الوقود. لا توجد أسئلة في هذا القسم، فقط اقرأ كل نظام بتمعّن لتتعرّف على آلية عمله
+                    ومميزاته واعتباراته، ثم انتقل إلى قسم الاختيار في نهاية الاستبيان.
+                </div>
+
+                <!-- أولاً: نظام 8 ساعات -->
+                <div class="system-section">
+                    <div class="section-title" style="background:linear-gradient(90deg,#2e7d32,#1b5e20);">
+                        <i class="fa-solid fa-clock"></i>
+                        أولاً: نظام 8 ساعات يومياً (3 نوبات)
+                    </div>
+                    <div class="mechanism-box">
+                        <b>آلية العمل:</b> يقسم اليوم إلى 3 نوبات (صباحية، مسائية، ليلية)، ويعمل الموظف 8 ساعات في
+                        النوبة، مع دوام يومي متواصل.
+                    </div>
+                    <div class="mechanism-box">
+                        <b>المميزات:</b> ساعات عمل يومية قصيرة، وتغطية كاملة لساعات اليوم من خلال النوبات الثلاث.
+                    </div>
+                    <div class="mechanism-box">
+                        <b>الاعتبارات:</b> دوام يومي متواصل قد يقلل أيام الراحة، والعمل الليلي المتكرر قد يسبب إرهاقاً.
+                    </div>
+                    <div class="mechanism-box" style="background:#eaf6ee;">
+                        <b>مناسب لـ:</b> المحطات ذات المبيعات العالية التي تتطلب تغطية كاملة على مدار الساعة، مع وجود
+                        عدد كافٍ من الموظفين لتغطية النوبات الثلاث.
+                    </div>
+                </div>
+
+                <!-- ثانياً: نظام النوبات المتساوية -->
+                <div class="system-section">
+                    <div class="section-title" style="background:linear-gradient(90deg,#2e7d32,#1b5e20);">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        ثانياً: نظام النوبات المتساوية (5/5 أو أسبوع عمل / أسبوع راحة)
+                    </div>
+                    <div class="mechanism-box">
+                        <b>آلية العمل:</b> يقسم العمال إلى مجموعتين متساويتين (مثلاً 4 و4، أو 3 و3، أو 2 و2). تعمل
+                        مجموعة واحدة بينما ترتاح الأخرى، ثم يتناوبان بشكل دوري (مثل 5 أيام عمل / 5 أيام راحة، أو أسبوع
+                        عمل / أسبوع راحة) لضمان استمرارية العمل.
+                    </div>
+                    <div class="mechanism-box">
+                        <b>المميزات:</b> أيام راحة متواصلة طويلة، وعدالة في توزيع أيام العمل والراحة، وتقليل الإرهاق
+                        الناتج عن العمل اليومي المتواصل.
+                    </div>
+                    <div class="mechanism-box">
+                        <b>الاعتبارات:</b> يتطلب عدداً كافياً من الموظفين لتشكيل مجموعتين متساويتين.
+                    </div>
+                    <div class="mechanism-box" style="background:#eaf6ee;">
+                        <b>مناسب لـ:</b> المحطات ذات المبيعات المنخفضة أو المتوسطة (خاصة الريفية والجبلية) التي لا
+                        تحتاج تغطية كاملة على مدار الساعة.
+                    </div>
+                </div>
+
+                <!-- ثالثاً: نظام 24/48 -->
+                <div class="system-section">
+                    <div class="section-title" style="background:linear-gradient(90deg,#2e7d32,#1b5e20);">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        ثالثاً: نظام 24 ساعة عمل / 48 ساعة راحة
+                    </div>
+                    <div class="mechanism-box">
+                        <b>آلية العمل:</b> يقسم العمال إلى ثلاث مجموعات متساوية (مثلاً 8+8+8). تعمل مجموعة واحدة لمدة
+                        24 ساعة متواصلة، بينما ترتاح المجموعتان الأخريان لمدة 48 ساعة، ثم يتناوبون بشكل دوري.
+                    </div>
+                    <div class="mechanism-box">
+                        <b>المميزات:</b> يومان كاملان من الراحة بعد كل نوبة، وتناوب واضح وثابت، وعدد أيام عمل أقل خلال
+                        الشهر.
+                    </div>
+                    <div class="mechanism-box">
+                        <b>الاعتبارات:</b> النوبة طويلة (24 ساعة) وقد تكون مرهقة، ويحتاج تطبيقه إلى وجود أماكن راحة
+                        مناسبة داخل المحطة ونظام تناوب ليلي (مثل ساعتين عمل / ساعتين راحة).
+                    </div>
+                    <div class="mechanism-box" style="background:#eaf6ee;">
+                        <b>مناسب لـ:</b> المحطات ذات المبيعات الكبيرة التي تتطلب وجود الموظف لفترات طويلة.
+                    </div>
+                </div>
+
+                <!-- رابعاً: نظام 16 ساعة -->
+                <div class="system-section">
+                    <div class="section-title" style="background:linear-gradient(90deg,#2e7d32,#1b5e20);">
+                        <i class="fa-solid fa-sun"></i>
+                        رابعاً: نظام 16 ساعة عمل يومياً
+                    </div>
+                    <div class="mechanism-box">
+                        <b>آلية العمل:</b> يقسم العمال إلى ثلاث مجموعات متساوية. في اليوم الواحد تعمل مجموعتان فقط:
+                        <ul style="margin:6px 20px 6px 0;">
+                            <li><b>المجموعة الأولى:</b> تعمل 16 ساعة (نوبة مسائية 8 ساعات + نوبة ليلية 8 ساعات).</li>
+                            <li><b>المجموعة الثانية:</b> تعمل 8 ساعات صباحية فقط.</li>
+                            <li><b>المجموعة الثالثة:</b> في يوم راحة.</li>
+                        </ul>
+                        في اليوم التالي تتناوب المجموعات بحيث تحصل كل مجموعة على راحة بعد يوم عملها الطويل.
+                    </div>
+                    <div class="mechanism-box">
+                        <b>المميزات:</b> توزيع عادل للأعباء بين الموظفين، ويوم راحة بعد يوم العمل الطويل، وتغطية جيدة
+                        لأوقات الذروة مساءً وليلاً.
+                    </div>
+                    <div class="mechanism-box">
+                        <b>الاعتبارات:</b> النوبة طويلة (16 ساعة) وقد تكون مرهقة جسدياً ونفسياً، ويحتاج تنظيماً دقيقاً
+                        للتناوب بين المجموعات.
+                    </div>
+                    <div class="mechanism-box" style="background:#eaf6ee;">
+                        <b>مناسب لـ:</b> المحطات متوسطة المبيعات التي تحتاج تغطية أطول في المساء والليل.
+                    </div>
+                </div>
+
+                <!-- ===== القسم الرابع: اختيار النظام المفضل ===== -->
+                <div class="section-title">
+                    <i class="fa-solid fa-hand-pointer"></i>
+                    القسم الرابع: اختيارك للنظام المفضل
+                </div>
+                <div class="open-question">
+                    <label class="q-label">6. أي نظام من الأنظمة الأربعة السابقة تفضّل؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="q6_8h" name="6. نظام الدوام المفضل" value="نظام 8 ساعات يومياً (3 نوبات)">
+                        <label for="q6_8h" style="font-weight:400">نظام 8 ساعات يومياً (3 نوبات)</label>
+                        <input type="radio" id="q6_equal" name="6. نظام الدوام المفضل" value="نظام النوبات المتساوية (5/5 أو أسبوع/أسبوع)">
+                        <label for="q6_equal" style="font-weight:400">نظام النوبات المتساوية (5/5 أو أسبوع/أسبوع)</label>
+                        <input type="radio" id="q6_24" name="6. نظام الدوام المفضل" value="نظام 24 ساعة عمل / 48 ساعة راحة">
+                        <label for="q6_24" style="font-weight:400">نظام 24 ساعة عمل / 48 ساعة راحة</label>
+                        <input type="radio" id="q6_16" name="6. نظام الدوام المفضل" value="نظام 16 ساعة عمل يومياً">
+                        <label for="q6_16" style="font-weight:400">نظام 16 ساعة عمل يومياً</label>
+                        <input type="radio" id="q6_other" name="6. نظام الدوام المفضل" value="نظام آخر">
+                        <label for="q6_other" style="font-weight:400">نظام آخر</label>
+                    </div>
+                    <textarea id="q6_other_text" name="6. نظام الدوام المفضل (أخرى)"
+                        placeholder="إذا اخترت نظاماً آخر، يرجى ذكره هنا" class="input-line" style="display:none;"></textarea>
+                </div>
+
+                <!-- ===== القسم الخامس: أسباب الاختيار ===== -->
+                <div class="section-title">
+                    <i class="fa-solid fa-comment-dots"></i>
+                    القسم الخامس: أسباب اختيارك
+                </div>
+                <div class="open-question">
+                    <label class="q-label">7. ما هو السبب الرئيسي وراء اختيارك لهذا النظام؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="q7_rest" name="7. السبب الرئيسي لاختيار النظام" value="أيام راحة أطول">
+                        <label for="q7_rest" style="font-weight:400">أيام راحة أطول</label>
+                        <input type="radio" id="q7_family" name="7. السبب الرئيسي لاختيار النظام" value="توافق أفضل مع الحياة الشخصية والعائلية">
+                        <label for="q7_family" style="font-weight:400">توافق أفضل مع الحياة الشخصية والعائلية</label>
+                        <input type="radio" id="q7_fatigue" name="7. السبب الرئيسي لاختيار النظام" value="تقليل الإرهاق والتعب">
+                        <label for="q7_fatigue" style="font-weight:400">تقليل الإرهاق والتعب</label>
+                        <input type="radio" id="q7_station" name="7. السبب الرئيسي لاختيار النظام" value="مناسب لطبيعة محطتي">
+                        <label for="q7_station" style="font-weight:400">مناسب لطبيعة محطتي</label>
+                        <input type="radio" id="q7_hours" name="7. السبب الرئيسي لاختيار النظام" value="ساعات عمل يومية أقل">
+                        <label for="q7_hours" style="font-weight:400">ساعات عمل يومية أقل</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label class="q-label">8. هل ترى أن النظام الذي اخترته مناسب لطبيعة محطتك (حجم المبيعات وعدد الموظفين)؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="q8_yes" name="8. مناسبة النظام المختار لطبيعة المحطة" value="نعم">
+                        <label for="q8_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="q8_no" name="8. مناسبة النظام المختار لطبيعة المحطة" value="لا">
+                        <label for="q8_no" style="font-weight:400">لا</label>
+                        <input type="radio" id="q8_maybe" name="8. مناسبة النظام المختار لطبيعة المحطة" value="غير متأكد">
+                        <label for="q8_maybe" style="font-weight:400">غير متأكد</label>
+                    </div>
+                </div>
+                <div class="open-question">
+                    <label class="q-label">9. هل تعتقد أن هذا النظام يحقق لك توازناً أفضل بين العمل والحياة الشخصية؟</label>
+                    <div class="radio-group">
+                        <input type="radio" id="q9_yes" name="9. تحقيق توازن أفضل بين العمل والحياة الشخصية" value="نعم">
+                        <label for="q9_yes" style="font-weight:400">نعم</label>
+                        <input type="radio" id="q9_no" name="9. تحقيق توازن أفضل بين العمل والحياة الشخصية" value="لا">
+                        <label for="q9_no" style="font-weight:400">لا</label>
+                        <input type="radio" id="q9_maybe" name="9. تحقيق توازن أفضل بين العمل والحياة الشخصية" value="غير متأكد">
+                        <label for="q9_maybe" style="font-weight:400">غير متأكد</label>
+                    </div>
+                </div>
+
+                <!-- ===== القسم السادس: ملاحظات إضافية ===== -->
+                <div class="section-title">
+                    <i class="fa-solid fa-pen"></i>
+                    القسم السادس: ملاحظات إضافية ومقترحات
+                </div>
+                <div class="open-question">
+                    <label class="q-label" for="q10_text">10. هل لديك أي ملاحظات أو اقتراحات إضافية حول أنظمة الدوام؟ (اختياري)</label>
+                    <textarea id="q10_text" name="10. ملاحظات إضافية ومقترحات حول أنظمة الدوام" rows="3"></textarea>
+                </div>
+
+                <div class="instructions" style="margin-top:30px; text-align:center; background:#e4ffeb;">
+                    نؤكد مجدداً أن جميع الإجابات في هذا الاستبيان سرية تماماً ولن تستخدم إلا لتحسين أنظمة الدوام في محطات
+                    الوقود. شكراً لتعاونكم في تعبئة هذا الاستبيان، والذي سيساهم في تطوير بيئة العمل وتحسين ظروف الموظفين.
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fa-solid fa-paper-plane" style="margin-left:8px;"></i>
+                    إرسال الاستبيان
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div id="resultsOverlay">
+        <div class="results-card">
+            <div class="results-header">
+                <h2><i class="fa-solid fa-check-circle"></i> تم تسجيل إجاباتك بنجاح</h2>
+                <p>إليك ملخص لما سيتم إرساله للإدارة:</p>
+            </div>
+            <div id="resultsContent"></div>
+            <div class="results-footer">
+                <button class="btn-copy" id="btnCopy"><i class="fa-solid fa-copy"></i> نسخ التقرير</button>
+                <button class="btn-close" onclick="closeOverlay()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('surveyForm');
+        const overlay = document.getElementById('resultsOverlay');
+        const resultsContent = document.getElementById('resultsContent');
+        const submitBtn = form.querySelector('.submit-btn');
+
+        // Passwordless / anonymous delivery:
+        const RECEIVER_EMAIL = (window.SURVEY_RECEIVER_EMAIL || "963-991293755.402@zohomail.com").trim();
+        const SEND_EMAIL_URL = `https://formsubmit.co/ajax/${encodeURIComponent(RECEIVER_EMAIL)}`;
+
+        // Show the free-text box only when "نظام آخر" is selected
+        form.querySelectorAll('input[name="5. نظام الدوام الحالي"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                document.getElementById('sys_other_text').style.display = this.value === 'نظام آخر' ? 'block' : 'none';
+            });
+        });
+
+        // Other text fields
+        document.querySelectorAll('input[name="6. نظام الدوام المفضل"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                document.getElementById('q6_other_text').style.display = this.value === 'نظام آخر' ? 'block' : 'none';
+            });
+        });
+
+        let clipboardText = "";
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            submitBtn.disabled = true;
+            const originalBtnContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = 'جاري الإرسال... <span class="loading-spinner"></span>';
+
+            const formData = new FormData(this);
+            const branchName = formData.get('3. الفرع التابع له') || 'غير محدد';
+            const subject = `نتائج استبيان الدوام: ${branchName}`;
+
+            // 1. Build Pretty Summary for UI
+            let summaryHTML = "";
+            clipboardText = `نتائج استبيان الدوام - الفرع: ${branchName}\n\n`;
+
+            for (const [key, value] of formData.entries()) {
+                summaryHTML += `
+                    <div class="result-item">
+                        <span class="result-q">• ${key}:</span>
+                        <span class="result-a">${value || "لم تتم الإجابة"}</span>
+                    </div>`;
+                clipboardText += `• ${key}: ${value || "لم تتم الإجابة"}\n`;
+            }
+            resultsContent.innerHTML = summaryHTML;
+
+            // 2. Prepare payload
+            const data = {};
+            formData.forEach((value, key) => {
+                if (Object.prototype.hasOwnProperty.call(data, key)) {
+                    const prev = data[key];
+                    data[key] = Array.isArray(prev) ? [...prev, value] : [prev, value];
+                } else {
+                    data[key] = value;
+                }
+            });
+            data['_subject'] = subject;
+            data['_form'] = 'استبيان الدوام';
+
+            // 3. Prepare Requests
+            const params = new URLSearchParams();
+            for (const [key, value] of Object.entries(data)) {
+                if (Array.isArray(value)) {
+                    for (const v of value) params.append(key, v);
+                } else {
+                    params.append(key, value);
+                }
+            }
+            params.set('_captcha', 'false');
+            params.set('_template', 'table');
+
+            try {
+                // 1. Send to Local Server (Fast)
+                const localReq = await fetch('/api/save-survey', {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'shift', data: data })
+                });
+
+                if (localReq.ok) {
+                    console.log("Local save success.");
+                } else {
+                    console.warn("Local save failed, attempting email anyway.");
+                }
+
+                // Show Success immediately
+                overlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+
+                // 2. Send Email in Background (Non-blocking)
+                fetch(SEND_EMAIL_URL, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
+                    body: params.toString()
+                }).catch(err => console.error("Email background send error:", err));
+
+            } catch (err) {
+                console.error("Submission Logic Error:", err);
+                alert("حدث خطأ في الاتصال بالخادم المحلي. سيتم محاولة الإرسال عبر البريد الإلكتروني.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnContent;
+                form.reset();
+                document.getElementById('sys_other_text').style.display = 'none';
+                document.getElementById('q6_other_text').style.display = 'none';
+            }
+        });
+
+        // Button actions
+        document.getElementById('btnCopy').onclick = function () {
+            navigator.clipboard.writeText(clipboardText).then(() => {
+                alert("تم نسخ التقرير بنجاح! يمكنك الآن لصقه في أي مكان.");
+            });
+        };
+
+        function closeOverlay() {
+            overlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Survey Lock Check
+        async function checkLockStatus() {
+            try {
+                const res = await fetch('/api/survey-locks');
+                if (res.ok) {
+                    const locks = await res.json();
+                    if (locks.shift) {
+                        document.getElementById('surveyForm').classList.add('content-locked');
+                        document.getElementById('lockOverlay').style.display = 'flex';
+                        document.body.style.overflow = 'hidden';
+                    }
+                }
+            } catch (err) {
+                console.error("Lock check failed:", err);
+            }
+        }
+        checkLockStatus();
+    </script>
+</body>
+
+</html>

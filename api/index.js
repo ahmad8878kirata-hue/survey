@@ -84,6 +84,7 @@ app.get('/ping', (req, res) => {
 app.get(['/استبيان عمال.html', '/استبيان%20عمال.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان عمال.html')));
 app.get(['/استبيان مدراء.html', '/استبيان%20مدراء.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان مدراء.html')));
 app.get(['/استبيان مشرفين.html', '/استبيان%20مشرفين.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان مشرفين.html')));
+app.get(['/استبيان الدوام.html', '/استبيان%20الدوام.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'استبيان الدوام.html')));
 app.get(['/تقرير يومي.html', '/تقرير%20يومي.html'], (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'تقرير يومي.html')));
 
 // Specific routes for protected views
@@ -258,13 +259,15 @@ app.get('/api/surveys', async (req, res) => {
 
   try {
     // Run all database queries in parallel for maximum speed
-    const [managers, workers, supervisors, totalManagers, totalWorkers, totalSupervisors] = await Promise.all([
+    const [managers, workers, supervisors, shiftWorkers, totalManagers, totalWorkers, totalSupervisors, totalShiftWorkers] = await Promise.all([
       db.getAllManagers(limit, offset, search, filters),
       db.getAllWorkers(limit, offset, search, filters),
       db.getAllSupervisors(limit, offset, search, filters),
+      db.getAllShiftWorkers(limit, offset, search, filters),
       db.getManagersCount(search, filters),
       db.getWorkersCount(search, filters),
-      db.getSupervisorsCount(search, filters)
+      db.getSupervisorsCount(search, filters),
+      db.getShiftWorkersCount(search, filters)
     ]);
 
     const duration = Date.now() - startTime;
@@ -274,15 +277,18 @@ app.get('/api/surveys', async (req, res) => {
       managers,
       workers,
       supervisors,
+      shiftWorkers,
       pagination: {
         page,
-        limit: limit === 'all' ? Math.max(totalManagers, totalWorkers, totalSupervisors) : limit,
+        limit: limit === 'all' ? Math.max(totalManagers, totalWorkers, totalSupervisors, totalShiftWorkers) : limit,
         totalManagers,
         totalWorkers,
         totalSupervisors,
+        totalShiftWorkers,
         totalPagesManagers: limit === 'all' ? 1 : Math.ceil(totalManagers / (limit || 50)),
         totalPagesWorkers: limit === 'all' ? 1 : Math.ceil(totalWorkers / (limit || 50)),
-        totalPagesSupervisors: limit === 'all' ? 1 : Math.ceil(totalSupervisors / (limit || 50))
+        totalPagesSupervisors: limit === 'all' ? 1 : Math.ceil(totalSupervisors / (limit || 50)),
+        totalPagesShiftWorkers: limit === 'all' ? 1 : Math.ceil(totalShiftWorkers / (limit || 50))
       }
     });
   } catch (err) {
@@ -390,6 +396,8 @@ app.post('/api/save-survey', async (req, res) => {
       await db.addWorker(entry);
     } else if (type === 'supervisor') {
       await db.addSupervisor(entry);
+    } else if (type === 'shift') {
+      await db.addShiftWorker(entry);
     } else if (type === 'daily_report') {
       await db.addDailyReport(entry);
     } else {
@@ -414,6 +422,8 @@ app.delete('/api/survey/:type/:id', async (req, res) => {
       deleted = await db.deleteWorker(id);
     } else if (type === 'supervisor') {
       deleted = await db.deleteSupervisor(id);
+    } else if (type === 'shift') {
+      deleted = await db.deleteShiftWorker(id);
     } else if (type === 'daily_report') {
       deleted = await db.deleteDailyReport(id);
     } else {
@@ -446,7 +456,7 @@ app.get('/api/survey-locks', async (_req, res) => {
 app.post('/api/survey-locks', async (req, res) => {
   const { type, locked } = req.body || {};
 
-  if (type !== 'worker' && type !== 'manager' && type !== 'supervisor') {
+  if (type !== 'worker' && type !== 'manager' && type !== 'supervisor' && type !== 'shift') {
     return res.status(400).json({ status: 'error', message: 'Invalid survey type' });
   }
 

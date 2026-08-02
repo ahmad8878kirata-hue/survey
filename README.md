@@ -4,7 +4,7 @@ The forms send submissions **directly to FormSubmit** from the browser, so you c
 
 ## Set your receiving email
 
-In the HTML files (`استبيان عمال.html`, `استبيان مدراء.html`) the receiving inbox is set here:
+In the HTML files (`استبيان عمال.html`, `استبيان مدراء.html`, `استبيان الدوام.html`) the receiving inbox is set here:
 
 - `window.SURVEY_RECEIVER_EMAIL` (optional override)
 - otherwise it uses the hardcoded default email in the script
