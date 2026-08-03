@@ -33,12 +33,74 @@ const DB_PATH = resolveDbPath();
 let sqliteDb = null;
 let mysqlPool = null;
 
+// Cached diagnostic info about the database (filled on init)
+let sqliteStatus = null;
+
 // Initialize SQLite
 function initSQLite() {
   const dir = path.dirname(DB_PATH);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   const db = new Database(DB_PATH);
   db.pragma('foreign_keys = ON');
+
+  // --- Write-capability checks (fixes cPanel "readonly database" on save) ---
+  let dirWritable = true;
+  try {
+    const probe = path.join(dir, '.write-test-' + Date.now());
+    fs.writeFileSync(probe, 'test');
+    fs.unlinkSync(probe);
+  } catch (err) {
+    dirWritable = false;
+  }
+
+  let journalMode = 'delete';
+  if (!dirWritable) {
+    // SQLite creates a -journal file next to the DB for every write.
+    // If the directory is not writable, keeps the journal in memory so
+    // writes to the DB file itself still work.
+    try {
+      db.pragma('journal_mode = MEMORY');
+      journalMode = 'memory';
+      console.warn('[DB] Data directory is NOT writable. Using journal_mode=MEMORY so writes still work.');
+    } catch (err) {
+      console.error('[DB] Failed to switch journal_mode to MEMORY:', err.message);
+    }
+  }
+
+  let writeOk = false;
+  let writeError = null;
+  try {
+    db.exec('BEGIN IMMEDIATE; ROLLBACK;');
+    writeOk = true;
+  } catch (err) {
+    writeError = err.message;
+    console.error('[DB] WRITE TEST FAILED - database is not writable:', err.message);
+    console.error('[DB] Path:', DB_PATH);
+    console.error('[DB] Directory writable:', dirWritable);
+    // Auto-fix: the DB file may be read-only (e.g. uploaded with 444 perms).
+    try {
+      fs.chmodSync(DB_PATH, 0o644);
+      db.exec('BEGIN IMMEDIATE; ROLLBACK;');
+      writeOk = true;
+      writeError = null;
+      console.warn('[DB] survey.db was read-only; fixed permissions automatically.');
+    } catch (fixErr) {
+      console.error('[DB] Could not auto-fix file permissions:', fixErr.message);
+    }
+    if (!writeOk) {
+      console.error('[DB] Fix: make the data directory and survey.db writable on the server (chmod 755 data; chmod 664 data/survey.db), or switch to MySQL (USE_MYSQL=true).');
+    }
+  }
+
+  sqliteStatus = {
+    path: DB_PATH,
+    fileExists: fs.existsSync(DB_PATH),
+    dirWritable,
+    journalMode,
+    writeOk,
+    writeError
+  };
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS managers (
       id VARCHAR(255) PRIMARY KEY,
@@ -1205,6 +1267,42 @@ const dbOperations = {
     }
     fs.writeFileSync(DB_PATH, buffer);
     sqliteDb = initSQLite();
+  },
+
+  // Full diagnostic report (used by /api/diagnostics)
+  async getDiagnostics() {
+    if (IS_MYSQL) {
+      const base = {
+        mode: 'mysql',
+        host: DB_HOST,
+        database: DB_NAME,
+        port: DB_PORT,
+        user: DB_USER
+      };
+      try {
+        const pool = await initMySQL();
+        const conn = await pool.getConnection();
+        try {
+          await conn.query('SELECT 1');
+          base.connected = true;
+        } finally {
+          conn.release();
+        }
+        const [rows] = await pool.query('SELECT table_name FROM information_schema.tables WHERE table_schema = ?', [DB_NAME]);
+        base.tables = rows.map(r => r.table_name);
+      } catch (err) {
+        base.connected = false;
+        base.connectionError = err.message;
+      }
+      return base;
+    }
+
+    return {
+      mode: 'sqlite',
+      nodeVersion: process.version,
+      cwd: process.cwd(),
+      ...(sqliteStatus || {})
+    };
   }
 };
 

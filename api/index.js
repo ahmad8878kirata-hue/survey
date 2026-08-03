@@ -228,6 +228,17 @@ app.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
 
+// Full diagnostic report to find why saves fail (open in browser, e.g. /api/diagnostics)
+app.get('/api/diagnostics', async (req, res) => {
+  try {
+    const diag = await db.getDiagnostics();
+    res.json({ status: 'success', timestamp: new Date().toISOString(), ...diag });
+  } catch (err) {
+    console.error('[DIAGNOSTICS ERROR]', err);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // --- NEW DASHBOARD API ---
 
 // Diagnostic route to verify server is running latest code
