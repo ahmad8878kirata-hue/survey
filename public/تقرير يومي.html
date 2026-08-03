@@ -929,7 +929,7 @@
                     addStation(); // add empty station
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
-                    notification.textContent = 'حدث خطأ أثناء إرسال التقرير: ' + (result.message || 'خطأ مجهول');
+                    notification.textContent = 'حدث خطأ أثناء إرسال التقرير: ' + (result.detail || result.message || 'خطأ مجهول');
                     notification.classList.add('error');
                 }
             } catch (error) {

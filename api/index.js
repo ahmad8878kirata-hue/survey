@@ -408,7 +408,7 @@ app.post('/api/save-survey', async (req, res) => {
     res.json({ status: 'success' });
   } catch (err) {
     console.error('Error saving survey:', err);
-    res.status(500).json({ status: 'error', message: 'Failed to save survey' });
+    res.status(500).json({ status: 'error', message: 'Failed to save survey', detail: err.message });
   }
 });
 
